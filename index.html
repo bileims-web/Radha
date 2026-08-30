@@ -73,9 +73,6 @@
     text-shadow:0 1px 0 rgba(255,255,255,.55)}
   .tile-range{position:relative;font-size:14px;color:rgba(62,42,27,.72);
     margin-top:3px;font-variant-numeric:tabular-nums}
-  .tile-note{position:relative;display:flex;align-items:center;justify-content:center;gap:6px;margin-top:8px;
-    font-size:11px;color:rgba(62,42,27,.70);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .tile-note i{flex:0 0 6px;height:6px;border-radius:50%;background:var(--tint)}
 
   .libtile{margin:10px var(--pad) 0;display:flex;align-items:center;gap:14px;
     width:calc(100% - 2*var(--pad));padding:18px 16px;border-radius:16px;
@@ -624,24 +621,10 @@ async function renderTiles(L){
     if(mk) t.dataset.motif=mk;
     t.innerHTML='<span class="tile-alpona"><svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><use href="#m-alpona"/></svg></span>'+
       (mk?'<span class="tile-art"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#m-'+mk+'"/></svg></span>':'')+
-      '<span class="tile-hi dv"></span>'+(c.range?'<span class="tile-range"></span>':'')+
-      '<span class="tile-note"></span>';
+      '<span class="tile-hi dv"></span>'+(c.range?'<span class="tile-range"></span>':'');
     t.querySelector(".tile-hi").textContent=c.title;
     if(c.range) t.querySelector(".tile-range").textContent=c.range;
 
-    const note=t.querySelector(".tile-note");
-    if(c.mode==="rsn"&&pe&&pe.collId===c.id){
-      note.innerHTML='<i></i><span class="dv"></span>';
-      note.querySelector("span").textContent=pe.name;
-    }else if(c.mode==="single"){
-      const m=await get("marks",tid(c.id,c.tracks[0].file));
-      if(m&&m.pos>15){note.innerHTML='<i></i><span></span>';
-        note.querySelector("span").textContent="Resume "+fmt(m.pos);}
-    }else{
-      const last=await get("meta","last:"+c.id);
-      if(last){note.innerHTML='<i></i><span class="dv"></span>';
-        note.querySelector("span").textContent=last.name;}
-    }
     t.addEventListener("click",()=>openTile(c));
     grid.appendChild(t);
   }
