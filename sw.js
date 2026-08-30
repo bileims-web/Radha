@@ -4,7 +4,7 @@
  * mp3 under audio/). Both cache names derive from it, so a bump retires the
  * old caches wholesale on the next activation.
  */
-var VERSION = 'v1';
+var VERSION = 'v2';   // v2: new home-screen icon
 var SHELL_CACHE = 'radha-shell-' + VERSION;
 var AUDIO_CACHE = 'radha-audio-' + VERSION;
 
