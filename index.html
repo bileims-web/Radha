@@ -45,8 +45,8 @@
 
   .tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px var(--pad) 0}
   .tile{position:relative;aspect-ratio:1/1;border-radius:16px;overflow:hidden;
-    display:flex;flex-direction:column;justify-content:flex-end;padding:13px;
-    text-align:left;border:1px solid rgba(201,162,39,.16);transition:transform .12s}
+    display:flex;flex-direction:column;justify-content:center;padding:13px;
+    text-align:center;border:1px solid rgba(201,162,39,.16);transition:transform .12s}
   .tile:active{transform:scale(.975)}
   .tile::before{content:"";position:absolute;inset:0;
     background:radial-gradient(120% 90% at 22% 0%,rgba(255,255,255,.09),transparent 62%)}
@@ -54,7 +54,7 @@
   .tile-hi{position:relative;font-size:17.5px;font-weight:600;color:#F0E2B8;line-height:1.34}
   .tile-range{position:relative;font-size:14px;color:rgba(240,226,184,.8);
     margin-top:3px;font-variant-numeric:tabular-nums}
-  .tile-note{position:relative;display:flex;align-items:center;gap:6px;margin-top:8px;
+  .tile-note{position:relative;display:flex;align-items:center;justify-content:center;gap:6px;margin-top:8px;
     font-size:11px;color:rgba(240,226,184,.8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .tile-note i{flex:0 0 6px;height:6px;border-radius:50%;background:var(--gold)}
 
