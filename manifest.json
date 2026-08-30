@@ -1,0 +1,138 @@
+{
+  "collections": [
+    {
+      "id": "arati",
+      "title": "आरती",
+      "mode": "arati",
+      "tint": "#6E1F1F",
+      "tracks": [
+        {
+          "file": "audio/arati/01.mp3",
+          "title": "हरिवंश महाप्रभु आरती"
+        },
+        {
+          "file": "audio/arati/02.mp3",
+          "title": "दिव्य श्रृंगार आरती"
+        },
+        {
+          "file": "audio/arati/03.mp3",
+          "title": "चंद्र मिटे दिनकर मिटे"
+        },
+        {
+          "file": "audio/arati/04.mp3",
+          "title": "श्री यमुनाष्टक"
+        }
+      ],
+      "chains": [
+        [
+          0,
+          1
+        ],
+        [
+          2,
+          3
+        ]
+      ]
+    },
+    {
+      "id": "chaturashi",
+      "title": "श्री हित चतुराशी",
+      "mode": "plain",
+      "tint": "#26365A",
+      "tracks": [
+        {
+          "file": "audio/chaturashi/01.mp3",
+          "title": "श्री हित चतुराशी पद गायन 1"
+        },
+        {
+          "file": "audio/chaturashi/02.mp3",
+          "title": "श्री हित चतुराशी पद गायन 2"
+        }
+      ]
+    },
+    {
+      "id": "rsn-1",
+      "title": "श्री राधा सुधा निधि",
+      "range": "1–90",
+      "mode": "rsn",
+      "tint": "#4A2F5C",
+      "tracks": [
+        {
+          "file": "audio/rsn-1/01.mp3",
+          "title": "श्री राधा सुधा निधि 1–30"
+        },
+        {
+          "file": "audio/rsn-1/02.mp3",
+          "title": "श्री राधा सुधा निधि 31–60"
+        },
+        {
+          "file": "audio/rsn-1/03.mp3",
+          "title": "श्री राधा सुधा निधि 61–90"
+        }
+      ]
+    },
+    {
+      "id": "rsn-2",
+      "title": "श्री राधा सुधा निधि",
+      "range": "91–180",
+      "mode": "rsn",
+      "tint": "#4A2F5C",
+      "tracks": [
+        {
+          "file": "audio/rsn-2/01.mp3",
+          "title": "श्री राधा सुधा निधि 91–120"
+        },
+        {
+          "file": "audio/rsn-2/02.mp3",
+          "title": "श्री राधा सुधा निधि 121–150"
+        },
+        {
+          "file": "audio/rsn-2/03.mp3",
+          "title": "श्री राधा सुधा निधि 151–180"
+        }
+      ]
+    },
+    {
+      "id": "rsn-3",
+      "title": "श्री राधा सुधा निधि",
+      "range": "181–270",
+      "mode": "rsn",
+      "tint": "#4A2F5C",
+      "tracks": [
+        {
+          "file": "audio/rsn-3/01.mp3",
+          "title": "श्री राधा सुधा निधि 181–210"
+        },
+        {
+          "file": "audio/rsn-3/02.mp3",
+          "title": "श्री राधा सुधा निधि 211–240"
+        },
+        {
+          "file": "audio/rsn-3/03.mp3",
+          "title": "श्री राधा सुधा निधि 241–270"
+        }
+      ]
+    },
+    {
+      "id": "sevak-vani",
+      "title": "श्री हित सेवक वाणी",
+      "mode": "single",
+      "tint": "#2F4A3A",
+      "tracks": [
+        {
+          "file": "audio/sevak-vani/01.mp3",
+          "title": "श्री सेवक वाणी"
+        }
+      ]
+    }
+  ],
+  "rsnSequence": [
+    "rsn-1",
+    "rsn-2",
+    "rsn-3"
+  ],
+  "rules": {
+    "aratiChainGapSeconds": 10,
+    "rsnFinishedWithinSeconds": 60
+  }
+}
