@@ -18,6 +18,7 @@
   :root{
     --bg:#121110;--surface:#1C1A18;--surface2:#232120;--line:#2E2A26;
     --text:#EDE7DD;--muted:#918878;--gold:#C9A227;--red:#B4462F;--pad:16px;
+    --ivory:#F7F1E4;--ink:#3E2A1B;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;height:100%}
@@ -43,20 +44,38 @@
 
   .scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:180px}
 
+  /* Tiles are off-white leaves of paper. Each collection's colour from
+     manifest.json is no longer the fill — it is the ink the motif and the
+     alpona are drawn in, so the six stay tellable apart at a glance.
+     Ivory #F7F1E4, ink #3E2A1B. */
   .tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px var(--pad) 0}
   .tile{position:relative;aspect-ratio:1/1;border-radius:16px;overflow:hidden;
     display:flex;flex-direction:column;justify-content:center;padding:13px;
-    text-align:center;border:1px solid rgba(201,162,39,.16);transition:transform .12s}
+    text-align:center;transition:transform .12s;
+    background:#F7F1E4;
+    background:color-mix(in srgb, var(--tint) 9%, #F7F1E4);
+    border:1px solid rgba(62,42,27,.16);
+    box-shadow:0 1px 3px rgba(0,0,0,.35)}
   .tile:active{transform:scale(.975)}
+  /* light falling from the top-left, as on paper */
   .tile::before{content:"";position:absolute;inset:0;
-    background:radial-gradient(120% 90% at 22% 0%,rgba(255,255,255,.09),transparent 62%)}
-  .tile.pointed{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset}
-  .tile-hi{position:relative;font-size:17.5px;font-weight:600;color:#F0E2B8;line-height:1.34}
-  .tile-range{position:relative;font-size:14px;color:rgba(240,226,184,.8);
+    background:radial-gradient(120% 90% at 22% 0%,rgba(255,255,255,.85),transparent 64%)}
+  .tile.pointed{border-color:var(--gold);box-shadow:0 0 0 1.5px var(--gold) inset,0 1px 3px rgba(0,0,0,.35)}
+
+  /* the motif sits behind the words, large and quiet */
+  .tile-art{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none}
+  .tile-art svg{width:78%;height:78%;color:var(--tint);opacity:.30}
+  /* alpona: the rice-paste flourish in the corners */
+  .tile-alpona{position:absolute;inset:0;pointer-events:none}
+  .tile-alpona svg{width:100%;height:100%;color:var(--tint);opacity:.13}
+
+  .tile-hi{position:relative;font-size:17.5px;font-weight:600;color:var(--ink);line-height:1.34;
+    text-shadow:0 1px 0 rgba(255,255,255,.55)}
+  .tile-range{position:relative;font-size:14px;color:rgba(62,42,27,.72);
     margin-top:3px;font-variant-numeric:tabular-nums}
   .tile-note{position:relative;display:flex;align-items:center;justify-content:center;gap:6px;margin-top:8px;
-    font-size:11px;color:rgba(240,226,184,.8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .tile-note i{flex:0 0 6px;height:6px;border-radius:50%;background:var(--gold)}
+    font-size:11px;color:rgba(62,42,27,.70);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tile-note i{flex:0 0 6px;height:6px;border-radius:50%;background:var(--tint)}
 
   .libtile{margin:10px var(--pad) 0;display:flex;align-items:center;gap:14px;
     width:calc(100% - 2*var(--pad));padding:18px 16px;border-radius:16px;
@@ -181,6 +200,122 @@
 </style>
 </head>
 <body>
+
+<!-- Motifs for the collection tiles, drawn as line art so they stay crisp at
+     any size, cost a couple of kilobytes, and need no network. Every stroke is
+     currentColor, so each tile inks its motif in its own colour. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <g id="g-common" fill="none" stroke="currentColor" stroke-width="2.2"
+       stroke-linecap="round" stroke-linejoin="round"></g>
+  </defs>
+
+  <!-- a lit diya, seen from the front -->
+  <symbol id="m-diya" viewBox="0 0 100 100">
+    <g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M18 58 Q50 90 82 58 Q50 66 18 58 Z"/>
+      <ellipse cx="50" cy="83" rx="13" ry="3.4"/>
+      <path d="M50 88 L50 91"/>
+      <path d="M50 24 C60 38 57 52 50 58 C43 52 40 38 50 24 Z" fill="currentColor" fill-opacity=".30"/>
+      <path d="M50 42 C54 48 53 54 50 57 C47 54 46 48 50 42 Z" fill="currentColor" fill-opacity=".45" stroke="none"/>
+      <g stroke-width="1.7" opacity=".72">
+        <path d="M50 12 L50 18"/>
+        <path d="M28 24 L32 29"/><path d="M72 24 L68 29"/>
+        <path d="M20 44 L26 45"/><path d="M80 44 L74 45"/>
+      </g>
+    </g>
+  </symbol>
+
+  <!-- Krishna's flute, a peacock feather tied to it -->
+  <symbol id="m-flute" viewBox="0 0 100 100">
+    <g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 76 L84 34" stroke-width="9" opacity=".22"/>
+      <path d="M12 76 L84 34"/>
+      <path d="M15.5 78 L18.5 83"/>
+      <g stroke-width="1.9" opacity=".85">
+        <circle cx="30" cy="66.5" r="2"/><circle cx="40" cy="60.6" r="2"/>
+        <circle cx="50" cy="54.8" r="2"/><circle cx="60" cy="48.9" r="2"/>
+        <circle cx="70" cy="43" r="2"/>
+      </g>
+      <path d="M78 37 C74 26 72 18 74 9"/>
+      <g stroke-width="1.5" opacity=".8">
+        <path d="M74.5 15 L69 12"/><path d="M74.6 20 L69.4 18"/><path d="M75.4 25 L70.6 24"/>
+        <path d="M74.5 15 L80 11"/><path d="M74.6 20 L80.2 18.5"/><path d="M75.4 25 L80.4 24.5"/>
+      </g>
+      <ellipse cx="74" cy="9" rx="7.5" ry="9.5"/>
+      <ellipse cx="74" cy="9.5" rx="4" ry="5.4" fill="currentColor" fill-opacity=".26"/>
+      <ellipse cx="74" cy="10" rx="1.7" ry="2.4" fill="currentColor" fill-opacity=".6" stroke="none"/>
+    </g>
+  </symbol>
+
+  <!-- Radha Charan: the lotus feet. One foot is drawn, then mirrored, so the
+       great toes fall on the inner edges and face each other as a real pair
+       does. Each sole bears a lotus. -->
+  <symbol id="m-charan" viewBox="0 0 100 100">
+    <defs>
+      <g id="charan-foot" fill="none" stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round">
+        <!-- sole: widest across the ball, waisted at the arch, narrow heel -->
+        <path d="M30 40 C22.5 40 17.5 45 16.6 52
+                 C15.9 59 17.6 65.5 19.6 71
+                 C21.6 76.8 25.6 83 31 83
+                 C35.8 83 38 77.4 38.4 71
+                 C38.9 64 38.8 56 38 49
+                 C37.1 43.2 34.4 40 30 40 Z"/>
+        <!-- five toes in a natural arc, the great toe innermost and largest -->
+        <ellipse cx="38.6" cy="33.2" rx="4.3" ry="3.5" transform="rotate(24 38.6 33.2)"/>
+        <ellipse cx="32.3" cy="29.4" rx="3"   ry="2.5" transform="rotate(9 32.3 29.4)"/>
+        <ellipse cx="26.9" cy="29.2" rx="2.7" ry="2.3" transform="rotate(-3 26.9 29.2)"/>
+        <ellipse cx="22.1" cy="30.6" rx="2.4" ry="2.05" transform="rotate(-14 22.1 30.6)"/>
+        <ellipse cx="18.1" cy="33.2" rx="2.05" ry="1.8" transform="rotate(-26 18.1 33.2)"/>
+        <!-- the lotus borne on the sole -->
+        <g stroke-width="1.4" opacity=".92" transform="translate(27.4 60)">
+          <path d="M0 -6.6 C2.9 -2.8 2.9 1.5 0 4.4 C-2.9 1.5 -2.9 -2.8 0 -6.6 Z"/>
+          <path d="M-7 -2.8 C-3 -3.7 0.5 -1.1 0 4.4 C-4 3.7 -6.6 1.1 -7 -2.8 Z"/>
+          <path d="M7 -2.8 C3 -3.7 -0.5 -1.1 0 4.4 C4 3.7 6.6 1.1 7 -2.8 Z"/>
+        </g>
+      </g>
+    </defs>
+    <use href="#charan-foot" transform="translate(2 0)"/>
+    <use href="#charan-foot" transform="translate(98 0) scale(-1 1)"/>
+  </symbol>
+
+  <!-- a lotus still in bud, the outer petals only just parting -->
+  <symbol id="m-lotus" viewBox="0 0 100 100">
+    <g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <!-- outermost pair, beginning to open -->
+      <path d="M50 64 C40 55 34.5 41 36.5 27 C44 35 49 50 50 64 Z" fill="currentColor" fill-opacity=".08"/>
+      <path d="M50 64 C60 55 65.5 41 63.5 27 C56 35 51 50 50 64 Z" fill="currentColor" fill-opacity=".08"/>
+      <!-- inner pair, still held close -->
+      <path d="M50 64 C43 54 40.5 38 43.5 24 C48.5 33 51 48 50 64 Z" fill="currentColor" fill-opacity=".12"/>
+      <path d="M50 64 C57 54 59.5 38 56.5 24 C51.5 33 49 48 50 64 Z" fill="currentColor" fill-opacity=".12"/>
+      <!-- the tight central petal -->
+      <path d="M50 13 C56.5 27 57.5 46 50 63 C42.5 46 43.5 27 50 13 Z" fill="currentColor" fill-opacity=".2"/>
+      <!-- calyx, stem and a single leaf -->
+      <path d="M41 62 C44 68 56 68 59 62"/>
+      <path d="M50 66 L50 88"/>
+      <path d="M50 80 C42.5 80.5 37 76.5 35.5 71 C41.5 70.5 47 73.5 50 80 Z"/>
+      <path d="M33 90 Q50 95 67 90"/>
+    </g>
+  </symbol>
+
+  <!-- alpona: the rice-paste flourish drawn at a threshold, one corner of it -->
+  <symbol id="m-alpona" viewBox="0 0 100 100">
+    <g fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+      <g id="alp-corner">
+        <path d="M2 20 C10 20 16 14 16 6"/>
+        <path d="M2 27 C14 27 23 18 23 6"/>
+        <path d="M8.5 13.5 C11 11 13 9 15.5 8"/>
+        <circle cx="6" cy="6" r="1.7"/>
+        <path d="M27 4 C31 8 31 12 27 15 C25 11 25 8 27 4 Z"/>
+        <path d="M4 31 C8 35 12 35 15 31 C11 29 8 29 4 31 Z"/>
+      </g>
+      <use href="#alp-corner" transform="translate(100 0) scale(-1 1)"/>
+      <use href="#alp-corner" transform="translate(0 100) scale(1 -1)"/>
+      <use href="#alp-corner" transform="translate(100 100) scale(-1 -1)"/>
+    </g>
+  </symbol>
+</svg>
 
 <header class="topbar">
   <button class="icon-btn" id="backBtn" hidden aria-label="Back">
@@ -416,14 +551,32 @@ async function render(){
   await renderUser(L);
 }
 
+// Which motif each collection wears. Keyed on the manifest's own ids, so a
+// collection with no entry simply gets no motif rather than a broken one.
+const TILE_MOTIF={
+  "arati":"diya",
+  "chaturashi":"flute",
+  "rsn-1":"charan", "rsn-2":"charan", "rsn-3":"charan",
+  "sevak-vani":"lotus"
+};
+// The lotus was asked for in pink, so that one tile is inked pink rather than
+// the colour manifest.json gives it. The manifest is data and stays as it is;
+// this cannot be a CSS rule because --tint is set inline below and would win.
+const TILE_INK={"sevak-vani":"#C2557A"};
+
 async function renderTiles(L){
   const grid=document.createElement("div"); grid.className="tiles";
   const pe=ptrEntry();
   for(const c of S.man.collections){
     const t=document.createElement("button");
     t.className="tile"+(c.mode==="rsn"&&pe&&pe.collId===c.id?" pointed":"");
-    t.style.background=c.tint||"#3A2A22";
-    t.innerHTML='<span class="tile-hi dv"></span>'+(c.range?'<span class="tile-range"></span>':'')+
+    // the collection's colour is now the ink of its motif, not the tile fill
+    t.style.setProperty("--tint", TILE_INK[c.id]||c.tint||"#8C5A28");
+    const mk=TILE_MOTIF[c.id];
+    if(mk) t.dataset.motif=mk;
+    t.innerHTML='<span class="tile-alpona"><svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><use href="#m-alpona"/></svg></span>'+
+      (mk?'<span class="tile-art"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#m-'+mk+'"/></svg></span>':'')+
+      '<span class="tile-hi dv"></span>'+(c.range?'<span class="tile-range"></span>':'')+
       '<span class="tile-note"></span>';
     t.querySelector(".tile-hi").textContent=c.title;
     if(c.range) t.querySelector(".tile-range").textContent=c.range;
