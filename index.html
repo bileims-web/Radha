@@ -5,9 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#121110">
 <title>राधा</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Devanagari:wght@500;600&display=swap" rel="stylesheet">
+<!-- Noto Serif Devanagari now ships with the app instead of loading from
+     Google, so the Devanagari renders with no internet. Same family, same
+     weights (500/600), same unicode-ranges as the stylesheet it replaces. -->
+<link rel="stylesheet" href="fonts/noto-serif-devanagari.css">
+<link rel="manifest" href="app.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="राधा">
 <style>
   :root{
     --bg:#121110;--surface:#1C1A18;--surface2:#232120;--line:#2E2A26;
@@ -750,6 +756,15 @@ window.addEventListener("popstate",()=>{
 })();
 
 })();
+</script>
+<script>
+// Offline support. Registered after load so it can never delay or alter the
+// first paint; if registration fails the app carries on exactly as before.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  });
+}
 </script>
 </body>
 </html>
