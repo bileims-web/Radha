@@ -223,25 +223,58 @@
     </g>
   </symbol>
 
-  <!-- Krishna's flute, a peacock feather tied to it -->
+  <!-- Krishna's flute with a peacock feather bound to it. The flute is drawn
+       as a body rather than a line, tapering wider toward the far end; the
+       feather's barbs fan from the shaft below the eye, longest at the top
+       and shortening down the stem. -->
   <symbol id="m-flute" viewBox="0 0 100 100">
     <g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M12 76 L84 34" stroke-width="9" opacity=".22"/>
-      <path d="M12 76 L84 34"/>
-      <path d="M15.5 78 L18.5 83"/>
-      <g stroke-width="1.9" opacity=".85">
-        <circle cx="30" cy="66.5" r="2"/><circle cx="40" cy="60.6" r="2"/>
-        <circle cx="50" cy="54.8" r="2"/><circle cx="60" cy="48.9" r="2"/>
-        <circle cx="70" cy="43" r="2"/>
+      <!-- flute body: two parallel edges, flaring at the far end -->
+      <path d="M9.15 81.97 L84.53 48.5 L87.47 55.5 L10.85 86.03 Z"
+            fill="currentColor" fill-opacity=".08"/>
+      <!-- the lip of the flare -->
+      <path d="M80 50.51 L82.88 57.33" stroke-width="1.6" opacity=".85"/>
+      <!-- blow hole, then five finger holes evenly spaced down the body -->
+      <g stroke-width="1.6" opacity=".85">
+        <circle cx="17.6" cy="80.8" r="1.7"/>
+        <circle cx="32.8" cy="74.4" r="1.6"/>
+        <circle cx="41.9" cy="70.6" r="1.6"/>
+        <circle cx="51"   cy="66.7" r="1.6"/>
+        <circle cx="60.2" cy="62.9" r="1.6"/>
+        <circle cx="69.3" cy="59"   r="1.6"/>
       </g>
-      <path d="M78 37 C74 26 72 18 74 9"/>
-      <g stroke-width="1.5" opacity=".8">
-        <path d="M74.5 15 L69 12"/><path d="M74.6 20 L69.4 18"/><path d="M75.4 25 L70.6 24"/>
-        <path d="M74.5 15 L80 11"/><path d="M74.6 20 L80.2 18.5"/><path d="M75.4 25 L80.4 24.5"/>
+
+      <!-- the feather's shaft, gently curved -->
+      <path d="M70.8 58.4 C68.5 50 66.5 41 66 33" stroke-width="1.8"/>
+      <!-- barbs: twelve, fanning either side, longest nearest the eye and
+           shortening down the stem so the outline reads as feathered -->
+      <g stroke-width="1.05" opacity=".8">
+        <path d="M66.00 33.80 Q59.07 33.58 52.14 35.76"/>
+        <path d="M66.10 36.40 Q58.90 37.30 51.70 40.60"/>
+        <path d="M66.40 39.20 Q60.12 40.50 53.85 44.20"/>
+        <path d="M66.90 42.00 Q61.56 43.56 56.22 47.52"/>
+        <path d="M67.30 44.80 Q62.84 46.38 58.38 50.36"/>
+        <path d="M67.80 47.60 Q64.20 49.10 60.60 53.00"/>
+        <path d="M68.30 50.20 Q65.49 51.48 62.67 55.15"/>
+        <path d="M68.80 52.60 Q66.70 53.53 64.60 56.86"/>
+        <path d="M66.00 33.80 Q72.93 33.58 79.86 35.76"/>
+        <path d="M66.10 36.40 Q73.30 37.30 80.50 40.60"/>
+        <path d="M66.40 39.20 Q72.68 40.50 78.96 44.20"/>
+        <path d="M66.90 42.00 Q72.24 43.56 77.58 47.52"/>
+        <path d="M67.30 44.80 Q71.76 46.38 76.22 50.36"/>
+        <path d="M67.80 47.60 Q71.40 49.10 75.00 53.00"/>
+        <path d="M68.30 50.20 Q71.11 51.48 73.92 55.15"/>
+        <path d="M68.80 52.60 Q70.90 53.53 73.00 56.86"/>
       </g>
-      <ellipse cx="74" cy="9" rx="7.5" ry="9.5"/>
-      <ellipse cx="74" cy="9.5" rx="4" ry="5.4" fill="currentColor" fill-opacity=".26"/>
-      <ellipse cx="74" cy="10" rx="1.7" ry="2.4" fill="currentColor" fill-opacity=".6" stroke="none"/>
+      <!-- the eye: an outer teardrop ring dipping softly at the crown, an
+           oval within it, and a small solid centre -->
+      <path d="M66 8
+               C60 8.6 56.2 12.5 56.2 18
+               C56.2 24 59.5 28.5 66 33
+               C72.5 28.5 75.8 24 75.8 18
+               C75.8 12.5 72 8.6 66 8 Z"/>
+      <ellipse cx="66" cy="19.5" rx="5.8" ry="6.8" fill="currentColor" fill-opacity=".26"/>
+      <ellipse cx="66" cy="20" rx="2.4" ry="3" fill="currentColor" fill-opacity=".6" stroke="none"/>
     </g>
   </symbol>
 
