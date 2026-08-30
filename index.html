@@ -228,73 +228,96 @@
        feather's barbs fan from the shaft below the eye, longest at the top
        and shortening down the stem. -->
   <symbol id="m-flute" viewBox="0 0 100 100">
-    <g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-      <!-- The flute lies low and shallow so the feather has room for its full
-           sweep; the two read as one arrangement rather than two objects. -->
-      <path d="M5.33 87.9 L92.91 58.57 L95.09 65.43 L6.67 92.1 Z"
-            fill="currentColor" fill-opacity=".08"/>
-      <path d="M87.65 60.33 L89.79 67.03" stroke-width="1.6" opacity=".85"/>
-      <g stroke-width="1.6" opacity=".85">
-        <circle cx="14.8" cy="87.2" r="1.7"/>
-        <circle cx="32.4" cy="81.6" r="1.6"/>
-        <circle cx="43"   cy="78.2" r="1.6"/>
-        <circle cx="53.5" cy="74.9" r="1.6"/>
-        <circle cx="64.1" cy="71.5" r="1.6"/>
-        <circle cx="74.6" cy="68.2" r="1.6"/>
+    <defs>
+      <path id="fan-petal" d="M0 0 C2.6 -3 2.6 -7.5 0 -10.5 C-2.6 -7.5 -2.6 -3 0 0 Z"/>
+      <path id="tassel-drop" d="M0 0 C1.5 1.5 1.5 3.8 0 5.1 C-1.5 3.8 -1.5 1.5 0 0 Z"/>
+    </defs>
+    <g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+       transform="translate(0 6)">
+      <!-- After the drawing in the Recitation folder: the bansuri lies across,
+           bound at its ends and joint, the feather tucked behind it at the
+           left, a scalloped fan at the right, and beaded swags and tassels
+           hanging beneath — all drawn in the alpona's hand of fine strands,
+           curls and beads. -->
+
+      <!-- the flute -->
+      <path d="M8.33 41.01 L92.33 48.01 L91.67 55.99 L7.67 48.99 Z"
+            fill="currentColor" fill-opacity=".07"/>
+      <!-- binding bands: ends and the middle joint -->
+      <g stroke-width="1.5" opacity=".9">
+        <path d="M15.89 41.65 L15.23 49.61"/>
+        <path d="M41.93 43.82 L41.27 51.78"/>
+        <path d="M46.97 44.24 L46.31 52.2"/>
+        <path d="M83.93 47.32 L83.27 55.28"/>
+      </g>
+      <!-- beading around each binding -->
+      <g stroke-width="1.8" stroke-linecap="round" stroke-dasharray="0.1 2.6" opacity=".75">
+        <path d="M11.6 41.3 L11 49.3"/>
+        <path d="M44.5 44 L43.9 52"/>
+        <path d="M88 47.7 L87.4 55.7"/>
+      </g>
+      <!-- mouth hole and the finger holes -->
+      <g fill="currentColor" fill-opacity=".45" stroke="none">
+        <ellipse cx="24.9" cy="45.2" rx="2.4" ry="1.8" transform="rotate(4.8 24.9 45.2)"/>
+        <ellipse cx="53.5" cy="47.6" rx="2.1" ry="1.6" transform="rotate(4.8 53.5 47.6)"/>
+        <ellipse cx="60.2" cy="48.1" rx="2.1" ry="1.6" transform="rotate(4.8 60.2 48.1)"/>
+        <ellipse cx="66.9" cy="48.7" rx="2.1" ry="1.6" transform="rotate(4.8 66.9 48.7)"/>
+        <ellipse cx="73.6" cy="49.3" rx="2.1" ry="1.6" transform="rotate(4.8 73.6 49.3)"/>
+        <ellipse cx="80.3" cy="49.8" rx="2.1" ry="1.6" transform="rotate(4.8 80.3 49.8)"/>
       </g>
 
-      <!-- The feather, after the reference image and drawn in the same hand as
-           the alpona on the tile borders — the same flowing strands, terminal
-           curls and scattered beads. A long S-curved shaft hooking at its
-           foot; every barb sweeps UP and outward toward the eye like hair
-           blown one way, never a spoke; lower down they break into wisps. -->
-      <path d="M61 34 C60 44 57 52 54.5 59
-               C53.2 63 54.8 66 57.2 65.4 C58.8 65 59.2 63.4 58.1 62.6" stroke-width="1.8"/>
+      <!-- the feather, tucked close behind the flute at the left: a soft
+           plume of curved strands springing above a small eye -->
+      <path d="M33 43.5 C32.8 42 32.9 41.5 33 40.5" stroke-width="1.4" opacity=".9"/>
+      <g stroke-width="0.85" opacity=".7">
+        <path d="M32 28 C28 22 22 19 14 15"/>
+        <path d="M32.5 28 C30 23 26 20 21 18"/>
+        <path d="M32 27 C28 20 24 14 18 9"/>
+        <path d="M33 27.5 C32 21 30 16 28 11"/>
+        <path d="M32.5 26.5 C30 19 27 12 23 6"/>
+        <path d="M33 26 C32 18 31 11 29 5"/>
+        <path d="M33.5 26 C35 18 37 12 39 6"/>
+        <path d="M34 26.5 C36 19 40 13 44 8"/>
+        <path d="M34 27.5 C36 22 39 18 43 15"/>
+        <path d="M34.5 27 C38 20 43 16 49 12"/>
+        <path d="M34.5 28.5 C38 25 42 23 47 22"/>
+        <path d="M35 28 C39 23 45 20 51 18"/>
+        <path d="M35 29 C40 26 46 25 52 25"/>
+      </g>
+      <path d="M33 30 C31.8 27.5 29.2 28 28.8 31.5
+               C28.4 35 30.2 38 33 40.5
+               C35.8 38 37.6 35 37.2 31.5
+               C36.8 28 34.2 27.5 33 30 Z" stroke-width="1.6"/>
+      <ellipse cx="33" cy="33.5" rx="2.4" ry="3.1" fill="currentColor" fill-opacity=".26" stroke-width="1.1"/>
+      <ellipse cx="33" cy="33.8" rx="1.05" ry="1.35" fill="currentColor" fill-opacity=".6" stroke="none"/>
 
-      <g stroke-width="1.05" opacity=".8">
-        <path d="M60 37 C54 33 46 20 43 8"/>
-        <path d="M58.6 41 C50 36 41 24 38 13"/>
-        <path d="M57.4 45 C46 39 35 28 31 19"/>
-        <path d="M56.4 49 C43 43 31 34 27 26"/>
-        <path d="M55.4 53 C41 48 28 41 24 34"/>
-        <path d="M54.6 57 C41 54 28 48 24 42"/>
-        <path d="M60.6 37 C68 33 76 20 79 8"/>
-        <path d="M59.2 41 C67 36 78 25 82 15"/>
-        <path d="M58 45 C66 40 80 31 85 23"/>
-        <path d="M57 49 C65 44 82 37 88 30"/>
+      <!-- the scalloped fan resting on the flute at the right -->
+      <g stroke-width="1.2" fill="currentColor" fill-opacity=".10">
+        <use href="#fan-petal" transform="translate(79 46.9) rotate(-75)"/>
+        <use href="#fan-petal" transform="translate(79 46.9) rotate(-50)"/>
+        <use href="#fan-petal" transform="translate(79 46.9) rotate(-25)"/>
+        <use href="#fan-petal" transform="translate(79 46.9) rotate(0)"/>
+        <use href="#fan-petal" transform="translate(79 46.9) rotate(25)"/>
+        <use href="#fan-petal" transform="translate(79 46.9) rotate(50)"/>
+        <use href="#fan-petal" transform="translate(79 46.9) rotate(75)"/>
+      </g>
+      <g stroke-width="1.7" stroke-linecap="round" stroke-dasharray="0.1 2.8" opacity=".7">
+        <path d="M68.5 44.6 A11.5 11.5 0 0 1 89.5 44.6"/>
       </g>
 
-      <g stroke-width="1" opacity=".75">
-        <path d="M55 55 C45 57 37 61 34 67
-                 C32.5 70 34.5 72.5 37 71.5 C38.8 70.7 39 68.7 37.5 67.9"/>
-        <path d="M54.4 60 C46 62.5 40 66 38 70
-                 C36.9 72.2 38.8 74 40.8 73 C42.2 72.3 42.3 70.7 41 70.1"/>
-        <path d="M58.6 53 C65 51 72 48 75.5 44.5
-                 C77.5 42.5 77 40 74.9 40 C73.4 40 72.8 41.4 73.6 42.5"/>
-        <path d="M57.6 47 C65 44 73 39.5 79 35.5
-                 C81.5 34 81.3 31.5 79.2 31.4 C77.7 31.3 77 32.7 77.8 33.8"/>
+      <!-- beaded swags slung beneath the flute -->
+      <g stroke-width="2" stroke-linecap="round" stroke-dasharray="0.1 3.2" opacity=".8">
+        <path d="M28 50.7 Q50 67 72 54.4"/>
+        <path d="M40 51.7 Q62 70 84 55.4"/>
+        <path d="M78 55 L75 74"/>
+        <path d="M82 55.5 L82 82"/>
+        <path d="M86 56 L88 70"/>
       </g>
-
-      <g fill="currentColor" stroke="none" opacity=".8">
-        <circle cx="40" cy="5" r="1.1"/><circle cx="34.5" cy="10.5" r="1.1"/>
-        <circle cx="28" cy="16" r="1.1"/><circle cx="24" cy="23" r="1"/>
-        <circle cx="21.5" cy="38" r="1"/><circle cx="21" cy="46" r="1"/>
-        <circle cx="31" cy="64" r="1"/><circle cx="36" cy="73" r="1"/>
-        <circle cx="43" cy="71" r="1"/>
-        <circle cx="79.5" cy="5" r="1.1"/><circle cx="84.5" cy="12" r="1.1"/>
-        <circle cx="88.5" cy="20.5" r="1"/><circle cx="71.5" cy="38.5" r="1"/>
-        <circle cx="75.5" cy="29" r="1"/>
+      <g fill="currentColor" fill-opacity=".55" stroke="none">
+        <use href="#tassel-drop" transform="translate(75 75)"/>
+        <use href="#tassel-drop" transform="translate(82 83)"/>
+        <use href="#tassel-drop" transform="translate(88 71)"/>
       </g>
-
-      <!-- the eye: an outer teardrop notched to a point at the crown, an oval
-           within it, and a small solid centre -->
-      <path d="M61 9.5
-               C58.8 4 53 5 52.2 12
-               C51.4 19 54.5 27.5 61 34
-               C67.5 27.5 70.6 19 69.8 12
-               C69 5 63.2 4 61 9.5 Z"/>
-      <ellipse cx="61" cy="19" rx="4.8" ry="6.4" fill="currentColor" fill-opacity=".26"/>
-      <ellipse cx="61" cy="19.6" rx="2.1" ry="2.7" fill="currentColor" fill-opacity=".6" stroke="none"/>
     </g>
   </symbol>
 
