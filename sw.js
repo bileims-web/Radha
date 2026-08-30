@@ -10,7 +10,7 @@
  *   AUDIO_VERSION — bump ONLY when an mp3 under audio/ is replaced. Expensive:
  *                   every track has to be downloaded again.
  */
-var SHELL_VERSION = 'v13';  // v13: oxblood ground with alpona
+var SHELL_VERSION = 'v14';  // v14: ivory app icon, maroon handwriting
 var AUDIO_VERSION = 'v1';
 var SHELL_CACHE = 'radha-shell-' + SHELL_VERSION;
 var AUDIO_CACHE = 'radha-audio-' + AUDIO_VERSION;
