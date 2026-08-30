@@ -6,8 +6,8 @@
   "scope": "./",
   "id": "/Radha/",
   "display": "standalone",
-  "background_color": "#121110",
-  "theme_color": "#121110",
+  "background_color": "#2A1315",
+  "theme_color": "#2A1315",
   "icons": [
     {
       "src": "icons/icon-192.png",

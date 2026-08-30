@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#121110">
+<meta name="theme-color" content="#2A1315">
 <title>राधा</title>
 <!-- Noto Serif Devanagari now ships with the app instead of loading from
      Google, so the Devanagari renders with no internet. Same family, same
@@ -16,8 +16,11 @@
 <meta name="apple-mobile-web-app-title" content="राधा">
 <style>
   :root{
-    --bg:#121110;--surface:#1C1A18;--surface2:#232120;--line:#2E2A26;
-    --text:#EDE7DD;--muted:#918878;--gold:#C9A227;--red:#B4462F;--pad:16px;
+    /* Deep oxblood rather than black: it sets off the ivory tiles and the
+       gold, and the whole dark family moves together so the topbar,
+       sheets, mini-player and rows stay in key with it. */
+    --bg:#2A1315;--surface:#361A1C;--surface2:#422124;--line:#542E30;
+    --text:#F2E7DA;--muted:#B09287;--gold:#C9A227;--red:#B4462F;--pad:16px;
     --ivory:#F7F1E4;--ink:#3E2A1B;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -43,6 +46,17 @@
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
 
   .scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:180px}
+
+  /* Alpona drawn on the ground itself, framing the content. z-index -1 so
+     it lies under the flow but over the page colour; the top pair start
+     below the topbar, which is opaque and would otherwise cover them. */
+  #bgArt{position:fixed;inset:0;pointer-events:none;z-index:-1;overflow:hidden}
+  #bgArt svg{position:absolute;width:min(48vw,200px);aspect-ratio:1;
+    color:var(--gold);opacity:.09}
+  #bgArt .tl{top:calc(env(safe-area-inset-top) + 58px);left:0}
+  #bgArt .tr{top:calc(env(safe-area-inset-top) + 58px);right:0;transform:scaleX(-1)}
+  #bgArt .bl{bottom:0;left:0;transform:scaleY(-1)}
+  #bgArt .br{bottom:0;right:0;transform:scale(-1,-1)}
 
   /* Tiles are off-white leaves of paper. Each collection's colour from
      manifest.json is no longer the fill — it is the ink the motif and the
@@ -197,6 +211,13 @@
 </style>
 </head>
 <body>
+
+<div id="bgArt" aria-hidden="true">
+  <svg class="tl" viewBox="0 0 100 100"><use href="#m-alpona-bg"/></svg>
+  <svg class="tr" viewBox="0 0 100 100"><use href="#m-alpona-bg"/></svg>
+  <svg class="bl" viewBox="0 0 100 100"><use href="#m-alpona-bg"/></svg>
+  <svg class="br" viewBox="0 0 100 100"><use href="#m-alpona-bg"/></svg>
+</div>
 
 <!-- Motifs for the collection tiles, drawn as line art so they stay crisp at
      any size, cost a couple of kilobytes, and need no network. Every stroke is
@@ -389,6 +410,29 @@
         <use href="#lp-in" transform="translate(50 54) rotate(0)"/>
         <use href="#lp-in" transform="translate(50 54) rotate(18)"/>
       </g>
+    </g>
+  </symbol>
+
+  <!-- The same alpona hand as the tile borders, drawn larger for the page
+       ground: two sweeping arcs from edge to edge, a bud at the corner,
+       petals riding the outer arc, beads and terminal curls. -->
+  <symbol id="m-alpona-bg" viewBox="0 0 100 100">
+    <defs>
+      <path id="alp-bg-petal" d="M0 0 C3 -2.6 3 -7 0 -9.5 C-3 -7 -3 -2.6 0 0 Z"/>
+    </defs>
+    <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M0 34 C20 34 34 20 34 0"/>
+      <path d="M0 50 C28 50 50 28 50 0"/>
+      <path d="M6 6 C12 9 15 15 13 22 C7 19 4 13 6 6 Z"/>
+      <use href="#alp-bg-petal" transform="translate(46 20) rotate(113.5)"/>
+      <use href="#alp-bg-petal" transform="translate(35.5 35.5) rotate(135)"/>
+      <use href="#alp-bg-petal" transform="translate(19.6 46.1) rotate(157)"/>
+      <circle cx="62" cy="9" r="1.5"/>
+      <circle cx="53" cy="35" r="1.5"/>
+      <circle cx="35" cy="53" r="1.5"/>
+      <circle cx="9" cy="62" r="1.5"/>
+      <path d="M50 0 C50 5.5 54 9 58.5 7 C61 5.8 61 2.2 58.5 1.2"/>
+      <path d="M0 50 C5.5 50 9 54 7 58.5 C5.8 61 2.2 61 1.2 58.5"/>
     </g>
   </symbol>
 
