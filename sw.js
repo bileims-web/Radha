@@ -1,12 +1,19 @@
 /* Radha — offline service worker.
  *
- * Bump VERSION whenever a cached file changes on the server (including any
- * mp3 under audio/). Both cache names derive from it, so a bump retires the
- * old caches wholesale on the next activation.
+ * Two versions, deliberately separate. The shell is a few hundred kilobytes
+ * and is re-fetched often; the audio cache can hold half a gigabyte that took
+ * a long time to download. Tying them together would mean every icon or
+ * index.html change threw away every cached track.
+ *
+ *   SHELL_VERSION — bump when index.html, manifest.json, a font or an icon
+ *                   changes. Cheap: a few hundred KB is re-fetched.
+ *   AUDIO_VERSION — bump ONLY when an mp3 under audio/ is replaced. Expensive:
+ *                   every track has to be downloaded again.
  */
-var VERSION = 'v2';   // v2: new home-screen icon
-var SHELL_CACHE = 'radha-shell-' + VERSION;
-var AUDIO_CACHE = 'radha-audio-' + VERSION;
+var SHELL_VERSION = 'v3';   // v3: red-on-yellow home-screen icon
+var AUDIO_VERSION = 'v1';
+var SHELL_CACHE = 'radha-shell-' + SHELL_VERSION;
+var AUDIO_CACHE = 'radha-audio-' + AUDIO_VERSION;
 
 /* Everything the app needs to start with no network. Deliberately excludes
    audio/: half a gigabyte cannot be precached on install without blocking
