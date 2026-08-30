@@ -57,8 +57,6 @@
   .tile-note{position:relative;display:flex;align-items:center;gap:6px;margin-top:8px;
     font-size:11px;color:rgba(240,226,184,.8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .tile-note i{flex:0 0 6px;height:6px;border-radius:50%;background:var(--gold)}
-  .tile-count{position:absolute;top:11px;right:13px;font-size:11px;
-    color:rgba(240,226,184,.5);font-variant-numeric:tabular-nums}
 
   .libtile{margin:10px var(--pad) 0;display:flex;align-items:center;gap:14px;
     width:calc(100% - 2*var(--pad));padding:18px 16px;border-radius:16px;
@@ -425,8 +423,7 @@ async function renderTiles(L){
     const t=document.createElement("button");
     t.className="tile"+(c.mode==="rsn"&&pe&&pe.collId===c.id?" pointed":"");
     t.style.background=c.tint||"#3A2A22";
-    t.innerHTML='<span class="tile-count">'+c.tracks.length+'</span>'+
-      '<span class="tile-hi dv"></span>'+(c.range?'<span class="tile-range"></span>':'')+
+    t.innerHTML='<span class="tile-hi dv"></span>'+(c.range?'<span class="tile-range"></span>':'')+
       '<span class="tile-note"></span>';
     t.querySelector(".tile-hi").textContent=c.title;
     if(c.range) t.querySelector(".tile-range").textContent=c.range;
