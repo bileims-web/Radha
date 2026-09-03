@@ -862,16 +862,21 @@ async function advance(c,n){
   await put("meta",next,"pos:"+c.id);
 }
 
-async function playPath(c,n,fromStart){
+async function playPath(c,n,fromStart,raise){
   clearChain();
   await loadText(c);
   playTrack({id:"px:"+c.id+":"+n,name:itemTitle(c,n),url:c.audio.replace("{n}",n),
              path:c,n:n,kind:"path"},fromStart);
+  // The words are the point of a path slide, so a deliberate start shows them
+  // straight away instead of leaving them behind a tap on the mini bar. An
+  // automatic advance mid-session passes no flag, so a player the user has
+  // closed stays closed.
+  if(raise) document.body.classList.add("player-open");
 }
 async function startSession(c,mode){
   const items=buildSession(c,posOf(c),mode);
   S.session={pathId:c.id,mode:mode,items:items,i:0};
-  await playPath(c,items[0]);
+  await playPath(c,items[0],false,true);
 }
 /* Long press: reset the path to its opening pad and begin again there, in
    whichever mode was pressed. Three-part then starts at the morning block,
@@ -1119,7 +1124,7 @@ async function renderPicker(c,L,from,to){
       const ii=document.createElement("i");ii.style.width=Math.min(100,mark.pos/dur*100)+"%";
       bb.appendChild(ii);meta.appendChild(bb);}
     row.appendChild(meta);
-    row.addEventListener("click",()=>{S.session=null;playPath(c,n);});
+    row.addEventListener("click",()=>{S.session=null;playPath(c,n,false,true);});
     longPress(row,()=>openItemSheet({kind:"fixed",id,name:itemTitle(c,n)}));
     L.appendChild(row);
   }
