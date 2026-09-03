@@ -692,7 +692,7 @@
   <button class="toggle" id="autoplayRow">
     <span class="meta">
       <span class="name">Autoplay</span>
-      <span class="sub">In रसिक पदावली only — plays the next song in the same folder. The paths follow their own order.</span>
+      <span class="sub">Plays the next one on its own — the next song in the same folder of रसिक पदावली, or the next pad of a path.</span>
     </span>
     <span class="sw" id="autoplaySw"></span>
   </button>
@@ -1299,6 +1299,10 @@ audio.addEventListener("ended",async()=>{
       s.i++; await playPath(c,s.items[s.i]); return;
     }
     if(s&&s.pathId===c.id){S.session=null;toast("सत्र पूर्ण");}
+    // A pad tapped on its own is not part of a session, but the reciter still
+    // expects the path to carry on into the next one. Autoplay walks the
+    // path's own order, closing pad included, and stops at the end.
+    else if(S.autoplay&&t.n<lastIndex(c)){ await playPath(c,t.n+1); return; }
     paint(); render(); return;
   }
 
