@@ -365,14 +365,25 @@
     box-shadow:0 0 0 1px var(--gold) inset}
 
   /* ---------- audio panel ---------- */
-  .apanel{padding-left:0;padding-right:0}
-  .apanel .seek{padding:0 22px;width:auto;margin:0 22px}
-  .ap-times{margin:-6px 22px 0}
-  .ap-play{display:grid;place-items:center;margin:16px 0 4px}
-  .speed{display:flex;align-items:center;gap:12px;padding:14px 22px 6px}
-  .slabel{flex:1;font-size:15px}
-  .sbtn{width:38px;height:38px;flex:0 0 38px;border-radius:10px;border:1px solid var(--line);
-    display:grid;place-items:center;font-size:19px;line-height:1;color:var(--text)}
+  /* The panel is a control strip, not a page: the words keep the screen, so
+     every row is one line and the whole thing stays around a third of it. */
+  .apanel{padding:2px 0 calc(env(safe-area-inset-bottom) + 8px)}
+  .apanel .grab{margin:4px auto 8px}
+  /* elapsed · bar · total, on ONE line */
+  .ap-seek{display:flex;align-items:center;gap:11px;padding:0 18px}
+  .apanel .seek{flex:1;min-width:0;width:auto;margin:0;padding:0}
+  .ap-t{flex:0 0 auto;font-size:11.5px;color:var(--muted);
+    font-variant-numeric:tabular-nums;letter-spacing:.2px}
+  .ap-play{display:grid;place-items:center;margin:12px 0 2px}
+  .apanel .big{width:58px;height:58px}
+  .apanel .big svg{width:23px;height:23px}
+  .speed{display:flex;align-items:center;gap:10px;padding:10px 18px 4px}
+  .slabel{flex:1;font-size:14.5px;font-weight:600}
+  .apanel .toggle{padding:9px 18px;gap:12px}
+  .apanel .toggle .name{font-size:14.5px;font-weight:600}
+  .apanel .toggle .sub{font-size:12px;margin-top:1px}
+  .sbtn{width:34px;height:34px;flex:0 0 34px;border-radius:10px;border:1px solid var(--line);
+    display:grid;place-items:center;font-size:18px;line-height:1;color:var(--text)}
   .sbtn:active{background:var(--surface2)}
   .sbtn:disabled{color:var(--line);border-color:var(--surface2)}
   .srate{min-width:52px;text-align:center;font-size:15.5px;font-variant-numeric:tabular-nums;
@@ -818,26 +829,29 @@
      pace, whether this one repeats, and whether the next one follows. -->
 <div class="sheet apanel" id="audioPanel">
   <div class="grab"></div>
-  <input class="seek" id="apSeek" type="range" min="0" max="1000" value="0" aria-label="Seek">
-  <div class="times ap-times"><span id="apCur">00:00:00</span><span id="apDur">00:00:00</span></div>
+  <div class="ap-seek">
+    <span class="ap-t" id="apCur">00:00:00</span>
+    <input class="seek" id="apSeek" type="range" min="0" max="1000" value="0" aria-label="Seek">
+    <span class="ap-t" id="apDur">00:00:00</span>
+  </div>
   <div class="ap-play"><button class="big" id="apPlay" aria-label="Play or pause"></button></div>
   <div class="speed">
-    <span class="slabel dv">&#2327;&#2340;&#2367;</span>
+    <span class="slabel">Speed</span>
     <button class="sbtn" id="apSlower" aria-label="Slower">&#8722;</button>
     <span class="srate" id="apRate">1.00</span>
     <button class="sbtn" id="apFaster" aria-label="Faster">+</button>
   </div>
   <button class="toggle" id="apRepeatRow">
     <span class="meta">
-      <span class="name dv">&#2311;&#2360;&#2375; &#2342;&#2379;&#2361;&#2352;&#2366;&#2319;&#2305;</span>
-      <span class="sub">Plays this one again when it ends. Your place does not move while repeat is on, so sitting with one item never marks it done.</span>
+      <span class="name">Repeat</span>
+      <span class="sub">Repeat this verse</span>
     </span>
     <span class="sw" id="apRepeatSw"></span>
   </button>
   <button class="toggle" id="apAutoRow">
     <span class="meta">
-      <span class="name dv">&#2309;&#2327;&#2354;&#2366; &#2309;&#2346;&#2344;&#2375; &#2310;&#2346;</span>
-      <span class="sub" id="apAutoSub">Carries on into the next one when this ends.</span>
+      <span class="name">Auto-Play</span>
+      <span class="sub" id="apAutoSub">Play next verse when this ends</span>
     </span>
     <span class="sw" id="apAutoSw"></span>
   </button>
@@ -1437,9 +1451,6 @@ function paintPanel(){
   $("apRepeatSw").classList.toggle("on",S.repeat);
   const c2=S.cur&&S.cur.path;
   $("apAutoSw").classList.toggle("on",c2?autoOf(c2):false);
-  $("apAutoSub").textContent=c2
-    ? "Carries on into the next one when this ends — "+c2.title+" only."
-    : "Carries on into the next one when this ends.";
 }
 async function setSpeed(v){
   v=Math.round(Math.max(SPD_MIN,Math.min(SPD_MAX,v))*100)/100;
