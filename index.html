@@ -1194,6 +1194,7 @@ function goBack(){
 
 /* ---------- playback ---------- */
 let objUrl=null,saveAt=0,chainTimer=null,chainTick=null;
+let curSrc=null,retries=0,stallAt=-1,stallTicks=0;
 
 function clearChain(){if(chainTimer){clearTimeout(chainTimer);chainTimer=null;}
   if(chainTick){clearInterval(chainTick);chainTick=null;} $("chainLine").textContent="";}
@@ -1219,8 +1220,9 @@ async function playTrack(t,fromStart){
   else $("discLabel").setAttribute("fill","#6E1F1F");
 
   const mark=fromStart?null:await get("marks",t.id);
+  curSrc=src; retries=0; stallAt=-1; stallTicks=0;
   audio.src=src;
-  audio.onerror=()=>toast("Could not play this file.");
+  audio.onerror=recover;
   audio.onloadedmetadata=async()=>{
     if(isFinite(audio.duration)){
       if(t.node){if(Math.abs((t.node.duration||0)-audio.duration)>1){t.node.duration=audio.duration;await put("nodes",t.node);}}
@@ -1228,7 +1230,7 @@ async function playTrack(t,fromStart){
     }
     if(mark&&mark.pos>0&&mark.pos<audio.duration-3){
       audio.currentTime=mark.pos; toast("Resuming from "+fmt(mark.pos));}
-    paint(); audio.play().catch(()=>{});
+    paint(); audio.play().catch(paint);
   };
   $("mini").hidden=false; document.body.classList.add("has-mini");
   const cls=t.path?(scriptOf(t.path).cls||"dv"):(t.coll?"dv":"");
@@ -1279,6 +1281,40 @@ async function saveMark(){
   if(audio.duration&&c>audio.duration-5) await del("marks",S.cur.id);
   else await put("marks",{pos:c,updated:Date.now()},S.cur.id);
 }
+
+/* A hiccup must not end the sitting. The network changes, the stream is cut,
+   the phone comes back from sleep: the element fires `error`, or simply stops
+   advancing, and playback used to die there behind a toast nobody sees. This
+   re-attaches the same file, seeks back to where it stopped and carries on —
+   three tries, and only then does it say so.
+
+   It can never fabricate a completion: `ended` is untouched, and a pad that
+   was recovered mid-way still has to play out to its own end to count. */
+function recover(){
+  if(!S.cur||!curSrc)return;
+  if(retries>=3){toast("Could not play this file.");return;}
+  retries++; stallAt=-1; stallTicks=0;
+  const at=audio.currentTime||0;
+  audio.src=curSrc;
+  audio.onloadedmetadata=()=>{
+    if(at>0&&isFinite(audio.duration)&&at<audio.duration-1) audio.currentTime=at;
+    paint(); audio.play().catch(paint);
+  };
+  audio.load();
+}
+
+/* Some stalls are silent — no `error`, the clock just stops. Fifteen seconds
+   of no progress while we are meant to be playing is one of those. */
+setInterval(()=>{
+  if(!S.cur||audio.paused||audio.ended){stallAt=-1;stallTicks=0;return;}
+  const t=audio.currentTime;
+  if(t===stallAt){ if(++stallTicks>=3) recover(); }
+  // Five seconds of real progress means the last recovery held. Clearing the
+  // count here and not in `timeupdate` matters: a timeupdate still fires
+  // between a reload and the failure that follows it, and resetting there made
+  // recover() retry a hopeless seek for ever.
+  else { if(stallAt>=0) retries=0; stallAt=t; stallTicks=0; }
+},5000);
 
 audio.addEventListener("timeupdate",()=>{
   paint();

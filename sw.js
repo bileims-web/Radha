@@ -10,7 +10,7 @@
  *   AUDIO_VERSION — bump ONLY when an mp3 under audio/ is replaced. Expensive:
  *                   every track has to be downloaded again.
  */
-var SHELL_VERSION = 'v17';  // v17: a path carries on into the next pad
+var SHELL_VERSION = 'v18';  // v18: one provider per load, and a hiccup mid-pad is recovered
 var AUDIO_VERSION = 'v1';   // untouched: this release only ADDS mp3s, it replaces none
 var SHELL_CACHE = 'radha-shell-' + SHELL_VERSION;
 var AUDIO_CACHE = 'radha-audio-' + AUDIO_VERSION;
@@ -139,13 +139,45 @@ function sliceRange(full, rangeHeader) {
   });
 }
 
+/* ONE PROVIDER PER LOAD — this is the whole reason a pad used to stop mid-way.
+ *
+ * A track that is not cached yet is played straight from the network while
+ * queueFill() downloads it in the background. That fill finishes DURING
+ * playback, so the element's next range request — the same file, a later
+ * offset — was suddenly answered from the cache instead. Chrome's media loader
+ * cannot follow a resource that changes hands part-way through: the next SEEK
+ * fails outright with MEDIA_ERR_NETWORK, no request is even issued, and
+ * playback dies where it stands. The app seeks on every resume
+ * (`audio.currentTime = mark.pos`) and on both +-30s buttons, so a pad was fine
+ * the first time it was ever played and fragile every time after.
+ *
+ * So the choice is made ONCE, on the request that starts the load, and every
+ * later range request for that track follows it. Proven both ways in Chrome:
+ * network-then-cache breaks the seek; one source throughout plays to `ended`.
+ */
+var provider = Object.create(null);      // url -> 'cache' | 'net', for the load in flight
+
+function startsLoad(range) {
+  return !range || /^bytes=0-$/.test(String(range).trim());
+}
+
+function fromCache(hit, range) {
+  return range ? sliceRange(hit, range) : hit;
+}
+
 function handleAudio(request) {
+  var url = request.url, range = request.headers.get('range');
   return caches.open(AUDIO_CACHE).then(function (cache) {
-    return cache.match(request.url).then(function (hit) {
-      var range = request.headers.get('range');
-      if (hit) return range ? sliceRange(hit, range) : hit;
-      queueFill(request.url);          // fill for next time, in the background
-      return fetch(request);           // this time, behave as if we were not here
+    return cache.match(url).then(function (hit) {
+      if (startsLoad(range)) provider[url] = hit ? 'cache' : 'net';
+      if (hit && provider[url] === 'cache') return fromCache(hit, range);
+      if (!hit) queueFill(url);        // fill for next time, in the background
+      // Stay on the network for the rest of this load even once the fill lands.
+      return fetch(request).catch(function () {
+        // Offline mid-track: the cache is all there is, and consistency is moot.
+        if (hit) return fromCache(hit, range);
+        throw new Error('offline and not cached');
+      });
     });
   }).catch(function () { return fetch(request); });
 }
