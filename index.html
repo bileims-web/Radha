@@ -9,6 +9,9 @@
      Google, so the Devanagari renders with no internet. Same family, same
      weights (500/600), same unicode-ranges as the stylesheet it replaces. -->
 <link rel="stylesheet" href="fonts/noto-serif-devanagari.css">
+<!-- and Bengali, for the Sudha Nidhi, on the same terms: self-hosted so the
+     verses render with no internet. -->
+<link rel="stylesheet" href="fonts/noto-serif-bengali.css">
 <link rel="manifest" href="app.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -26,7 +29,8 @@
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;height:100%}
   body{background:var(--bg);color:var(--text);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif,
+      "Noto Serif Devanagari","Noto Serif Bengali";
     font-size:16px;line-height:1.4;overscroll-behavior:none;
     display:flex;flex-direction:column;height:100dvh}
   button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
@@ -206,6 +210,96 @@
     border-radius:10px;font-size:14px;z-index:60;opacity:0;pointer-events:none;
     transition:.2s;max-width:86vw;text-align:center}
   .toast.on{opacity:1;transform:translate(-50%,0)}
+
+  /* Bengali is set in the serif that matches the Devanagari, served from this
+     repo for the same reason: the text must render with no internet. */
+  .bn{font-family:"Noto Serif Bengali","Noto Sans Bengali",serif}
+
+  /* ---------- path slides (चौरासी जी, राधा सुधा निधि) ---------- */
+
+  /* Where the path stands, and the two ways to start it. Ivory like the tiles,
+     so it reads as a leaf of the same paper rather than as a control panel. */
+  .pathhead{position:relative;overflow:hidden;margin:14px var(--pad) 0;padding:16px;
+    border-radius:16px;background:color-mix(in srgb, var(--tint) 9%, #F7F1E4);
+    border:1px solid rgba(62,42,27,.16);box-shadow:0 1px 3px rgba(0,0,0,.35)}
+  .pathhead::before{content:"";position:absolute;inset:0;
+    background:radial-gradient(120% 90% at 22% 0%,rgba(255,255,255,.85),transparent 64%)}
+  .pathhead>*{position:relative}
+  .pathwhere{font-size:12px;letter-spacing:.5px;text-transform:uppercase;
+    color:rgba(62,42,27,.6);font-weight:600}
+  .pathnext{font-size:19px;font-weight:600;color:var(--ink);margin-top:4px;line-height:1.35}
+  .modes{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:15px}
+  .mode{padding:13px 10px;border-radius:12px;border:1px solid rgba(62,42,27,.22);
+    background:rgba(255,255,255,.5);color:var(--ink);text-align:center;
+    font-size:15.5px;font-weight:600;line-height:1.25;transition:transform .12s}
+  .mode:active{transform:scale(.97)}
+  .mode .sub3{display:block;font-size:11.5px;font-weight:400;margin-top:4px;
+    color:rgba(62,42,27,.66);font-variant-numeric:tabular-nums}
+  .pathhint{font-size:11.5px;color:rgba(62,42,27,.62);margin-top:12px;text-align:center;
+    line-height:1.5}
+
+  /* script toggle — Bengali / Hindi on the Sudha Nidhi */
+  .scripts{display:flex;gap:5px;margin:14px var(--pad) 0;padding:4px;
+    background:var(--surface);border:1px solid var(--line);border-radius:12px}
+  .scripts button{flex:1;padding:9px 6px;border-radius:9px;font-size:14.5px;color:var(--muted)}
+  .scripts button.on{background:var(--surface2);color:var(--gold);font-weight:600}
+  .scripts button .tag{display:block;font-size:10px;letter-spacing:.3px;
+    color:var(--muted);font-weight:400;margin-top:2px}
+
+  .sect{font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);
+    padding:22px var(--pad) 9px;font-weight:600}
+
+  /* the badge that says "you are here" on a group row */
+  .here{flex:0 0 auto;font-size:11px;color:var(--gold);border:1px solid rgba(201,162,39,.5);
+    border-radius:20px;padding:2px 10px;font-variant-numeric:tabular-nums}
+
+  /* an honest empty space, for the Hindi text that is not written yet */
+  .ph{margin:14px var(--pad);padding:22px 20px;border-radius:14px;background:var(--surface);
+    border:1px dashed var(--line);color:var(--muted);font-size:13.5px;line-height:1.65;
+    text-align:center}
+  .ph b{display:block;color:var(--text);font-size:15.5px;font-weight:600;margin-bottom:8px}
+
+  /* The recitation text, shown in place of the disc while a pad or a verse
+     plays. On these slides the words are the point of the screen, so they get
+     the room the spinning disc had. */
+  .versewrap{flex:1;min-height:0;display:none;flex-direction:column}
+  body.path-play .disc{display:none}
+  body.path-play .versewrap{display:flex}
+  .versescroll{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
+    padding:4px 2px 12px;-webkit-mask-image:linear-gradient(#000 92%,transparent);
+    mask-image:linear-gradient(#000 92%,transparent)}
+  .versetext{font-size:18.5px;line-height:1.95;text-align:center;color:var(--text);
+    white-space:pre-wrap;overflow-wrap:anywhere;margin:0}
+  .versemuted{color:var(--muted);font-size:14px;line-height:1.7;white-space:normal;
+    padding:0 6px}
+
+  /* ---------- रसिक पदावली — the library, laid out as tiles ---------- */
+  .ltiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px var(--pad) 0}
+  .ltile{position:relative;aspect-ratio:1/1;border-radius:16px;overflow:hidden;padding:13px;
+    display:flex;flex-direction:column;justify-content:flex-end;text-align:left;
+    background:var(--surface);border:1px solid var(--line);transition:transform .12s}
+  .ltile:active{transform:scale(.975)}
+  .ltile.cur{border-color:var(--gold)}
+  .ltile.cur .lname{color:var(--gold)}
+  .lglyph{position:absolute;top:12px;left:12px;color:var(--muted)}
+  .lname{font-size:15px;font-weight:600;line-height:1.32;
+    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .lsub{font-size:11.5px;color:var(--muted);margin-top:4px;font-variant-numeric:tabular-nums}
+  .lsub .mark{color:var(--gold)}
+  .lbar{height:2px;background:var(--line);border-radius:2px;margin-top:7px;overflow:hidden}
+  .lbar i{display:block;height:100%;background:var(--gold);border-radius:2px}
+
+  /* The two slides that are not built yet. They hold their place in the grid
+     so the layout is whole, but they are plainly not ready: no ink of their
+     own, a dashed edge, and a quiet label. Tapping one says so and no more. */
+  .tile.soon{background:rgba(247,241,228,.62);border-style:dashed;
+    border-color:rgba(62,42,27,.2);box-shadow:none}
+  .tile.soon::before{opacity:.45}
+  .tile.soon .tile-art svg{color:#6B5B4B;opacity:.16}
+  .tile.soon .tile-alpona svg{color:#6B5B4B;opacity:.09}
+  .tile.soon .tile-hi{color:rgba(62,42,27,.58);text-shadow:none}
+  .tile-soon{position:relative;margin-top:6px;font-size:10.5px;letter-spacing:.5px;
+    color:rgba(62,42,27,.5);font-weight:600}
 
   @media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
 </style>
@@ -452,6 +546,39 @@
       <use href="#alp-corner" transform="translate(100 100) scale(-1 -1)"/>
     </g>
   </symbol>
+
+  <!-- A pothi — the bound manuscript a पदावली is: two boards, loose leaves
+       between them, and the cord wound round and tied off in a bow. Drawn in
+       the same alpona hand as the other motifs: fine strands, beads, curls. -->
+  <symbol id="m-pothi" viewBox="0 0 100 100">
+    <g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <!-- the boards, above and below -->
+      <path d="M14 31 H86 V40 H14 Z" fill="currentColor" fill-opacity=".10"/>
+      <path d="M14 62 H86 V71 H14 Z" fill="currentColor" fill-opacity=".10"/>
+      <!-- the loose leaves -->
+      <g stroke-width="1.5" opacity=".8">
+        <path d="M18 45 H82"/><path d="M18 50 H82"/>
+        <path d="M18 55 H82"/><path d="M18 59.5 H82"/>
+      </g>
+      <!-- the cord: over the top board, beaded where it crosses the leaves -->
+      <path d="M50 26 V31"/>
+      <g stroke-width="1.8" stroke-linecap="round" stroke-dasharray="0.1 2.7" opacity=".75">
+        <path d="M50 41 V61"/>
+      </g>
+      <path d="M50 71 V75"/>
+      <!-- tied off in a bow -->
+      <path d="M50 75 C43.5 74.5 40 79 43.5 82.5 C46.5 85.5 50 81.5 50 75 Z" fill="currentColor" fill-opacity=".14"/>
+      <path d="M50 75 C56.5 74.5 60 79 56.5 82.5 C53.5 85.5 50 81.5 50 75 Z" fill="currentColor" fill-opacity=".14"/>
+      <path d="M47 84 C45 87 43.5 89 41.5 90.5"/>
+      <path d="M53 84 C55 87 56.5 89 58.5 90.5"/>
+      <circle cx="50" cy="75.5" r="1.9" fill="currentColor" stroke="none"/>
+      <!-- corner beads on the boards -->
+      <g fill="currentColor" stroke="none" fill-opacity=".5">
+        <circle cx="18.5" cy="35.5" r="1.4"/><circle cx="81.5" cy="35.5" r="1.4"/>
+        <circle cx="18.5" cy="66.5" r="1.4"/><circle cx="81.5" cy="66.5" r="1.4"/>
+      </g>
+    </g>
+  </symbol>
 </svg>
 
 <header class="topbar">
@@ -505,6 +632,11 @@
         stroke-dasharray="603" stroke-dashoffset="603"/>
     </svg>
   </div>
+  <!-- On the path slides the words are the point of the screen, so they take
+       the room the disc had. Which of the two shows is body.path-play. -->
+  <div class="versewrap">
+    <div class="versescroll" id="verseScroll"><p class="versetext dv" id="verseText"></p></div>
+  </div>
   <h2 class="now-name" id="nowName">—</h2>
   <div class="now-folder" id="nowFolder"></div>
   <input class="seek" id="seek" type="range" min="0" max="1000" value="0" aria-label="Seek">
@@ -547,16 +679,11 @@
   </button>
 </div>
 
-<div class="sheet" id="resumeSheet">
+<!-- The two slides that are not built yet say so, and no more. -->
+<div class="sheet" id="soonSheet">
   <div class="grab"></div>
-  <h3 id="resumeTitle">श्री हित सेवक वाणी</h3>
-  <button class="item" id="actResume">
-    <span class="glyph"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg></span>
-    <span><span id="resumeLabel">Resume</span><span class="sub2" id="resumeAt"></span></span>
-  </button>
-  <button class="item" id="actFromStart">
-    <span class="glyph"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 109-9"/><path d="M3 4v5h5"/></svg></span>Play from start
-  </button>
+  <h3 id="soonTitle" class="dv">—</h3>
+  <div class="toggle"><span class="meta"><span class="sub dv" id="soonBody"></span></span></div>
 </div>
 
 <div class="sheet" id="setSheet">
@@ -565,7 +692,7 @@
   <button class="toggle" id="autoplayRow">
     <span class="meta">
       <span class="name">Autoplay</span>
-      <span class="sub">In My Library only — plays the next song in the same folder. The six collections follow their own order.</span>
+      <span class="sub">In रसिक पदावली only — plays the next song in the same folder. The paths follow their own order.</span>
     </span>
     <span class="sw" id="autoplaySw"></span>
   </button>
@@ -592,7 +719,7 @@
 (function(){
 "use strict";
 
-const FALLBACK={collections:[],rsnSequence:[],rules:{aratiChainGapSeconds:10,rsnFinishedWithinSeconds:60}};
+const FALLBACK={collections:[],rules:{aratiChainGapSeconds:10}};
 
 /* ---------- db ---------- */
 let db;
@@ -610,11 +737,25 @@ const put=(s,v,k)=>rq(st(s,"readwrite").put(v,k));
 const get=(s,k)=>rq(st(s,"readonly").get(k));
 const del=(s,k)=>rq(st(s,"readwrite").delete(k));
 const kids=p=>rq(st("nodes","readonly").index("parent").getAll(p));
+/* A whole store as one Map. The pickers are long — 86 pads, 91 verses in a
+   group — and asking for each row's mark and duration one at a time is that
+   many sequential round trips, which is visibly slow to paint on a phone.
+   Two bulk reads answer the whole list instead. */
+async function mapOf(s){
+  const [k,v]=await Promise.all([rq(st(s,"readonly").getAllKeys()),
+                                 rq(st(s,"readonly").getAll())]);
+  const m=new Map(); k.forEach((kk,i)=>m.set(kk,v[i])); return m;
+}
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 
 /* ---------- state ---------- */
-const S={man:FALLBACK,view:"home",cwd:"root",stack:[],coll:null,
-  autoplay:true,queue:[],qi:-1,cur:null,target:null,rsnPtr:0,rsnSeq:[]};
+const S={man:FALLBACK,view:"home",cwd:"root",stack:[],coll:null,grp:0,
+  autoplay:true,queue:[],qi:-1,cur:null,target:null,
+  pos:{},      // path id -> the next item to play      (persisted "pos:<id>")
+  script:{},   // path id -> chosen script id           (persisted "script:<id>")
+  text:{},     // "<pathId>:<scriptId>" -> rows | null  (fetched once)
+  session:null // {pathId,mode,items:[n,…],i}  while a session is running
+};
 const $=i=>document.getElementById(i);
 const audio=$("audio");
 
@@ -631,6 +772,7 @@ const PLAY='<svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
 const PAUSE='<svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><rect x="7" y="5" width="3.4" height="14" rx="1"/><rect x="13.6" y="5" width="3.4" height="14" rx="1"/></svg>';
 const NOTE='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg>';
 const FOLDER='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>';
+const CHEV='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
 
 function longPress(el,fn){let t=null,f=false;
   const s=()=>{f=false;t=setTimeout(()=>{f=true;t=null;if(navigator.vibrate)navigator.vibrate(15);fn();},480);};
@@ -642,19 +784,102 @@ function longPress(el,fn){let t=null,f=false;
   el.addEventListener("contextmenu",e=>{e.preventDefault();if(!f)fn();});
   el.addEventListener("click",e=>{if(f){e.preventDefault();e.stopPropagation();f=false;}},true);}
 
-/* ---------- ids & sequence ---------- */
-const tid=(c,f)=>"fx:"+c+":"+f;
-function buildSeq(){
-  S.rsnSeq=[];
-  for(const cid of (S.man.rsnSequence||[])){
-    const c=S.man.collections.find(x=>x.id===cid); if(!c) continue;
-    c.tracks.forEach((t,i)=>S.rsnSeq.push({collId:c.id,idx:i,id:tid(c.id,t.file),name:t.title,coll:c,track:t}));
-  }
+/* ================================================================
+   THE PATHS — श्री हित चौरासी जी and श्री मद् राधा सुधा निधि
+
+   Both slides run on the same engine. One number per path says where it
+   stands: `pos`, THE NEXT ITEM TO PLAY. It runs over the whole sequence —
+   0 (the opening pad), 1…count (the body), and for the Chaurasi 85 (the
+   closing pad) — not over the body alone. Everything else falls out of that:
+
+     · The bracket needs no state. pos===0 means the opening pad has not been
+       heard this cycle, so any session starting there opens with it. That is
+       why the evening session does not replay it, and why resuming into
+       one-go from pad 41 does not either: the bracket belongs to the cycle,
+       and the cycle's progress IS pos.
+     · A cycle ends by returning pos to 0 — never to 1. The user's rule:
+       "every cycle opens with the praise pad, no matter how it was reached."
+     · The two modes share the one pos, so tapping either resumes where the
+       other left off.
+   ================================================================ */
+
+const isPath=c=>!!c&&c.mode==="path";
+function scriptOf(c){const id=S.script[c.id];
+  return c.scripts.find(s=>s.id===id)||c.scripts[0];}
+function posOf(c){const p=S.pos[c.id];return typeof p==="number"?p:0;}
+/* the final item of a cycle: the closing pad where there is one, else the body's end */
+const lastIndex=c=>c.close?c.close.n:c.count;
+
+async function loadText(c){
+  const sc=scriptOf(c),key=c.id+":"+sc.id;
+  if(key in S.text) return S.text[key];
+  if(!sc.text){S.text[key]=null;return null;}   // nothing written yet — say so, don't fake it
+  try{const r=await fetch(sc.text,{cache:"force-cache"});
+      S.text[key]=r.ok?await r.json():null;}
+  catch(e){S.text[key]=null;}
+  return S.text[key];
 }
-const ptrEntry=()=>S.rsnSeq[S.rsnPtr]||null;
-async function advancePtr(){
-  S.rsnPtr=(S.rsnPtr+1)%(S.rsnSeq.length||1);
-  await put("meta",S.rsnPtr,"rsn:pointer");
+/* rows are built so that index === item number: rows[n] is SHCJ<n> / SMRSNJ_<n> */
+function rowFor(c,n){const rows=S.text[c.id+":"+scriptOf(c).id];return rows?rows[n]:null;}
+function firstLine(c,n){const r=rowFor(c,n);if(!r)return "";
+  const ln=r.t.split("\n").find(x=>x.trim());return ln?ln.trim():"";}
+function bracketLabel(c,which){
+  const sc=scriptOf(c),b=c[which];
+  return (which==="open"?sc.openLabel:sc.closeLabel)||(b&&b.label)||"";}
+function itemTitle(c,n){
+  if(c.open&&n===c.open.n) return bracketLabel(c,"open");
+  if(c.close&&n===c.close.n) return bracketLabel(c,"close");
+  return scriptOf(c).itemLabel+" "+n;}
+
+/* Which items a session will play, from where the path stands. */
+function buildSession(c,pos,mode){
+  const close=c.close?c.close.n:null;
+  if(close!==null&&pos===close) return [close];   // only the closing pad is left
+  const items=[];let from=pos;
+  if(pos===0){items.push(0);from=1;}              // the opening pad, once per cycle
+  let to=c.count;
+  if(mode==="three"){                             // stop at the end of the block we are in
+    const b=c.blocks.find(b=>from>=b.from&&from<=b.to)||c.blocks[0];
+    to=b.to;
+  }
+  for(let n=from;n<=to;n++) items.push(n);
+  if(close!==null&&to===c.count) items.push(close); // whoever finishes the path closes it
+  return items;
+}
+
+/* THE COMPLETION RULE. A pad counts as done ONLY if it played through to its
+   end — the `ended` event, nothing else. There is no time window and nothing
+   to tune. Stopping part-way leaves pos where it is, and the item's own
+   `marks` entry remembers how far in you were, so it resumes mid-pad.
+
+   Do NOT reintroduce a near-the-end test here. saveMark() below clears a mark
+   within 5s of the end; that is a resume convenience and must never be read
+   as completion. */
+async function advance(c,n){
+  const last=lastIndex(c);
+  const next=(n>=last)?0:n+1;   // the cycle closes by parking at 0, the opening pad
+  S.pos[c.id]=next;
+  await put("meta",next,"pos:"+c.id);
+}
+
+async function playPath(c,n,fromStart){
+  clearChain();
+  await loadText(c);
+  playTrack({id:"px:"+c.id+":"+n,name:itemTitle(c,n),url:c.audio.replace("{n}",n),
+             path:c,n:n,kind:"path"},fromStart);
+}
+async function startSession(c,mode){
+  const items=buildSession(c,posOf(c),mode);
+  S.session={pathId:c.id,mode:mode,items:items,i:0};
+  await playPath(c,items[0]);
+}
+/* Long press: reset the path to its opening pad and begin again there, in
+   whichever mode was pressed. Three-part then starts at the morning block,
+   because pos===0 puts it there. */
+async function restartPath(c,mode){
+  S.session=null;S.pos[c.id]=0;await put("meta",0,"pos:"+c.id);
+  toast("आरम्भ से");
+  await startSession(c,mode);
 }
 
 /* ---------- render ---------- */
@@ -664,88 +889,94 @@ async function render(){
   $("fab").hidden = !(S.view==="library");
 
   if(S.view==="home"){
-    $("pageTitle").firstChild.nodeValue="राधा";
-    $("pageTitle").classList.add("dv");
-    $("crumb").textContent="";
-    await renderTiles(L);
-    return;
+    setTitle("राधा","",true); await renderTiles(L); return;
   }
   if(S.view==="collection"){
-    $("pageTitle").firstChild.nodeValue=S.coll.title;
-    $("pageTitle").classList.add("dv");
-    $("crumb").textContent=S.coll.range||"";
-    await renderColl(S.coll,L);
-    return;
+    setTitle(S.coll.title,S.coll.range||"",true); await renderColl(S.coll,L); return;
   }
-  $("pageTitle").classList.remove("dv");
-  if(S.stack.length){
-    $("pageTitle").firstChild.nodeValue=S.stack[S.stack.length-1].name;
-    $("crumb").textContent="My Library / "+S.stack.map(x=>x.name).join(" / ");
-  }else{
-    $("pageTitle").firstChild.nodeValue="My Library";
-    $("crumb").textContent="";
+  if(S.view==="path"){
+    setTitle(S.coll.title,"",true); await renderPath(S.coll,L); return;
   }
+  if(S.view==="pathgroup"){
+    const b=S.coll.blocks[S.grp];
+    setTitle(S.coll.title,b.from+"–"+b.to,true);
+    await renderPathGroup(S.coll,L); return;
+  }
+  if(S.stack.length) setTitle(S.stack[S.stack.length-1].name,
+    "रसिक पदावली / "+S.stack.map(x=>x.name).join(" / "),false);
+  else setTitle("रसिक पदावली","",true);
   await renderUser(L);
 }
+function setTitle(t,crumb,dv){
+  $("pageTitle").firstChild.nodeValue=t;
+  $("pageTitle").classList.toggle("dv",!!dv);
+  $("crumb").textContent=crumb;
+}
 
-// Which motif each collection wears. Keyed on the manifest's own ids, so a
+// Which motif each tile wears. Keyed on the manifest's own ids, so a
 // collection with no entry simply gets no motif rather than a broken one.
 const TILE_MOTIF={
   "arati":"diya",
-  "chaturashi":"flute",
-  "rsn-1":"charan", "rsn-2":"charan", "rsn-3":"charan",
-  "sevak-vani":"lotus"
+  "shcj":"flute", "padgayan":"flute",
+  "rsn":"charan",
+  "sevak-vani":"lotus",
+  "padavali":"pothi"
 };
-// The lotus was asked for in pink, so that one tile is inked pink rather than
-// the colour manifest.json gives it. The manifest is data and stays as it is;
-// this cannot be a CSS rule because --tint is set inline below and would win.
+// The lotus was asked for in pink; that pairing stays with सेवक वाणी.
 const TILE_INK={"sevak-vani":"#C2557A"};
+
+/* the line under a tile's name: for a path, where it currently stands */
+function tileRange(c){
+  if(isPath(c)){
+    const p=posOf(c);
+    if(p===0) return c.open?bracketLabel(c,"open"):"आरम्भ";
+    if(c.close&&p===c.close.n) return bracketLabel(c,"close");
+    return scriptOf(c).itemLabel+" "+p+" / "+c.count;
+  }
+  return c.range||"";
+}
 
 async function renderTiles(L){
   const grid=document.createElement("div"); grid.className="tiles";
-  const pe=ptrEntry();
+  const libCount=(await kids("root")).length;
   for(const c of S.man.collections){
+    const soon=c.mode==="soon";
     const t=document.createElement("button");
-    t.className="tile"+(c.mode==="rsn"&&pe&&pe.collId===c.id?" pointed":"");
-    // the collection's colour is now the ink of its motif, not the tile fill
+    t.className="tile"+(soon?" soon":"");
     t.style.setProperty("--tint", TILE_INK[c.id]||c.tint||"#8C5A28");
     const mk=TILE_MOTIF[c.id];
     if(mk) t.dataset.motif=mk;
+    let sub="";
+    if(soon) sub='<span class="tile-soon dv">शीघ्र</span>';
+    else{
+      const r=c.mode==="library"?(libCount?libCount+" item"+(libCount>1?"s":""):"अपने गीत"):tileRange(c);
+      if(r) sub='<span class="tile-range '+(isPath(c)?(scriptOf(c).cls||"dv"):"dv")+'"></span>';
+      t.dataset.sub=r||"";
+    }
     t.innerHTML='<span class="tile-alpona"><svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><use href="#m-alpona"/></svg></span>'+
       (mk?'<span class="tile-art"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#m-'+mk+'"/></svg></span>':'')+
-      '<span class="tile-hi dv"></span>'+(c.range?'<span class="tile-range"></span>':'');
+      '<span class="tile-hi dv"></span>'+sub;
     t.querySelector(".tile-hi").textContent=c.title;
-    if(c.range) t.querySelector(".tile-range").textContent=c.range;
-
+    const rr=t.querySelector(".tile-range");
+    if(rr) rr.textContent=t.dataset.sub;
     t.addEventListener("click",()=>openTile(c));
     grid.appendChild(t);
   }
   L.appendChild(grid);
-
-  const lib=document.createElement("button");
-  lib.className="libtile";
-  const n=(await kids("root")).length;
-  lib.innerHTML='<span class="glyph">'+FOLDER+'</span><span class="meta">'+
-    '<span class="name">My Library</span><span class="sub">'+
-    (n?n+" item"+(n>1?"s":""):"Add your own songs and folders")+'</span></span>'+
-    '<span class="glyph"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>';
-  lib.addEventListener("click",()=>{S.view="library";S.cwd="root";S.stack=[];$("list").scrollTop=0;render();});
-  L.appendChild(lib);
 }
 
 async function renderColl(c,L){
-  if(!c.tracks.length){L.innerHTML='<div class="empty"><b>No recordings yet</b>Add the files to audio/'+c.id+'/ in the repo.</div>';return;}
-  const pe=ptrEntry();
+  if(!c.tracks||!c.tracks.length){L.innerHTML='<div class="empty"><b>No recordings yet</b>Add the files to audio/'+c.id+'/ in the repo.</div>';return;}
+  const allMarks=await mapOf("marks"), allMeta=await mapOf("meta");
   for(let i=0;i<c.tracks.length;i++){
     const t=c.tracks[i], id=tid(c.id,t.file);
     const row=document.createElement("button");
-    row.className="row"+(S.cur&&S.cur.id===id?" current":"")
-      +(c.mode==="rsn"&&pe&&pe.id===id?" pointed":"");
+    row.className="row"+(S.cur&&S.cur.id===id?" current":"");
     row.innerHTML='<span class="glyph">'+NOTE+'</span>';
     const meta=document.createElement("span"); meta.className="meta";
     const nm=document.createElement("span"); nm.className="name dv"; nm.textContent=t.title;
     meta.appendChild(nm);
-    const mark=await get("marks",id), dur=await get("meta","dur:"+id);
+    const mark=allMarks.get(id), dur=allMeta.get("dur:"+id);
     const sub=document.createElement("span"); sub.className="sub";
     if(mark&&mark.pos>15) sub.innerHTML='<span class="mark">Resume '+fmt(mark.pos)+'</span>'+(dur?' · '+fmt(dur):'');
     else sub.textContent=dur?fmt(dur):"Tap to play";
@@ -760,58 +991,196 @@ async function renderColl(c,L){
   }
 }
 
+/* what a session would cover, spelled out on its button */
+function preview(c,mode){
+  const it=buildSession(c,posOf(c),mode),L=scriptOf(c).itemLabel,bits=[];
+  const body=it.filter(n=>n>0&&(!c.close||n!==c.close.n));
+  if(it[0]===0&&c.open) bits.push(bracketLabel(c,"open"));
+  if(body.length) bits.push(body[0]===body[body.length-1]?L+" "+body[0]
+    :L+" "+body[0]+"–"+body[body.length-1]);
+  if(c.close&&it[it.length-1]===c.close.n) bits.push(bracketLabel(c,"close"));
+  return bits.join(" · ");
+}
+
+async function renderPath(c,L){
+  await loadText(c);
+  const sc=scriptOf(c);
+
+  // script toggle — only where there is a choice to make
+  if(c.scripts.length>1){
+    const bar=document.createElement("div"); bar.className="scripts";
+    for(const s of c.scripts){
+      const b=document.createElement("button");
+      b.className=(s.id===sc.id?"on":"")+" "+(s.cls||"");
+      b.innerHTML='<span></span>'+(s.text?"":'<span class="tag dv">शीघ्र</span>');
+      b.querySelector("span").textContent=s.label;
+      b.addEventListener("click",async()=>{S.script[c.id]=s.id;
+        await put("meta",s.id,"script:"+c.id); render();});
+      bar.appendChild(b);
+    }
+    L.appendChild(bar);
+  }
+
+  // where the path stands, and the two ways to start it
+  const head=document.createElement("div"); head.className="pathhead";
+  head.style.setProperty("--tint",c.tint||"#8C5A28");
+  const p=posOf(c);
+  head.innerHTML='<div class="pathwhere dv">अगला</div>'+
+    '<div class="pathnext dv"></div>'+
+    '<div class="modes"></div>'+
+    '<div class="pathhint dv">देर तक दबाएँ — '+(c.open?bracketLabel(c,"open"):"आरम्भ")+' से फिर शुरू</div>';
+  head.querySelector(".pathnext").textContent=itemTitle(c,p);
+  const modes=head.querySelector(".modes");
+  for(const m of [{k:"three",t:"तीन भाग"},{k:"one",t:"एक साथ"}]){
+    const b=document.createElement("button"); b.className="mode dv";
+    b.innerHTML='<span></span><span class="sub3 dv"></span>';
+    b.querySelector("span").textContent=m.t;
+    b.querySelector(".sub3").textContent=preview(c,m.k);
+    b.addEventListener("click",()=>startSession(c,m.k));
+    longPress(b,()=>restartPath(c,m.k));
+    modes.appendChild(b);
+  }
+  L.appendChild(head);
+
+  // the text that is not written yet says so plainly
+  if(!sc.text){
+    const ph=document.createElement("div"); ph.className="ph dv";
+    ph.innerHTML="<b></b><span></span>";
+    ph.querySelector("b").textContent=sc.placeholderTitle||"अभी तैयार नहीं";
+    ph.querySelector("span").textContent=sc.placeholderBody||"";
+    L.appendChild(ph);
+  }
+
+  if(c.groups) await renderGroups(c,L);
+  else await renderPicker(c,L,0,lastIndex(c));
+}
+
+/* the three sub-slides, each showing whether the path stands inside it */
+async function renderGroups(c,L){
+  const p=posOf(c), sc=scriptOf(c);
+  const h=document.createElement("div"); h.className="sect"; h.textContent="भाग";
+  L.appendChild(h);
+  c.blocks.forEach((b,i)=>{
+    // pos 0 is the prelude, which stands before the first group
+    const here=(p===0&&i===0)||(p>=b.from&&p<=b.to);
+    const row=document.createElement("button");
+    row.className="row"+(here?" pointed":"");
+    row.innerHTML='<span class="glyph">'+NOTE+'</span>';
+    const meta=document.createElement("span"); meta.className="meta";
+    const nm=document.createElement("span"); nm.className="name "+(sc.cls||"dv");
+    nm.textContent=sc.itemLabel+" "+b.from+"–"+b.to;
+    const sub=document.createElement("span"); sub.className="sub";
+    sub.textContent=(b.to-b.from+1);   // the badge already says whether we are in it
+    meta.appendChild(nm); meta.appendChild(sub);
+    row.appendChild(meta);
+    if(here){const t=document.createElement("span");t.className="here dv";t.textContent="यहीं";row.appendChild(t);}
+    else row.insertAdjacentHTML("beforeend",'<span class="glyph">'+CHEV+'</span>');
+    row.addEventListener("click",()=>{S.grp=i;S.view="pathgroup";$("list").scrollTop=0;render();});
+    L.appendChild(row);
+  });
+}
+async function renderPathGroup(c,L){
+  await loadText(c);
+  const b=c.blocks[S.grp];
+  // the prelude belongs at the head of the first group
+  await renderPicker(c,L,S.grp===0&&c.open?c.open.n:b.from,b.to);
+}
+
+/* The pad picker, as in the existing app: one row per item, the row the path
+   stands on marked in gold. Tapping a row plays that item on its own — it does
+   NOT move the position unless it happens to be the item the path stands on,
+   so browsing never silently jumps where the next session will start. */
+async function renderPicker(c,L,from,to){
+  const p=posOf(c),sc=scriptOf(c);
+  const allMarks=await mapOf("marks"), allMeta=await mapOf("meta");
+  const h=document.createElement("div"); h.className="sect "+(sc.cls||"dv");
+  h.textContent=sc.itemLabel;
+  L.appendChild(h);
+  for(let n=from;n<=to;n++){
+    const id="px:"+c.id+":"+n;
+    const row=document.createElement("button");
+    row.className="row"+(S.cur&&S.cur.id===id?" current":"")+(n===p?" pointed":"");
+    row.innerHTML='<span class="glyph">'+NOTE+'</span>';
+    const meta=document.createElement("span"); meta.className="meta";
+    const line=firstLine(c,n);
+    const nm=document.createElement("span");
+    nm.className="name "+(line?(sc.cls||"dv"):"dv");
+    nm.textContent=line||itemTitle(c,n);
+    meta.appendChild(nm);
+    const mark=allMarks.get(id),dur=allMeta.get("dur:"+id);
+    const sub=document.createElement("span"); sub.className="sub "+(sc.cls||"dv");
+    const bits=[];
+    if(line) bits.push(itemTitle(c,n));
+    if(mark&&mark.pos>15) bits.push('<span class="mark">'+fmt(mark.pos)+'</span>');
+    else if(dur) bits.push(fmt(dur));
+    sub.innerHTML=bits.join(" · ");
+    meta.appendChild(sub);
+    if(mark&&dur&&mark.pos>15){const bb=document.createElement("span");bb.className="track-bar";
+      const ii=document.createElement("i");ii.style.width=Math.min(100,mark.pos/dur*100)+"%";
+      bb.appendChild(ii);meta.appendChild(bb);}
+    row.appendChild(meta);
+    row.addEventListener("click",()=>{S.session=null;playPath(c,n);});
+    longPress(row,()=>openItemSheet({kind:"fixed",id,name:itemTitle(c,n)}));
+    L.appendChild(row);
+  }
+}
+
+/* ---------- रसिक पदावली ---------- */
 async function renderUser(L){
   const list=await kids(S.cwd);
   list.sort((a,b)=>a.type!==b.type?(a.type==="folder"?-1:1)
     :a.name.localeCompare(b.name,undefined,{numeric:true,sensitivity:"base"}));
   if(!list.length){const e=document.createElement("div");e.className="empty";
-    e.innerHTML='<b>Nothing here yet</b>Tap + to make a folder or add songs.';L.appendChild(e);return;}
+    e.innerHTML='<b class="dv">अभी कुछ नहीं</b>Tap + to make a folder or add songs.';L.appendChild(e);return;}
+  const allMarks=await mapOf("marks");
+  const grid=document.createElement("div"); grid.className="ltiles";
   for(const n of list){
-    const row=document.createElement("button");
-    row.className="row"+(S.cur&&S.cur.id===n.id?" current":"");
-    row.innerHTML='<span class="glyph">'+(n.type==="folder"?FOLDER:NOTE)+'</span>';
-    const meta=document.createElement("span");meta.className="meta";
-    const nm=document.createElement("span");nm.className="name";nm.textContent=n.name;
-    meta.appendChild(nm);
-    if(n.type==="file"){
-      const mark=await get("marks",n.id);
-      const sub=document.createElement("span");sub.className="sub";
-      if(mark&&mark.pos>15) sub.innerHTML='<span class="mark">Resume '+fmt(mark.pos)+'</span>'+(n.duration?' · '+fmt(n.duration):'');
-      else sub.textContent=n.duration?fmt(n.duration):bytes(n.size);
-      meta.appendChild(sub);
-      if(mark&&n.duration&&mark.pos>15){const b=document.createElement("span");b.className="track-bar";
-        const ii=document.createElement("i");ii.style.width=Math.min(100,mark.pos/n.duration*100)+"%";
-        b.appendChild(ii);meta.appendChild(b);}
+    const t=document.createElement("button");
+    t.className="ltile"+(S.cur&&S.cur.id===n.id?" cur":"");
+    t.innerHTML='<span class="lglyph">'+(n.type==="folder"?FOLDER:NOTE)+'</span>'+
+      '<span class="lname"></span><span class="lsub"></span>';
+    t.querySelector(".lname").textContent=n.name;
+    const sub=t.querySelector(".lsub");
+    if(n.type==="folder"){
+      const k=(await kids(n.id)).length;
+      sub.textContent=k?k+" item"+(k>1?"s":""):"empty";
+    }else{
+      const mark=allMarks.get(n.id);
+      if(mark&&mark.pos>15){
+        sub.innerHTML='<span class="mark">Resume '+fmt(mark.pos)+'</span>';
+        if(n.duration){const b=document.createElement("span");b.className="lbar";
+          const ii=document.createElement("i");ii.style.width=Math.min(100,mark.pos/n.duration*100)+"%";
+          b.appendChild(ii);t.appendChild(b);}
+      } else sub.textContent=n.duration?fmt(n.duration):bytes(n.size);
     }
-    row.appendChild(meta);
-    row.addEventListener("click",()=>{
+    t.addEventListener("click",()=>{
       if(n.type==="folder"){S.stack.push({id:n.id,name:n.name});S.cwd=n.id;$("list").scrollTop=0;render();return;}
       const files=list.filter(x=>x.type==="file");
       S.queue=files.map(f=>({id:f.id,name:f.name,blobId:f.id,node:f,kind:"user"}));
       S.qi=files.indexOf(n); playTrack(S.queue[S.qi]);
     });
-    longPress(row,()=>openItemSheet({kind:"user",id:n.id,name:n.name,node:n}));
-    L.appendChild(row);
+    longPress(t,()=>openItemSheet({kind:"user",id:n.id,name:n.name,node:n}));
+    grid.appendChild(t);
   }
+  L.appendChild(grid);
 }
 
 /* ---------- opening ---------- */
+const tid=(c,f)=>"fx:"+c+":"+f;
 async function openTile(c){
-  if(c.mode==="single"){
-    const id=tid(c.id,c.tracks[0].file);
-    const m=await get("marks",id);
-    if(m&&m.pos>15){
-      S.target={coll:c,idx:0};
-      $("resumeTitle").textContent=c.title;
-      $("resumeAt").textContent=fmt(m.pos);
-      showSheet($("resumeSheet"));
-    }else playFixed(c,0);
-    return;
+  if(c.mode==="soon"){
+    $("soonTitle").textContent=c.title;
+    $("soonBody").textContent=c.soonNote||"अभी तैयार नहीं।";
+    showSheet($("soonSheet")); return;
   }
-  S.view="collection"; S.coll=c; $("list").scrollTop=0; render();
+  if(c.mode==="library"){S.view="library";S.cwd="root";S.stack=[];$("list").scrollTop=0;render();return;}
+  S.coll=c; S.grp=0;
+  S.view=isPath(c)?"path":"collection";
+  $("list").scrollTop=0; render();
 }
 function goBack(){
-  if(S.view==="collection"){S.view="home";S.coll=null;render();return;}
+  if(S.view==="pathgroup"){S.view="path";render();return;}
+  if(S.view==="collection"||S.view==="path"){S.view="home";S.coll=null;render();return;}
   if(S.view==="library"){
     if(S.stack.length){S.stack.pop();S.cwd=S.stack.length?S.stack[S.stack.length-1].id:"root";render();}
     else{S.view="home";render();}
@@ -819,13 +1188,13 @@ function goBack(){
 }
 
 /* ---------- playback ---------- */
-let objUrl=null,saveAt=0,chainTimer=null,chainTick=null,ptrDone=false;
+let objUrl=null,saveAt=0,chainTimer=null,chainTick=null;
 
 function clearChain(){if(chainTimer){clearTimeout(chainTimer);chainTimer=null;}
   if(chainTick){clearInterval(chainTick);chainTick=null;} $("chainLine").textContent="";}
 
 function playFixed(c,i,fromStart){
-  clearChain();
+  clearChain(); S.session=null;
   const t=c.tracks[i];
   playTrack({id:tid(c.id,t.file),name:t.title,url:t.file,coll:c,idx:i,kind:"fixed"},fromStart);
 }
@@ -838,9 +1207,10 @@ async function playTrack(t,fromStart){
     objUrl=URL.createObjectURL(b);src=objUrl;}
   else src=t.url;
 
-  S.cur=t; ptrDone=false;
-  if(t.coll){await put("meta",{id:t.id,name:t.name},"last:"+t.coll.id);
-    $("discLabel").setAttribute("fill",t.coll.tint||"#6E1F1F");}
+  S.cur=t;
+  const grp=t.coll||t.path;                       // whichever kind of collection this came from
+  if(grp){await put("meta",{id:t.id,name:t.name},"last:"+grp.id);
+    $("discLabel").setAttribute("fill",grp.tint||"#6E1F1F");}
   else $("discLabel").setAttribute("fill","#6E1F1F");
 
   const mark=fromStart?null:await get("marks",t.id);
@@ -856,12 +1226,30 @@ async function playTrack(t,fromStart){
     paint(); audio.play().catch(()=>{});
   };
   $("mini").hidden=false; document.body.classList.add("has-mini");
-  $("miniName").textContent=t.name; $("nowName").textContent=t.name;
-  $("miniName").classList.toggle("dv",!!t.coll);
-  $("nowName").classList.toggle("dv",!!t.coll);
-  $("nowFolder").textContent=t.coll?(t.coll.title+(t.coll.range?" "+t.coll.range:"")):"My Library";
-  $("nowFolder").classList.toggle("dv",!!t.coll);
+  const cls=t.path?(scriptOf(t.path).cls||"dv"):(t.coll?"dv":"");
+  for(const el of [$("miniName"),$("nowName")]){
+    el.textContent=t.name;
+    el.classList.toggle("dv",cls==="dv"); el.classList.toggle("bn",cls==="bn");
+  }
+  $("nowFolder").textContent=grp?(grp.title+(grp.range?" "+grp.range:"")):"रसिक पदावली";
+  $("nowFolder").classList.toggle("dv",true);
+
+  // the words, in place of the disc
+  document.body.classList.toggle("path-play",!!t.path);
+  if(t.path) showVerse(t.path,t.n);
   render(); mediaMeta(t);
+}
+
+/* text and audio in sync: one file per item, so the text for the item that is
+   playing is simply the row with its number */
+function showVerse(c,n){
+  const el=$("verseText"),sc=scriptOf(c),row=rowFor(c,n);
+  $("verseScroll").scrollTop=0;
+  el.className="versetext "+(row?(sc.cls||"dv"):"versemuted dv");
+  // A verse line that wraps must not leave its danda stranded on a line of
+  // its own, so the space before । or ॥ is made non-breaking.
+  el.textContent=row?row.t.replace(/ +([।॥])/g,"\u00A0$1")
+    :(sc.placeholderTitle?sc.placeholderTitle+"\n\n"+(sc.placeholderBody||""):"");
 }
 
 function paint(){
@@ -877,6 +1265,9 @@ function paint(){
   document.body.classList.toggle("playing",!audio.paused);
 }
 
+/* Clears the mark near the end so a finished item does not offer to resume at
+   its last second. This is a RESUME convenience only — completion is `ended`,
+   never this test. See advance(). */
 async function saveMark(){
   if(!S.cur)return; const c=audio.currentTime;
   if(!isFinite(c))return;
@@ -884,23 +1275,28 @@ async function saveMark(){
   else await put("marks",{pos:c,updated:Date.now()},S.cur.id);
 }
 
-audio.addEventListener("timeupdate",async()=>{
+audio.addEventListener("timeupdate",()=>{
   paint();
   const n=Date.now(); if(n-saveAt>5000){saveAt=n;saveMark();}
-  // RSN pointer: finished = inside the last minute of the pointed track
-  if(!ptrDone&&S.cur&&S.cur.coll&&S.cur.coll.mode==="rsn"&&audio.duration){
-    const pe=ptrEntry();
-    const within=(S.man.rules&&S.man.rules.rsnFinishedWithinSeconds)||60;
-    if(pe&&pe.id===S.cur.id&&audio.currentTime>=audio.duration-within){
-      ptrDone=true; await advancePtr(); render();
-    }
-  }
 });
 audio.addEventListener("play",paint);
 audio.addEventListener("pause",()=>{paint();saveMark();});
 audio.addEventListener("ended",async()=>{
   if(S.cur) await del("marks",S.cur.id);
   const t=S.cur;
+
+  // a path item has played through to its end — the one thing that counts as done
+  if(t&&t.path){
+    const c=t.path;
+    if(posOf(c)===t.n) await advance(c,t.n);
+    const s=S.session;
+    if(s&&s.pathId===c.id&&s.items[s.i]===t.n&&s.i+1<s.items.length){
+      s.i++; await playPath(c,s.items[s.i]); return;
+    }
+    if(s&&s.pathId===c.id){S.session=null;toast("सत्र पूर्ण");}
+    paint(); render(); return;
+  }
+
   if(t&&t.coll&&t.coll.chains){
     const pair=t.coll.chains.find(p=>p[0]===t.idx);
     if(pair){startChain(t.coll,pair[1]);return;}
@@ -913,6 +1309,8 @@ audio.addEventListener("ended",async()=>{
 document.addEventListener("visibilitychange",()=>{if(document.hidden)saveMark();});
 window.addEventListener("pagehide",saveMark);
 
+/* आरती: the two pairs run on from one another after a short gap. Carried
+   across unchanged — the behaviour lives in manifest.json's `chains`. */
 function startChain(c,nextIdx){
   const gap=(S.man.rules&&S.man.rules.aratiChainGapSeconds)||10;
   let left=gap;
@@ -924,8 +1322,9 @@ function startChain(c,nextIdx){
 
 function mediaMeta(t){
   if(!("mediaSession" in navigator))return;
+  const grp=t.coll||t.path;
   navigator.mediaSession.metadata=new MediaMetadata({
-    title:t.name,artist:t.coll?t.coll.title:"My Library",album:"राधा"});
+    title:t.name,artist:grp?grp.title:"रसिक पदावली",album:"राधा"});
   navigator.mediaSession.setActionHandler("play",()=>audio.play());
   navigator.mediaSession.setActionHandler("pause",()=>audio.pause());
   navigator.mediaSession.setActionHandler("seekbackward",()=>audio.currentTime-=30);
@@ -950,10 +1349,6 @@ function openItemSheet(t){S.target=t;$("itemSheetTitle").textContent=t.name;
   $("actDelete").style.display=fx?"none":"";
   $("actClearMark").style.display=(fx||(t.node&&t.node.type==="file"))?"":"none";
   showSheet($("itemSheet"));}
-
-$("actResume").addEventListener("click",()=>{const t=S.target;hideSheets();playFixed(t.coll,t.idx,false);});
-$("actFromStart").addEventListener("click",async()=>{const t=S.target;hideSheets();
-  await del("marks",tid(t.coll.id,t.coll.tracks[t.idx].file));playFixed(t.coll,t.idx,true);});
 
 /* ---------- dialog ---------- */
 let dcb=null;
@@ -986,7 +1381,7 @@ $("actDelete").addEventListener("click",async()=>{const t=S.target;hideSheets();
   if(!confirm("Delete “"+t.name+"”"+(t.node.type==="folder"?" and everything inside it":"")+"?"))return;
   await rm(t.node);
   if(S.cur&&S.cur.id===t.node.id){audio.pause();audio.removeAttribute("src");S.cur=null;
-    $("mini").hidden=true;document.body.classList.remove("has-mini","player-open");}
+    $("mini").hidden=true;document.body.classList.remove("has-mini","player-open","path-play");}
   render();});
 async function rm(n){if(n.type==="folder"){for(const k of await kids(n.id))await rm(k);}
   else{await del("blobs",n.id);await del("marks",n.id);} await del("nodes",n.id);}
@@ -1019,8 +1414,13 @@ window.addEventListener("popstate",()=>{
   try{const r=await fetch("manifest.json",{cache:"no-cache"});
     if(r.ok){const m=await r.json();
       if(m&&Array.isArray(m.collections)&&m.collections.length)S.man=m;}}catch(e){}
-  buildSeq();
-  const p=await get("meta","rsn:pointer"); S.rsnPtr=(typeof p==="number"&&p<S.rsnSeq.length)?p:0;
+  for(const c of S.man.collections){
+    if(!isPath(c))continue;
+    const p=await get("meta","pos:"+c.id);
+    S.pos[c.id]=(typeof p==="number"&&p>=0&&p<=lastIndex(c))?p:0;
+    const s=await get("meta","script:"+c.id);
+    if(s&&c.scripts.some(x=>x.id===s)) S.script[c.id]=s;
+  }
   const ap=await get("meta","autoplay"); S.autoplay=ap===undefined?true:ap;
   $("autoplaySw").classList.toggle("on",S.autoplay);
   $("bigPlay").innerHTML=PLAY;$("miniPlay").innerHTML=PLAY;

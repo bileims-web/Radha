@@ -10,8 +10,8 @@
  *   AUDIO_VERSION — bump ONLY when an mp3 under audio/ is replaced. Expensive:
  *                   every track has to be downloaded again.
  */
-var SHELL_VERSION = 'v14';  // v14: ivory app icon, maroon handwriting
-var AUDIO_VERSION = 'v1';
+var SHELL_VERSION = 'v15';  // v15: four slides, path engine, verse text
+var AUDIO_VERSION = 'v1';   // untouched: this release only ADDS mp3s, it replaces none
 var SHELL_CACHE = 'radha-shell-' + SHELL_VERSION;
 var AUDIO_CACHE = 'radha-audio-' + AUDIO_VERSION;
 
@@ -28,6 +28,13 @@ var SHELL = [
   'fonts/noto-serif-devanagari-devanagari.woff2',
   'fonts/noto-serif-devanagari-latin.woff2',
   'fonts/noto-serif-devanagari-latin-ext.woff2',
+  'fonts/noto-serif-bengali.css',
+  'fonts/noto-serif-bengali-bengali-500.woff2',
+  'fonts/noto-serif-bengali-latin-500.woff2',
+  'fonts/noto-serif-bengali-latin-ext-500.woff2',
+  // the recitation text: small, and the path slides are useless without it
+  'text/shcj.json',
+  'text/rsn-bn.json',
   'icons/icon-192.png',
   'icons/icon-512.png',
   'icons/icon-maskable-192.png',
@@ -192,7 +199,9 @@ self.addEventListener('fetch', function (e) {
     return;
   }
 
-  if (/\/(fonts|icons)\/|\.woff2$|\.png$|app\.webmanifest$/.test(path)) {
+  // text/*.json is versioned by SHELL_VERSION like the fonts: it never changes
+  // under a given name within a release, and the install precaches it.
+  if (/\/(fonts|icons|text)\/|\.woff2$|\.png$|app\.webmanifest$/.test(path)) {
     e.respondWith(cacheFirst(req));
     return;
   }

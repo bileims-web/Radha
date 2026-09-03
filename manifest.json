@@ -35,104 +35,117 @@
       ]
     },
     {
-      "id": "chaturashi",
-      "title": "श्री हित चतुराशी",
-      "mode": "plain",
+      "id": "shcj",
+      "title": "श्री हित चौरासी जी",
+      "mode": "path",
       "tint": "#26365A",
-      "tracks": [
+      "audio": "audio/shcj/SHCJ{n}.mp3",
+      "count": 84,
+      "open": {
+        "n": 0,
+        "label": "प्रशस्ति"
+      },
+      "close": {
+        "n": 85,
+        "label": "फलस्तुति"
+      },
+      "blocks": [
         {
-          "file": "audio/chaturashi/01.mp3",
-          "title": "श्री हित चतुराशी पद गायन 1"
+          "from": 1,
+          "to": 30,
+          "label": "प्रातः"
         },
         {
-          "file": "audio/chaturashi/02.mp3",
-          "title": "श्री हित चतुराशी पद गायन 2"
+          "from": 31,
+          "to": 60,
+          "label": "सायं"
+        },
+        {
+          "from": 61,
+          "to": 84,
+          "label": "रात्रि"
+        }
+      ],
+      "scripts": [
+        {
+          "id": "hi",
+          "label": "हिन्दी",
+          "text": "text/shcj.json",
+          "cls": "dv",
+          "itemLabel": "पद"
         }
       ]
     },
     {
-      "id": "rsn-1",
-      "title": "श्री राधा सुधा निधि",
-      "range": "1–90",
-      "mode": "rsn",
-      "tint": "#4A2F5C",
-      "tracks": [
-        {
-          "file": "audio/rsn-1/01.mp3",
-          "title": "श्री राधा सुधा निधि 1–30"
-        },
-        {
-          "file": "audio/rsn-1/02.mp3",
-          "title": "श्री राधा सुधा निधि 31–60"
-        },
-        {
-          "file": "audio/rsn-1/03.mp3",
-          "title": "श्री राधा सुधा निधि 61–90"
-        }
-      ]
+      "id": "padgayan",
+      "title": "श्री हित चौरासी पद गायन",
+      "mode": "soon",
+      "tint": "#26365A",
+      "soonNote": "दो गायन संस्करण हैं। एक में जहाँ छूटा, दूसरा वहीं से चले — इसके लिए हर पद का समय चाहिए, जो अभी नहीं है।"
     },
     {
-      "id": "rsn-2",
-      "title": "श्री राधा सुधा निधि",
-      "range": "91–180",
-      "mode": "rsn",
+      "id": "rsn",
+      "title": "श्री मद् राधा सुधा निधि",
+      "mode": "path",
       "tint": "#4A2F5C",
-      "tracks": [
+      "audio": "audio/rsn/SMRSNJ_{n}.mp3",
+      "count": 270,
+      "open": {
+        "n": 0,
+        "label": "মঙ্গলাচরণ"
+      },
+      "close": null,
+      "groups": true,
+      "blocks": [
         {
-          "file": "audio/rsn-2/01.mp3",
-          "title": "श्री राधा सुधा निधि 91–120"
+          "from": 1,
+          "to": 90
         },
         {
-          "file": "audio/rsn-2/02.mp3",
-          "title": "श्री राधा सुधा निधि 121–150"
+          "from": 91,
+          "to": 180
         },
         {
-          "file": "audio/rsn-2/03.mp3",
-          "title": "श्री राधा सुधा निधि 151–180"
+          "from": 181,
+          "to": 270
         }
-      ]
-    },
-    {
-      "id": "rsn-3",
-      "title": "श्री राधा सुधा निधि",
-      "range": "181–270",
-      "mode": "rsn",
-      "tint": "#4A2F5C",
-      "tracks": [
+      ],
+      "scripts": [
         {
-          "file": "audio/rsn-3/01.mp3",
-          "title": "श्री राधा सुधा निधि 181–210"
+          "id": "bn",
+          "label": "বাংলা",
+          "text": "text/rsn-bn.json",
+          "cls": "bn",
+          "itemLabel": "শ্লোক",
+          "openLabel": "মঙ্গলাচরণ"
         },
         {
-          "file": "audio/rsn-3/02.mp3",
-          "title": "श्री राधा सुधा निधि 211–240"
-        },
-        {
-          "file": "audio/rsn-3/03.mp3",
-          "title": "श्री राधा सुधा निधि 241–270"
+          "id": "hi",
+          "label": "हिन्दी",
+          "text": null,
+          "cls": "dv",
+          "itemLabel": "श्लोक",
+          "placeholderTitle": "हिन्दी पाठ अभी तैयार नहीं",
+          "placeholderBody": "शब्दार्थ सहित हिन्दी पाठ पर काम चल रहा है। तैयार होने पर यहाँ आ जाएगा। तब तक पाठ बंगला में पढ़ें — ध्वनि दोनों के लिए एक ही है।",
+          "openLabel": "मङ्गलाचरण"
         }
       ]
     },
     {
       "id": "sevak-vani",
       "title": "श्री हित सेवक वाणी",
-      "mode": "single",
-      "tint": "#2F4A3A",
-      "tracks": [
-        {
-          "file": "audio/sevak-vani/01.mp3",
-          "title": "श्री सेवक वाणी"
-        }
-      ]
+      "mode": "soon",
+      "tint": "#C2557A",
+      "soonNote": "यह स्लाइड राधा सुधा निधि की तरह बनेगी — पाठ और ध्वनि साथ-साथ। अभी नहीं बनी।"
+    },
+    {
+      "id": "padavali",
+      "title": "रसिक पदावली",
+      "mode": "library",
+      "tint": "#C2557A"
     }
   ],
-  "rsnSequence": [
-    "rsn-1",
-    "rsn-2",
-    "rsn-3"
-  ],
   "rules": {
-    "aratiChainGapSeconds": 10,
-    "rsnFinishedWithinSeconds": 60
+    "aratiChainGapSeconds": 10
   }
 }
