@@ -1144,7 +1144,7 @@ async function startSession(c,d){
   let p=posOf(c);
   if(p<d.from||p>d.to){p=d.from;S.pos[c.id]=p;await put("meta",p,"pos:"+c.id);}
   const items=[];for(let n=p;n<=d.to;n++) items.push(n);
-  S.session={pathId:c.id,items:items,i:0};
+  S.session={pathId:c.id,items:items,i:0,from:d.from,to:d.to};
   await setSilent(false);            // tapping a sitting is a play gesture
   await playPath(c,items[0],false,true,false);
 }
@@ -1155,7 +1155,7 @@ async function restartPath(c,d){
   S.session=null;S.pos[c.id]=0;await put("meta",0,"pos:"+c.id);
   toast("आरम्भ से");
   const items=[];for(let n=d.from;n<=d.to;n++) items.push(n);
-  S.session={pathId:c.id,items:items,i:0};
+  S.session={pathId:c.id,items:items,i:0,from:d.from,to:d.to};
   await setSilent(false);
   await playPath(c,d.from,true,true,false);
 }
@@ -1385,7 +1385,13 @@ function toggleAudio(){
    it is still the `ended` event, which cannot fire with nothing playing, so a
    silent walk ticks nothing off and moves no tile highlight. */
 async function jumpTo(c,n){
-  S.session=null;                    // a move by hand is not part of a sitting
+  const s=S.session;
+  if(s&&s.pathId===c.id&&n>=s.from&&n<=s.to){
+    // still inside this sitting: re-seat it here and let it run to its own end
+    s.items=[];for(let k=n;k<=s.to;k++)s.items.push(k);
+    s.i=0;
+  }
+  else S.session=null;               // a move out of the sitting ends it
   S.pos[c.id]=n; await put("meta",n,"pos:"+c.id);
   await playPath(c,n,true,false,S.silent);   // deliberate: from the top, not the mark
   render();
@@ -1415,13 +1421,28 @@ function paintReader(){
   $("rbAudio").classList.toggle("on",openSh===$("audioPanel"));
 }
 
-/* ---------- the item picker ---------- */
+/* ---------- the item picker ----------
+
+   What it may show is the SITTING you are in, and nothing beyond it: inside
+   भाग 2 it offers पद 31–60, inside a उपभाग only that third. एक साथ is a sitting
+   like any other — it simply covers the whole text, which is why it alone
+   offers every pad. With no sitting running (one finished, or the app was
+   reopened) the bound is the division the current item falls in, at the finest
+   level that text has. */
+function pickScope(c,n){
+  const s=S.session;
+  if(s&&s.pathId===c.id&&typeof s.from==="number") return {from:s.from,to:s.to};
+  const i=divIndex(c,n);
+  return hasSubs(c)?subsOf(c,i)[subIndex(c,i,n)]:divsOf(c)[i];
+}
 function openPicker(){
   const t=S.cur; if(!t||!t.path)return;
-  const c=t.path;
-  $("pickTitle").textContent=c.title;
+  const c=t.path,sp=pickScope(c,t.n);
+  const ttl=$("pickTitle");
+  ttl.textContent=rangeText(c,sp);
+  ttl.className="pick-title "+(scriptOf(c).cls||"dv");
   const g=$("pickGrid"); g.innerHTML=""; let here=null;
-  for(let n=0;n<=lastIndex(c);n++){
+  for(let n=sp.from;n<=sp.to;n++){
     const isOpen=!!(c.open&&n===c.open.n),isClose=!!(c.close&&n===c.close.n);
     const b=document.createElement("button");
     b.className="pcell"+((isOpen||isClose)?" bracket":"")+(n===t.n?" on":"");
