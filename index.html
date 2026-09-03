@@ -1331,7 +1331,10 @@ async function renderPath(c,L){
   });
   const all={from:0,to:lastIndex(c)};
   const one=stile(c,"एक साथ",rangeText(c,all),all.to+1,false);
-  one.classList.add("wide");
+  // Three sittings and एक साथ make a clean 2×2 of equal leaves. Only when the
+  // count leaves an odd tile does एक साथ span the row, so there is never a
+  // half-empty line at the bottom.
+  if((ds.length+1)%2) one.classList.add("wide");
   one.addEventListener("click",()=>startSession(c,all));
   longPress(one,()=>restartPath(c,all));
   grid.appendChild(one);
