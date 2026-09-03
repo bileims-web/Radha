@@ -268,8 +268,8 @@
   .versescroll{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;
     padding:4px 2px 12px;-webkit-mask-image:linear-gradient(#000 92%,transparent);
     mask-image:linear-gradient(#000 92%,transparent)}
-  .versetext{font-size:18.5px;line-height:1.95;text-align:center;color:var(--text);
-    white-space:pre-wrap;overflow-wrap:anywhere;margin:0}
+  .versetext{font-size:var(--verse-size,18px);line-height:1.95;text-align:center;
+    color:var(--text);white-space:pre-wrap;overflow-wrap:anywhere;margin:0}
   .versemuted{color:var(--muted);font-size:14px;line-height:1.7;white-space:normal;
     padding:0 6px}
 
@@ -300,6 +300,98 @@
   .tile.soon .tile-hi{color:rgba(62,42,27,.58);text-shadow:none}
   .tile-soon{position:relative;margin-top:6px;font-size:10.5px;letter-spacing:.5px;
     color:rgba(62,42,27,.5);font-weight:600}
+
+  /* ---------- the sittings a path is divided into ----------
+     Leaves of the same paper as the home tiles, because they are the same
+     kind of choice: which sitting am I taking up. The one holding the current
+     position wears the gold edge — that is the whole of "where I am". */
+  .stiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:4px var(--pad) 0}
+  .stile{position:relative;overflow:hidden;border-radius:16px;padding:15px 12px;
+    min-height:112px;display:flex;flex-direction:column;justify-content:center;
+    text-align:center;transition:transform .12s;
+    background:color-mix(in srgb, var(--tint) 9%, #F7F1E4);
+    border:1px solid rgba(62,42,27,.16);box-shadow:0 1px 3px rgba(0,0,0,.35)}
+  .stile:active{transform:scale(.975)}
+  .stile::before{content:"";position:absolute;inset:0;
+    background:radial-gradient(120% 90% at 22% 0%,rgba(255,255,255,.85),transparent 64%)}
+  .stile>*{position:relative}
+  .stile.now{border-color:var(--gold);box-shadow:0 0 0 1.5px var(--gold) inset,0 1px 3px rgba(0,0,0,.35)}
+  .sname{font-size:16px;font-weight:600;color:var(--ink);line-height:1.3}
+  .srange{font-size:12.5px;color:rgba(62,42,27,.72);margin-top:5px;line-height:1.45}
+  .scount{font-size:11px;color:rgba(62,42,27,.55);margin-top:5px;font-variant-numeric:tabular-nums;
+    letter-spacing:.3px}
+  .stile.wide{grid-column:1 / -1;min-height:0;padding:14px 12px}
+  .snow{position:absolute;top:7px;right:9px;font-size:9.5px;letter-spacing:.4px;
+    color:var(--gold);font-weight:600}
+
+  /* ---------- the reader's own bar ----------
+     On a path slide the words are the screen. The transport moves into a panel
+     and this carries what a reader actually reaches for. */
+  .rbar{display:none;align-items:center;justify-content:space-between;gap:2px;
+    margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+  body.path-play .rbar{display:flex}
+  body.path-play .disc,body.path-play .now-folder,body.path-play #seek,
+  body.path-play .player>.times,body.path-play .transport,
+  body.path-play .chainline{display:none}
+  /* the item's own name reads better above the words than under them */
+  body.path-play .now-name{order:-1;font-size:15px;color:var(--muted);font-weight:600;
+    letter-spacing:.3px;margin:0 0 10px}
+  .rb{flex:1 1 0;min-width:0;height:46px;border-radius:11px;display:grid;
+    grid-auto-flow:column;gap:1px;place-items:center;align-content:center;
+    color:var(--text);position:relative}
+  .rb:active{background:var(--surface2)}
+  .rb:disabled{color:var(--line)}
+  .rb.on{color:var(--gold)}
+  .rb .az{font-size:17px;font-weight:600;line-height:1}
+  .rb .az.sm{font-size:13px}
+  .rb .pm{font-size:11px;font-weight:600;margin-left:1px;vertical-align:top}
+
+  /* ---------- item picker overlay ---------- */
+  .pickov{position:fixed;inset:0;z-index:44;background:var(--bg);display:none;
+    flex-direction:column;padding:calc(env(safe-area-inset-top) + 8px) 10px
+      calc(env(safe-area-inset-bottom) + 10px)}
+  .pickov.on{display:flex}
+  .pick-head{display:flex;align-items:center;gap:6px;padding:0 8px 8px;
+    border-bottom:1px solid var(--line)}
+  .pick-title{flex:1;font-size:16px;font-weight:600}
+  .pick-grid{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
+    display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:12px 4px 4px}
+  .pcell{aspect-ratio:1/1;border-radius:11px;background:var(--surface);
+    border:1px solid var(--line);color:var(--text);font-size:15px;
+    font-variant-numeric:tabular-nums;display:grid;place-items:center}
+  .pcell:active{background:var(--surface2)}
+  .pcell.bracket{border-style:dashed;color:var(--muted)}
+  .pcell.on{border-color:var(--gold);color:var(--gold);font-weight:600;
+    box-shadow:0 0 0 1px var(--gold) inset}
+
+  /* ---------- audio panel ---------- */
+  .apanel{padding-left:0;padding-right:0}
+  .apanel .seek{padding:0 22px;width:auto;margin:0 22px}
+  .ap-times{margin:-6px 22px 0}
+  .ap-play{display:grid;place-items:center;margin:16px 0 4px}
+  .speed{display:flex;align-items:center;gap:12px;padding:14px 22px 6px}
+  .slabel{flex:1;font-size:15px}
+  .sbtn{width:38px;height:38px;flex:0 0 38px;border-radius:10px;border:1px solid var(--line);
+    display:grid;place-items:center;font-size:19px;line-height:1;color:var(--text)}
+  .sbtn:active{background:var(--surface2)}
+  .sbtn:disabled{color:var(--line);border-color:var(--surface2)}
+  .srate{min-width:52px;text-align:center;font-size:15.5px;font-variant-numeric:tabular-nums;
+    color:var(--gold);font-weight:600}
+
+  /* ---------- where the sittings are decided ---------- */
+  .dlevel{padding:2px 0 10px;border-bottom:1px solid var(--line);margin-bottom:8px}
+  .dlevel:last-of-type{border-bottom:0}
+  .dhead{display:flex;align-items:center;gap:10px;padding:8px 22px 6px}
+  .dh-t{flex:1;font-size:14.5px;font-weight:600}
+  .dh-n{display:flex;align-items:center;gap:8px}
+  .dh-n b{min-width:18px;text-align:center;font-variant-numeric:tabular-nums;color:var(--gold)}
+  .drow{display:flex;align-items:center;gap:10px;padding:7px 22px}
+  .dn{flex:0 0 18px;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
+  .dr{flex:1;min-width:0;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .dc{flex:0 0 auto;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .dstep{flex:0 0 84px;display:flex;gap:6px;justify-content:flex-end}
+  .dstep .sbtn{width:34px;height:34px;flex:0 0 34px;font-size:17px}
+  .dnote{padding:2px 22px 12px;font-size:12px;color:var(--muted);line-height:1.55}
 
   @media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
 </style>
@@ -651,7 +743,42 @@
     </button>
   </div>
   <div class="chainline" id="chainLine"></div>
+
+  <!-- The reader's own controls, shown only on a path slide. The words are the
+       screen there, so the transport moves into the panel behind the ♪ and this
+       bar carries what a reader actually reaches for. -->
+  <div class="rbar" id="rbar">
+    <button class="rb" id="rbPick" aria-label="Choose an item">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+    </button>
+    <button class="rb" id="rbSmaller" aria-label="Smaller text"><span class="az sm">A</span><span class="pm">&#8722;</span></button>
+    <button class="rb" id="rbBigger" aria-label="Larger text"><span class="az">A</span><span class="pm">+</span></button>
+    <button class="rb" id="rbReset" aria-label="Reset text size">
+      <span class="az sm">A</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:2px"><path d="M3 12a9 9 0 109-9"/><path d="M3 4v5h5"/></svg>
+    </button>
+    <button class="rb" id="rbAudio" aria-label="Audio controls">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg>
+    </button>
+    <button class="rb" id="rbPrev" aria-label="Previous item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+    </button>
+    <button class="rb" id="rbNext" aria-label="Next item">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+  </div>
 </section>
+
+<!-- Every item of the text at once, so a jump is one tap rather than a scroll
+     through eighty-six rows. -->
+<div class="pickov" id="pickOv">
+  <div class="pick-head">
+    <span class="pick-title dv" id="pickTitle">&#2346;&#2342;</span>
+    <button class="icon-btn" id="pickClose" aria-label="Close">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <div class="pick-grid" id="pickGrid"></div>
+</div>
 
 <div class="scrim" id="scrim"></div>
 
@@ -686,16 +813,59 @@
   <div class="toggle"><span class="meta"><span class="sub dv" id="soonBody"></span></span></div>
 </div>
 
+<!-- The transport for a path slide. It lives behind the ♪ so the words keep
+     the screen, and it holds the three things a reciter changes mid-sitting:
+     pace, whether this one repeats, and whether the next one follows. -->
+<div class="sheet apanel" id="audioPanel">
+  <div class="grab"></div>
+  <input class="seek" id="apSeek" type="range" min="0" max="1000" value="0" aria-label="Seek">
+  <div class="times ap-times"><span id="apCur">00:00:00</span><span id="apDur">00:00:00</span></div>
+  <div class="ap-play"><button class="big" id="apPlay" aria-label="Play or pause"></button></div>
+  <div class="speed">
+    <span class="slabel dv">&#2327;&#2340;&#2367;</span>
+    <button class="sbtn" id="apSlower" aria-label="Slower">&#8722;</button>
+    <span class="srate" id="apRate">1.00</span>
+    <button class="sbtn" id="apFaster" aria-label="Faster">+</button>
+  </div>
+  <button class="toggle" id="apRepeatRow">
+    <span class="meta">
+      <span class="name dv">&#2311;&#2360;&#2375; &#2342;&#2379;&#2361;&#2352;&#2366;&#2319;&#2305;</span>
+      <span class="sub">Plays this one again when it ends. Your place does not move while repeat is on, so sitting with one item never marks it done.</span>
+    </span>
+    <span class="sw" id="apRepeatSw"></span>
+  </button>
+  <button class="toggle" id="apAutoRow">
+    <span class="meta">
+      <span class="name dv">&#2309;&#2327;&#2354;&#2366; &#2309;&#2346;&#2344;&#2375; &#2310;&#2346;</span>
+      <span class="sub" id="apAutoSub">Carries on into the next one when this ends.</span>
+    </span>
+    <span class="sw" id="apAutoSw"></span>
+  </button>
+</div>
+
+<!-- Where the sittings are decided. One row per division; the stepper moves the
+     boundary between it and the next, so a gap or an overlap cannot be typed. -->
+<div class="sheet" id="divSheet">
+  <div class="grab"></div>
+  <h3 id="divTitle" class="dv">&#2349;&#2366;&#2327;</h3>
+  <div id="divBody"></div>
+  <div class="dlg-btns" style="padding:2px 22px 8px">
+    <button class="cancel" id="divDefaults">Defaults</button>
+    <button class="go" id="divDone">Done</button>
+  </div>
+</div>
+
 <div class="sheet" id="setSheet">
   <div class="grab"></div>
   <h3>Settings</h3>
   <button class="toggle" id="autoplayRow">
     <span class="meta">
       <span class="name">Autoplay</span>
-      <span class="sub">Plays the next one on its own — the next song in the same folder of रसिक पदावली, or the next pad of a path.</span>
+      <span class="sub">Plays the next song in the same folder of रसिक पदावली. The paths each carry their own — set those in the audio panel.</span>
     </span>
     <span class="sw" id="autoplaySw"></span>
   </button>
+  <div id="divRows"></div>
   <div class="toggle">
     <span class="meta"><span class="name">Storage used</span>
     <span class="sub" id="storageLine">Checking…</span></span>
@@ -754,8 +924,21 @@ const S={man:FALLBACK,view:"home",cwd:"root",stack:[],coll:null,grp:0,
   pos:{},      // path id -> the next item to play      (persisted "pos:<id>")
   script:{},   // path id -> chosen script id           (persisted "script:<id>")
   text:{},     // "<pathId>:<scriptId>" -> rows | null  (fetched once)
-  session:null // {pathId,mode,items:[n,…],i}  while a session is running
+  div:{},      // path id -> level-1 cut points         (persisted "div:<id>")
+  sub:{},      // path id -> {divIndex: cut points}     (persisted "sub:<id>")
+  auto:{},     // path id -> carry on into the next one (persisted "auto:<id>")
+  divEdit:null,// which text the division sheet is editing
+  // Reading with the music off is a HABIT, not a property of a text: one flag
+  // for the app, remembered across items and across launches. Only an explicit
+  // play gesture clears it — see setSilent().
+  silent:false,// (persisted "silent")
+  speed:1,     // playback rate 0.50–2.00               (persisted "speed")
+  repeat:false,// repeat this item, holding the position(persisted "repeat")
+  font:18,     // the words' size in px                 (persisted "fontsize")
+  session:null // {pathId,items:[n,…],i}  while a session is running
 };
+const FONT_MIN=16,FONT_MAX=40,FONT_STEP=2,FONT_DEF=18;
+const SPD_MIN=0.5,SPD_MAX=2,SPD_STEP=0.05;
 const $=i=>document.getElementById(i);
 const audio=$("audio");
 
@@ -763,6 +946,10 @@ function fmt(s){if(!isFinite(s)||s<0)s=0;s=Math.floor(s);
   const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;
   return h?h+":"+String(m).padStart(2,"0")+":"+String(x).padStart(2,"0")
           :m+":"+String(x).padStart(2,"0");}
+/* the panel says hours even when there are none, so the digits never shift */
+function fmtHMS(s){if(!isFinite(s)||s<0)s=0;s=Math.floor(s);
+  const h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=s%60;
+  return [h,m,x].map(v=>String(v).padStart(2,"0")).join(":");}
 const noExt=n=>n.replace(/\.(mp3|m4a|aac|wav|ogg|opus|flac|mp4|webm)$/i,"");
 function bytes(b){return b<1048576?(b/1024).toFixed(0)+" KB"
   :b<1073741824?(b/1048576).toFixed(1)+" MB":(b/1073741824).toFixed(2)+" GB";}
@@ -831,21 +1018,81 @@ function itemTitle(c,n){
   if(c.close&&n===c.close.n) return bracketLabel(c,"close");
   return scriptOf(c).itemLabel+" "+n;}
 
-/* Which items a session will play, from where the path stands. */
-function buildSession(c,pos,mode){
-  const close=c.close?c.close.n:null;
-  if(close!==null&&pos===close) return [close];   // only the closing pad is left
-  const items=[];let from=pos;
-  if(pos===0){items.push(0);from=1;}              // the opening pad, once per cycle
-  let to=c.count;
-  if(mode==="three"){                             // stop at the end of the block we are in
-    const b=c.blocks.find(b=>from>=b.from&&from<=b.to)||c.blocks[0];
-    to=b.to;
-  }
-  for(let n=from;n<=to;n++) items.push(n);
-  if(close!==null&&to===c.count) items.push(close); // whoever finishes the path closes it
-  return items;
+/* ---------- how a path is divided into sittings ----------
+
+   A division is stored as its CUT POINTS — the item each division ends on, bar
+   the last — and never as ranges. Gaps and overlaps then cannot be expressed at
+   all: the first division always begins at 0 and the last always ends at
+   lastIndex, so the praise pad is always inside the first session and the
+   phalashruti always inside the last, with nothing to check afterwards. They
+   are parts of those sessions, not a bracket around the day.
+
+   Position needs no migration when a boundary moves either. `pos` is an item
+   number; which division holds it is worked out afresh on every render, so
+   changing a split resolves to whichever session now contains the item. */
+
+const DIV_MIN=2,DIV_MAX=6;
+
+function evenCuts(from,to,n){                  // n divisions over from..to
+  const total=to-from+1,cuts=[];
+  for(let i=1;i<n;i++) cuts.push(from+Math.round(total*i/n)-1);
+  return cuts;
 }
+function rangesFrom(from,to,cuts){
+  const out=[];let a=from;
+  for(const c of cuts){out.push({from:a,to:c});a=c+1;}
+  out.push({from:a,to:to});
+  return out;
+}
+function cutsValid(from,to,cuts){
+  if(!Array.isArray(cuts)||cuts.length<DIV_MIN-1||cuts.length>DIV_MAX-1)return false;
+  let prev=from-1;
+  for(const c of cuts){if(!Number.isInteger(c)||c<=prev||c>=to)return false;prev=c;}
+  return true;
+}
+/* The manifest's own blocks are the default while the count matches them —
+   that is where 31/30/25 and 91/90/90 come from. Any other count splits the
+   BODY evenly and lets the brackets ride the outer divisions. */
+function defaultCuts(c,n){
+  if(n===undefined) n=(c.blocks&&c.blocks.length)||3;
+  if(c.blocks&&c.blocks.length===n) return c.blocks.slice(0,-1).map(b=>b.to);
+  return evenCuts(c.open?c.open.n+1:0,c.count,n);
+}
+/* Sub-divisions skip the opening bracket when splitting, so it joins the first
+   sub-tile rather than forming one of its own: block 1 is 31/30/30, not 30/30/31. */
+function defaultSubCuts(c,d,n){
+  return evenCuts((c.open&&d.from===c.open.n)?d.from+1:d.from,d.to,n===undefined?3:n);
+}
+const hasSubs=c=>!!c.groups;                   // RSN alone goes a layer deeper
+function divsOf(c){
+  const to=lastIndex(c),cuts=S.div[c.id];
+  return rangesFrom(0,to,cutsValid(0,to,cuts)?cuts:defaultCuts(c));
+}
+function subsOf(c,i){
+  const d=divsOf(c)[i],cuts=(S.sub[c.id]||{})[i];
+  return rangesFrom(d.from,d.to,cutsValid(d.from,d.to,cuts)?cuts:defaultSubCuts(c,d));
+}
+function divIndex(c,n){const ds=divsOf(c);
+  for(let i=0;i<ds.length;i++) if(n>=ds[i].from&&n<=ds[i].to) return i;
+  return 0;}
+function subIndex(c,i,n){const ss=subsOf(c,i);
+  for(let k=0;k<ss.length;k++) if(n>=ss[k].from&&n<=ss[k].to) return k;
+  return 0;}
+
+/* what a division covers, in words: "प्रशस्ति · पद 1–30" */
+function rangeText(c,d){
+  const sc=scriptOf(c),bits=[];let from=d.from,to=d.to;
+  if(c.open&&from===c.open.n){bits.push(bracketLabel(c,"open"));from++;}
+  let closes=false;
+  if(c.close&&to===c.close.n){closes=true;to--;}
+  if(to>=from) bits.push(from===to?sc.itemLabel+" "+from
+                                  :sc.itemLabel+" "+from+"–"+to);
+  if(closes) bits.push(bracketLabel(c,"close"));
+  return bits.join(" · ");
+}
+
+/* auto-play is the path's own, not the library's — see the audio panel */
+function autoOf(c){const a=S.auto[c.id];return a===undefined?true:!!a;}
 
 /* THE COMPLETION RULE. A pad counts as done ONLY if it played through to its
    end — the `ended` event, nothing else. There is no time window and nothing
@@ -862,29 +1109,41 @@ async function advance(c,n){
   await put("meta",next,"pos:"+c.id);
 }
 
-async function playPath(c,n,fromStart,raise){
+async function playPath(c,n,fromStart,raise,startPaused){
   clearChain();
   await loadText(c);
+  if(startPaused===undefined) startPaused=S.silent;
   playTrack({id:"px:"+c.id+":"+n,name:itemTitle(c,n),url:c.audio.replace("{n}",n),
-             path:c,n:n,kind:"path"},fromStart);
+             path:c,n:n,kind:"path"},fromStart,startPaused);
   // The words are the point of a path slide, so a deliberate start shows them
   // straight away instead of leaving them behind a tap on the mini bar. An
   // automatic advance mid-session passes no flag, so a player the user has
   // closed stays closed.
   if(raise) document.body.classList.add("player-open");
 }
-async function startSession(c,mode){
-  const items=buildSession(c,posOf(c),mode);
-  S.session={pathId:c.id,mode:mode,items:items,i:0};
-  await playPath(c,items[0],false,true);
+/* A session is one division played to its end. If the path already stands
+   inside it we resume there; if it stands elsewhere the position MOVES to this
+   division's first item, so "where I am" stays honest and finishing a sitting
+   walks the highlight on to the next tile. A session always runs to its end —
+   the auto-play toggle governs what happens OUTSIDE one. */
+async function startSession(c,d){
+  let p=posOf(c);
+  if(p<d.from||p>d.to){p=d.from;S.pos[c.id]=p;await put("meta",p,"pos:"+c.id);}
+  const items=[];for(let n=p;n<=d.to;n++) items.push(n);
+  S.session={pathId:c.id,items:items,i:0};
+  await setSilent(false);            // tapping a sitting is a play gesture
+  await playPath(c,items[0],false,true,false);
 }
-/* Long press: reset the path to its opening pad and begin again there, in
-   whichever mode was pressed. Three-part then starts at the morning block,
-   because pos===0 puts it there. */
-async function restartPath(c,mode){
+/* Long press: put the text back to its start and begin this sitting at its own
+   first item. `pos` stays at 0, and advance() only moves it when the item that
+   plays IS the item the path stands on, so nothing is pushed forward silently. */
+async function restartPath(c,d){
   S.session=null;S.pos[c.id]=0;await put("meta",0,"pos:"+c.id);
   toast("आरम्भ से");
-  await startSession(c,mode);
+  const items=[];for(let n=d.from;n<=d.to;n++) items.push(n);
+  S.session={pathId:c.id,items:items,i:0};
+  await setSilent(false);
+  await playPath(c,d.from,true,true,false);
 }
 
 /* ---------- render ---------- */
@@ -902,10 +1161,10 @@ async function render(){
   if(S.view==="path"){
     setTitle(S.coll.title,"",true); await renderPath(S.coll,L); return;
   }
-  if(S.view==="pathgroup"){
-    const b=S.coll.blocks[S.grp];
-    setTitle(S.coll.title,b.from+"–"+b.to,true);
-    await renderPathGroup(S.coll,L); return;
+  if(S.view==="pathsub"){
+    const d=divsOf(S.coll)[S.grp];
+    setTitle(S.coll.title,rangeText(S.coll,d),true);
+    await renderPathSub(S.coll,L); return;
   }
   if(S.stack.length) setTitle(S.stack[S.stack.length-1].name,
     "रसिक पदावली / "+S.stack.map(x=>x.name).join(" / "),false);
@@ -996,58 +1255,37 @@ async function renderColl(c,L){
   }
 }
 
-/* what a session would cover, spelled out on its button */
-function preview(c,mode){
-  const it=buildSession(c,posOf(c),mode),L=scriptOf(c).itemLabel,bits=[];
-  const body=it.filter(n=>n>0&&(!c.close||n!==c.close.n));
-  if(it[0]===0&&c.open) bits.push(bracketLabel(c,"open"));
-  if(body.length) bits.push(body[0]===body[body.length-1]?L+" "+body[0]
-    :L+" "+body[0]+"–"+body[body.length-1]);
-  if(c.close&&it[it.length-1]===c.close.n) bits.push(bracketLabel(c,"close"));
-  return bits.join(" · ");
+/* one leaf of paper: a sitting, what it covers, and how many items that is */
+function stile(c,name,range,count,now){
+  const t=document.createElement("button");
+  t.className="stile"+(now?" now":"");
+  t.style.setProperty("--tint",c.tint||"#8C5A28");
+  t.innerHTML=(now?'<span class="snow dv">यहीं</span>':"")+
+    '<span class="sname dv"></span><span class="srange"></span><span class="scount"></span>';
+  t.querySelector(".sname").textContent=name;
+  const r=t.querySelector(".srange");
+  r.textContent=range; r.className="srange "+(scriptOf(c).cls||"dv");
+  t.querySelector(".scount").textContent=count;
+  return t;
 }
 
-async function renderPath(c,L){
-  await loadText(c);
+/* The head of a path slide: which script, and the note about text that is not
+   written yet. Both are unchanged; only what follows them is new. */
+function pathHead(c,L){
   const sc=scriptOf(c);
-
-  // script toggle — only where there is a choice to make
   if(c.scripts.length>1){
     const bar=document.createElement("div"); bar.className="scripts";
-    for(const s of c.scripts){
+    for(const x of c.scripts){
       const b=document.createElement("button");
-      b.className=(s.id===sc.id?"on":"")+" "+(s.cls||"");
-      b.innerHTML='<span></span>'+(s.text?"":'<span class="tag dv">शीघ्र</span>');
-      b.querySelector("span").textContent=s.label;
-      b.addEventListener("click",async()=>{S.script[c.id]=s.id;
-        await put("meta",s.id,"script:"+c.id); render();});
+      b.className=(x.id===sc.id?"on":"")+" "+(x.cls||"");
+      b.innerHTML='<span></span>'+(x.text?"":'<span class="tag dv">शीघ्र</span>');
+      b.querySelector("span").textContent=x.label;
+      b.addEventListener("click",async()=>{S.script[c.id]=x.id;
+        await put("meta",x.id,"script:"+c.id); render();});
       bar.appendChild(b);
     }
     L.appendChild(bar);
   }
-
-  // where the path stands, and the two ways to start it
-  const head=document.createElement("div"); head.className="pathhead";
-  head.style.setProperty("--tint",c.tint||"#8C5A28");
-  const p=posOf(c);
-  head.innerHTML='<div class="pathwhere dv">अगला</div>'+
-    '<div class="pathnext dv"></div>'+
-    '<div class="modes"></div>'+
-    '<div class="pathhint dv">देर तक दबाएँ — '+(c.open?bracketLabel(c,"open"):"आरम्भ")+' से फिर शुरू</div>';
-  head.querySelector(".pathnext").textContent=itemTitle(c,p);
-  const modes=head.querySelector(".modes");
-  for(const m of [{k:"three",t:"तीन भाग"},{k:"one",t:"एक साथ"}]){
-    const b=document.createElement("button"); b.className="mode dv";
-    b.innerHTML='<span></span><span class="sub3 dv"></span>';
-    b.querySelector("span").textContent=m.t;
-    b.querySelector(".sub3").textContent=preview(c,m.k);
-    b.addEventListener("click",()=>startSession(c,m.k));
-    longPress(b,()=>restartPath(c,m.k));
-    modes.appendChild(b);
-  }
-  L.appendChild(head);
-
-  // the text that is not written yet says so plainly
   if(!sc.text){
     const ph=document.createElement("div"); ph.className="ph dv";
     ph.innerHTML="<b></b><span></span>";
@@ -1055,78 +1293,253 @@ async function renderPath(c,L){
     ph.querySelector("span").textContent=sc.placeholderBody||"";
     L.appendChild(ph);
   }
-
-  if(c.groups) await renderGroups(c,L);
-  else await renderPicker(c,L,0,lastIndex(c));
 }
 
-/* the three sub-slides, each showing whether the path stands inside it */
-async function renderGroups(c,L){
-  const p=posOf(c), sc=scriptOf(c);
-  const h=document.createElement("div"); h.className="sect"; h.textContent="भाग";
+/* Level one: the sittings this text is divided into, and the one-go tile that
+   plays the lot. The tile holding the current position wears the gold edge —
+   for RSN that is the block the position falls in, and the layer below says
+   which third of it. */
+async function renderPath(c,L){
+  await loadText(c);
+  pathHead(c,L);
+  const p=posOf(c),ds=divsOf(c),cur=divIndex(c,p);
+  const h=document.createElement("div"); h.className="sect dv"; h.textContent="भाग";
   L.appendChild(h);
-  c.blocks.forEach((b,i)=>{
-    // pos 0 is the prelude, which stands before the first group
-    const here=(p===0&&i===0)||(p>=b.from&&p<=b.to);
-    const row=document.createElement("button");
-    row.className="row"+(here?" pointed":"");
-    row.innerHTML='<span class="glyph">'+NOTE+'</span>';
-    const meta=document.createElement("span"); meta.className="meta";
-    const nm=document.createElement("span"); nm.className="name "+(sc.cls||"dv");
-    nm.textContent=sc.itemLabel+" "+b.from+"–"+b.to;
-    const sub=document.createElement("span"); sub.className="sub";
-    sub.textContent=(b.to-b.from+1);   // the badge already says whether we are in it
-    meta.appendChild(nm); meta.appendChild(sub);
-    row.appendChild(meta);
-    if(here){const t=document.createElement("span");t.className="here dv";t.textContent="यहीं";row.appendChild(t);}
-    else row.insertAdjacentHTML("beforeend",'<span class="glyph">'+CHEV+'</span>');
-    row.addEventListener("click",()=>{S.grp=i;S.view="pathgroup";$("list").scrollTop=0;render();});
-    L.appendChild(row);
+  const grid=document.createElement("div"); grid.className="stiles";
+  ds.forEach((d,i)=>{
+    const t=stile(c,"भाग "+(i+1),rangeText(c,d),d.to-d.from+1,i===cur);
+    t.addEventListener("click",()=>{
+      if(hasSubs(c)){S.grp=i;S.view="pathsub";$("list").scrollTop=0;render();}
+      else startSession(c,d);
+    });
+    longPress(t,()=>restartPath(c,d));
+    grid.appendChild(t);
+  });
+  const all={from:0,to:lastIndex(c)};
+  const one=stile(c,"एक साथ",rangeText(c,all),all.to+1,false);
+  one.classList.add("wide");
+  one.addEventListener("click",()=>startSession(c,all));
+  longPress(one,()=>restartPath(c,all));
+  grid.appendChild(one);
+  L.appendChild(grid);
+}
+
+/* Level two, RSN only: the block split into thirds. */
+async function renderPathSub(c,L){
+  await loadText(c);
+  const p=posOf(c),i=S.grp,ss=subsOf(c,i),inHere=divIndex(c,p)===i,cur=subIndex(c,i,p);
+  const h=document.createElement("div"); h.className="sect dv";
+  h.textContent="भाग "+(i+1)+" के उपभाग";
+  L.appendChild(h);
+  const grid=document.createElement("div"); grid.className="stiles";
+  ss.forEach((d,k)=>{
+    const t=stile(c,"उपभाग "+(k+1),rangeText(c,d),d.to-d.from+1,inHere&&k===cur);
+    t.addEventListener("click",()=>startSession(c,d));
+    longPress(t,()=>restartPath(c,d));
+    grid.appendChild(t);
+  });
+  L.appendChild(grid);
+}
+
+/* ================================================================
+   THE READER — the bar under the words, and the two panels behind it
+
+   On a path slide the words are the screen. Seven controls sit under them and
+   everything else lives in a panel: the transport, the pace, and the two
+   toggles a reciter changes mid-sitting.
+   ================================================================ */
+
+/* Silence is sticky. Pausing sets it, and only an explicit play gesture — the
+   panel's play, the mini bar's play, a session tile, the phone's own media
+   keys — clears it. Prev, next, a jump from the picker and reopening the app
+   all inherit it, so reading with the music off stays off. */
+async function setSilent(v){
+  v=!!v; if(S.silent===v)return;
+  S.silent=v; await put("meta",v,"silent");
+}
+function toggleAudio(){
+  clearChain();
+  if(audio.paused){ setSilent(false); audio.play().catch(()=>{}); }
+  else { setSilent(true); audio.pause(); }
+}
+
+/* Moving the reader. `pos` follows, because pos is "where I am" and reading in
+   silence to shloka 40 should leave me at 40 tomorrow. Completion is untouched:
+   it is still the `ended` event, which cannot fire with nothing playing, so a
+   silent walk ticks nothing off and moves no tile highlight. */
+async function jumpTo(c,n){
+  S.session=null;                    // a move by hand is not part of a sitting
+  S.pos[c.id]=n; await put("meta",n,"pos:"+c.id);
+  await playPath(c,n,true,false,S.silent);   // deliberate: from the top, not the mark
+  render();
+}
+function readerStep(delta){
+  const t=S.cur; if(!t||!t.path)return;
+  const c=t.path,n=t.n+delta;
+  if(n<0||n>lastIndex(c))return;
+  jumpTo(c,n);
+}
+
+async function setFont(px){
+  px=Math.max(FONT_MIN,Math.min(FONT_MAX,px));
+  S.font=px;
+  document.documentElement.style.setProperty("--verse-size",px+"px");
+  await put("meta",px,"fontsize");
+  paintReader();
+}
+
+/* The bar's own state: what is reachable from where the reader stands. */
+function paintReader(){
+  const t=S.cur,path=t&&t.path;
+  $("rbPrev").disabled=!path||t.n<=0;
+  $("rbNext").disabled=!path||t.n>=lastIndex(path);
+  $("rbSmaller").disabled=S.font<=FONT_MIN;
+  $("rbBigger").disabled=S.font>=FONT_MAX;
+  $("rbAudio").classList.toggle("on",openSh===$("audioPanel"));
+}
+
+/* ---------- the item picker ---------- */
+function openPicker(){
+  const t=S.cur; if(!t||!t.path)return;
+  const c=t.path;
+  $("pickTitle").textContent=c.title;
+  const g=$("pickGrid"); g.innerHTML=""; let here=null;
+  for(let n=0;n<=lastIndex(c);n++){
+    const isOpen=!!(c.open&&n===c.open.n),isClose=!!(c.close&&n===c.close.n);
+    const b=document.createElement("button");
+    b.className="pcell"+((isOpen||isClose)?" bracket":"")+(n===t.n?" on":"");
+    // The brackets carry no item number — 85 is not the eighty-fifth pad — so
+    // they wear a danda instead of a number that would lie.
+    b.textContent=(isOpen||isClose)?"॥":String(n);
+    b.setAttribute("aria-label",itemTitle(c,n));
+    b.addEventListener("click",()=>{hidePicker();jumpTo(c,n);});
+    if(n===t.n)here=b;
+    g.appendChild(b);
+  }
+  $("pickOv").classList.add("on");
+  if(here)here.scrollIntoView({block:"center"});
+}
+function hidePicker(){$("pickOv").classList.remove("on");}
+const pickerOpen=()=>$("pickOv").classList.contains("on");
+
+/* ---------- the audio panel ---------- */
+function paintPanel(){
+  const d=audio.duration||0,c=audio.currentTime||0;
+  $("apCur").textContent=fmtHMS(c);
+  $("apDur").textContent=fmtHMS(d);
+  const s=$("apSeek");
+  if(!s.dragging) s.value=d?Math.round(c/d*1000):0;
+  s.style.setProperty("--fill",(d?c/d*100:0)+"%");
+  $("apPlay").innerHTML=audio.paused?PLAY:PAUSE;
+  $("apRate").textContent=S.speed.toFixed(2);
+  $("apSlower").disabled=S.speed<=SPD_MIN+1e-9;
+  $("apFaster").disabled=S.speed>=SPD_MAX-1e-9;
+  $("apRepeatSw").classList.toggle("on",S.repeat);
+  const c2=S.cur&&S.cur.path;
+  $("apAutoSw").classList.toggle("on",c2?autoOf(c2):false);
+  $("apAutoSub").textContent=c2
+    ? "Carries on into the next one when this ends — "+c2.title+" only."
+    : "Carries on into the next one when this ends.";
+}
+async function setSpeed(v){
+  v=Math.round(Math.max(SPD_MIN,Math.min(SPD_MAX,v))*100)/100;
+  S.speed=v; audio.playbackRate=v;
+  await put("meta",v,"speed"); paintPanel();
+}
+async function setRepeat(v){
+  S.repeat=!!v; await put("meta",S.repeat,"repeat"); paintPanel();
+}
+async function setAuto(c,v){
+  S.auto[c.id]=!!v; await put("meta",!!v,"auto:"+c.id); paintPanel();
+}
+
+/* ---------- where the sittings are decided ----------
+   The stepper moves a BOUNDARY, never a range, so a gap or an overlap cannot
+   be typed. Changing the number of divisions goes back to an even split, and
+   moving a level-1 boundary re-splits that text's sub-divisions, because the
+   old sub-boundaries would sit outside their block. */
+function stepBtn(txt,dis,fn){
+  const b=document.createElement("button");
+  b.className="sbtn"; b.textContent=txt; b.disabled=!!dis;
+  if(!dis)b.addEventListener("click",fn);
+  return b;
+}
+function divLevel(c,title,from,to,cuts,note,onCuts){
+  const wrap=document.createElement("div"); wrap.className="dlevel";
+  const head=document.createElement("div"); head.className="dhead";
+  const h=document.createElement("span"); h.className="dh-t dv"; h.textContent=title;
+  const nn=document.createElement("span"); nn.className="dh-n";
+  const n=cuts.length+1;
+  nn.appendChild(stepBtn("−",n<=DIV_MIN,()=>onCuts(null,n-1)));
+  const b=document.createElement("b"); b.textContent=String(n); nn.appendChild(b);
+  nn.appendChild(stepBtn("+",n>=DIV_MAX||(to-from+1)<n+1,()=>onCuts(null,n+1)));
+  head.appendChild(h); head.appendChild(nn); wrap.appendChild(head);
+
+  rangesFrom(from,to,cuts).forEach((d,i)=>{
+    const row=document.createElement("div"); row.className="drow";
+    const dn=document.createElement("span"); dn.className="dn"; dn.textContent=(i+1)+".";
+    const dr=document.createElement("span");
+    dr.className="dr "+(scriptOf(c).cls||"dv"); dr.textContent=rangeText(c,d);
+    const dc=document.createElement("span"); dc.className="dc"; dc.textContent=String(d.to-d.from+1);
+    const st=document.createElement("span"); st.className="dstep";
+    if(i<cuts.length){
+      const lo=(i===0?from:cuts[i-1]+1),hi=(i===cuts.length-1?to-1:cuts[i+1]-1);
+      st.appendChild(stepBtn("−",cuts[i]<=lo,()=>{const x=cuts.slice();x[i]--;onCuts(x);}));
+      st.appendChild(stepBtn("+",cuts[i]>=hi,()=>{const x=cuts.slice();x[i]++;onCuts(x);}));
+    }
+    row.appendChild(dn);row.appendChild(dr);row.appendChild(dc);row.appendChild(st);
+    wrap.appendChild(row);
+  });
+  if(note){const p=document.createElement("div");p.className="dnote";p.textContent=note;wrap.appendChild(p);}
+  return wrap;
+}
+async function setDivCuts(c,cuts,n){
+  if(cuts===null||cuts===undefined) cuts=defaultCuts(c,n);
+  S.div[c.id]=cuts; await put("meta",cuts,"div:"+c.id);
+  S.sub[c.id]={}; await put("meta",{},"sub:"+c.id);
+  renderDivBody(); render();
+}
+async function setSubCuts(c,i,cuts,n){
+  if(cuts===null||cuts===undefined) cuts=defaultSubCuts(c,divsOf(c)[i],n);
+  const all=Object.assign({},S.sub[c.id]||{}); all[i]=cuts;
+  S.sub[c.id]=all; await put("meta",all,"sub:"+c.id);
+  renderDivBody(); render();
+}
+function renderDivBody(){
+  const c=S.divEdit; if(!c)return;
+  $("divTitle").textContent=c.title;
+  const box=$("divBody"); box.innerHTML="";
+  const to=lastIndex(c),cuts=divsOf(c).slice(0,-1).map(d=>d.to);
+  // Said in the text's own words: RSN opens on मङ्गलाचरण and has no closing pad,
+  // so the note must not promise it a फलस्तुति.
+  const op=c.open?bracketLabel(c,"open"):"",cl=c.close?bracketLabel(c,"close"):"";
+  const note=op&&cl?"पहला भाग सदा "+op+" से खुलता है और अन्तिम "+cl+" पर पूरा होता है।"
+            :op?"पहला भाग सदा "+op+" से खुलता है।"
+            :cl?"अन्तिम भाग "+cl+" पर पूरा होता है।":"";
+  box.appendChild(divLevel(c,"भाग",0,to,cuts,note,(x,n)=>setDivCuts(c,x,n)));
+  if(hasSubs(c)) divsOf(c).forEach((d,i)=>{
+    const sc=subsOf(c,i).slice(0,-1).map(r=>r.to);
+    box.appendChild(divLevel(c,"भाग "+(i+1)+" के उपभाग",d.from,d.to,sc,null,
+      (x,n)=>setSubCuts(c,i,x,n)));
   });
 }
-async function renderPathGroup(c,L){
-  await loadText(c);
-  const b=c.blocks[S.grp];
-  // the prelude belongs at the head of the first group
-  await renderPicker(c,L,S.grp===0&&c.open?c.open.n:b.from,b.to);
+function openDivSheet(c){
+  S.divEdit=c; hideSheets(); renderDivBody(); showSheet($("divSheet"));
 }
-
-/* The pad picker, as in the existing app: one row per item, the row the path
-   stands on marked in gold. Tapping a row plays that item on its own — it does
-   NOT move the position unless it happens to be the item the path stands on,
-   so browsing never silently jumps where the next session will start. */
-async function renderPicker(c,L,from,to){
-  const p=posOf(c),sc=scriptOf(c);
-  const allMarks=await mapOf("marks"), allMeta=await mapOf("meta");
-  const h=document.createElement("div"); h.className="sect "+(sc.cls||"dv");
-  h.textContent=sc.itemLabel;
-  L.appendChild(h);
-  for(let n=from;n<=to;n++){
-    const id="px:"+c.id+":"+n;
-    const row=document.createElement("button");
-    row.className="row"+(S.cur&&S.cur.id===id?" current":"")+(n===p?" pointed":"");
-    row.innerHTML='<span class="glyph">'+NOTE+'</span>';
-    const meta=document.createElement("span"); meta.className="meta";
-    const line=firstLine(c,n);
-    const nm=document.createElement("span");
-    nm.className="name "+(line?(sc.cls||"dv"):"dv");
-    nm.textContent=line||itemTitle(c,n);
-    meta.appendChild(nm);
-    const mark=allMarks.get(id),dur=allMeta.get("dur:"+id);
-    const sub=document.createElement("span"); sub.className="sub "+(sc.cls||"dv");
-    const bits=[];
-    if(line) bits.push(itemTitle(c,n));
-    if(mark&&mark.pos>15) bits.push('<span class="mark">'+fmt(mark.pos)+'</span>');
-    else if(dur) bits.push(fmt(dur));
-    sub.innerHTML=bits.join(" · ");
-    meta.appendChild(sub);
-    if(mark&&dur&&mark.pos>15){const bb=document.createElement("span");bb.className="track-bar";
-      const ii=document.createElement("i");ii.style.width=Math.min(100,mark.pos/dur*100)+"%";
-      bb.appendChild(ii);meta.appendChild(bb);}
-    row.appendChild(meta);
-    row.addEventListener("click",()=>{S.session=null;playPath(c,n,false,true);});
-    longPress(row,()=>openItemSheet({kind:"fixed",id,name:itemTitle(c,n)}));
-    L.appendChild(row);
+/* One row per path in Settings, so the divisions are reachable without being
+   in a text. Each says how that text stands at the moment. */
+function renderDivRows(){
+  const box=$("divRows"); box.innerHTML="";
+  for(const c of S.man.collections){
+    if(!isPath(c))continue;
+    const b=document.createElement("button"); b.className="toggle";
+    b.innerHTML='<span class="meta"><span class="name dv"></span>'+
+                '<span class="sub"></span></span>'+CHEV;
+    b.querySelector(".name").textContent=c.title;
+    b.querySelector(".sub").textContent="भाग "+divsOf(c).map(d=>d.to-d.from+1).join(" · ")+
+      (hasSubs(c)?"  ·  उपभाग भी":"");
+    b.addEventListener("click",()=>openDivSheet(c));
+    box.appendChild(b);
   }
 }
 
@@ -1184,7 +1597,7 @@ async function openTile(c){
   $("list").scrollTop=0; render();
 }
 function goBack(){
-  if(S.view==="pathgroup"){S.view="path";render();return;}
+  if(S.view==="pathsub"){S.view="path";render();return;}
   if(S.view==="collection"||S.view==="path"){S.view="home";S.coll=null;render();return;}
   if(S.view==="library"){
     if(S.stack.length){S.stack.pop();S.cwd=S.stack.length?S.stack[S.stack.length-1].id:"root";render();}
@@ -1205,7 +1618,11 @@ function playFixed(c,i,fromStart){
   playTrack({id:tid(c.id,t.file),name:t.title,url:t.file,coll:c,idx:i,kind:"fixed"},fromStart);
 }
 
-async function playTrack(t,fromStart){
+/* `startPaused` is how reading in silence works: the item is loaded, its words
+   are painted and its mark is honoured, but nothing sounds until a play gesture.
+   Callers that mean "play this" pass false; callers that are only moving the
+   reader pass S.silent, so the habit carries. */
+async function playTrack(t,fromStart,startPaused){
   if(objUrl){URL.revokeObjectURL(objUrl);objUrl=null;}
   let src;
   if(t.blobId){const b=await get("blobs",t.blobId);
@@ -1230,7 +1647,8 @@ async function playTrack(t,fromStart){
     }
     if(mark&&mark.pos>0&&mark.pos<audio.duration-3){
       audio.currentTime=mark.pos; toast("Resuming from "+fmt(mark.pos));}
-    paint(); audio.play().catch(paint);
+    audio.playbackRate=S.speed;
+    paint(); if(!startPaused) audio.play().catch(paint);
   };
   $("mini").hidden=false; document.body.classList.add("has-mini");
   const cls=t.path?(scriptOf(t.path).cls||"dv"):(t.coll?"dv":"");
@@ -1270,6 +1688,8 @@ function paint(){
   const ic=audio.paused?PLAY:PAUSE;
   $("bigPlay").innerHTML=ic;$("miniPlay").innerHTML=ic;
   document.body.classList.toggle("playing",!audio.paused);
+  paintReader();
+  if(openSh===$("audioPanel")) paintPanel();
 }
 
 /* Clears the mark near the end so a finished item does not offer to resume at
@@ -1329,16 +1749,20 @@ audio.addEventListener("ended",async()=>{
   // a path item has played through to its end — the one thing that counts as done
   if(t&&t.path){
     const c=t.path;
+    // Repeat HOLDS the position. Sitting with one pad plays it again and
+    // again and never marks it done, which is the whole point of dwelling.
+    if(S.repeat){ await playPath(c,t.n,true,false,false); return; }
     if(posOf(c)===t.n) await advance(c,t.n);
     const s=S.session;
     if(s&&s.pathId===c.id&&s.items[s.i]===t.n&&s.i+1<s.items.length){
-      s.i++; await playPath(c,s.items[s.i]); return;
+      s.i++; await playPath(c,s.items[s.i],false,false,false); return;
     }
     if(s&&s.pathId===c.id){S.session=null;toast("सत्र पूर्ण");}
     // A pad tapped on its own is not part of a session, but the reciter still
-    // expects the path to carry on into the next one. Autoplay walks the
-    // path's own order, closing pad included, and stops at the end.
-    else if(S.autoplay&&t.n<lastIndex(c)){ await playPath(c,t.n+1); return; }
+    // expects the path to carry on into the next one. Auto-play is the path's
+    // OWN setting now — the one in Settings governs रसिक पदावली alone. It walks
+    // the path's order, closing pad included, and stops at the end.
+    else if(autoOf(c)&&t.n<lastIndex(c)){ await playPath(c,t.n+1,false,false,false); return; }
     paint(); render(); return;
   }
 
@@ -1370,8 +1794,8 @@ function mediaMeta(t){
   const grp=t.coll||t.path;
   navigator.mediaSession.metadata=new MediaMetadata({
     title:t.name,artist:grp?grp.title:"रसिक पदावली",album:"राधा"});
-  navigator.mediaSession.setActionHandler("play",()=>audio.play());
-  navigator.mediaSession.setActionHandler("pause",()=>audio.pause());
+  navigator.mediaSession.setActionHandler("play",()=>{setSilent(false);audio.play();});
+  navigator.mediaSession.setActionHandler("pause",()=>{setSilent(true);audio.pause();});
   navigator.mediaSession.setActionHandler("seekbackward",()=>audio.currentTime-=30);
   navigator.mediaSession.setActionHandler("seekforward",()=>audio.currentTime+=30);
 }
@@ -1380,10 +1804,10 @@ function mediaMeta(t){
 let openSh=null;
 function showSheet(e){openSh=e;e.classList.add("on");$("scrim").classList.add("on");}
 function hideSheets(){if(openSh)openSh.classList.remove("on");openSh=null;
-  $("scrim").classList.remove("on");$("dlg").classList.remove("on");}
+  $("scrim").classList.remove("on");$("dlg").classList.remove("on");paintReader();}
 $("scrim").addEventListener("click",hideSheets);
 $("fab").addEventListener("click",()=>showSheet($("addSheet")));
-$("settingsBtn").addEventListener("click",async()=>{showSheet($("setSheet"));
+$("settingsBtn").addEventListener("click",async()=>{renderDivRows();showSheet($("setSheet"));
   if(navigator.storage&&navigator.storage.estimate){const e=await navigator.storage.estimate();
     $("storageLine").textContent=bytes(e.usage||0)+" used";}
   else $("storageLine").textContent="Not reported by this browser";});
@@ -1438,8 +1862,59 @@ $("autoplayRow").addEventListener("click",async()=>{S.autoplay=!S.autoplay;
 $("backBtn").addEventListener("click",goBack);
 $("miniOpen").addEventListener("click",()=>document.body.classList.add("player-open"));
 $("playerClose").addEventListener("click",()=>document.body.classList.remove("player-open"));
-$("miniPlay").addEventListener("click",()=>{clearChain();audio.paused?audio.play().catch(()=>{}):audio.pause();});
-$("bigPlay").addEventListener("click",()=>{clearChain();audio.paused?audio.play().catch(()=>{}):audio.pause();});
+$("miniPlay").addEventListener("click",toggleAudio);
+$("bigPlay").addEventListener("click",toggleAudio);
+
+/* ---------- the reader's bar ---------- */
+$("rbPick").addEventListener("click",openPicker);
+$("pickClose").addEventListener("click",hidePicker);
+$("rbSmaller").addEventListener("click",()=>setFont(S.font-FONT_STEP));
+$("rbBigger").addEventListener("click",()=>setFont(S.font+FONT_STEP));
+$("rbReset").addEventListener("click",()=>setFont(FONT_DEF));
+$("rbAudio").addEventListener("click",()=>{
+  if(openSh===$("audioPanel"))hideSheets();
+  else{paintPanel();showSheet($("audioPanel"));paintReader();}});
+$("rbPrev").addEventListener("click",()=>readerStep(-1));
+$("rbNext").addEventListener("click",()=>readerStep(1));
+
+/* Turning the page with the thumb. The words scroll up and down inside one
+   item, so only a decisively sideways drag counts — and it is the same path as
+   the prev/next buttons, nothing of its own. */
+(function(){
+  const vs=$("verseScroll"); let x0=null,y0=null;
+  vs.addEventListener("touchstart",e=>{
+    if(e.touches.length!==1){x0=null;return;}
+    x0=e.touches[0].clientX; y0=e.touches[0].clientY;},{passive:true});
+  vs.addEventListener("touchend",e=>{
+    if(x0===null)return;
+    const t=e.changedTouches[0],dx=t.clientX-x0,dy=t.clientY-y0;
+    x0=null;
+    if(Math.abs(dx)<56||Math.abs(dx)<Math.abs(dy)*1.6)return;
+    readerStep(dx<0?1:-1);},{passive:true});
+})();
+
+/* ---------- the audio panel ---------- */
+$("apPlay").addEventListener("click",toggleAudio);
+const apSeek=$("apSeek");
+apSeek.addEventListener("input",()=>{apSeek.dragging=true;const d=audio.duration||0;
+  $("apCur").textContent=fmtHMS(d*apSeek.value/1000);
+  apSeek.style.setProperty("--fill",(apSeek.value/10)+"%");});
+apSeek.addEventListener("change",()=>{const d=audio.duration||0;
+  audio.currentTime=d*apSeek.value/1000;apSeek.dragging=false;saveMark();});
+$("apSlower").addEventListener("click",()=>setSpeed(S.speed-SPD_STEP));
+$("apFaster").addEventListener("click",()=>setSpeed(S.speed+SPD_STEP));
+$("apRepeatRow").addEventListener("click",()=>setRepeat(!S.repeat));
+$("apAutoRow").addEventListener("click",()=>{
+  const c=S.cur&&S.cur.path; if(!c){toast("Open a path first");return;}
+  setAuto(c,!autoOf(c));});
+
+/* ---------- the divisions ---------- */
+$("divDone").addEventListener("click",()=>{hideSheets();render();});
+$("divDefaults").addEventListener("click",async()=>{
+  const c=S.divEdit; if(!c)return;
+  delete S.div[c.id]; delete S.sub[c.id];
+  await del("meta","div:"+c.id); await del("meta","sub:"+c.id);
+  renderDivBody(); render();});
 $("back30").addEventListener("click",()=>audio.currentTime=Math.max(0,audio.currentTime-30));
 $("fwd30").addEventListener("click",()=>audio.currentTime=Math.min(audio.duration||0,audio.currentTime+30));
 const seek=$("seek");
@@ -1448,7 +1923,9 @@ seek.addEventListener("input",()=>{seek.dragging=true;const d=audio.duration||0;
 seek.addEventListener("change",()=>{const d=audio.duration||0;
   audio.currentTime=d*seek.value/1000;seek.dragging=false;saveMark();});
 window.addEventListener("popstate",()=>{
-  if(document.body.classList.contains("player-open"))document.body.classList.remove("player-open");
+  if(pickerOpen())hidePicker();
+  else if(openSh)hideSheets();
+  else if(document.body.classList.contains("player-open"))document.body.classList.remove("player-open");
   else if(S.view!=="home")goBack();
   history.pushState(null,"");});
 
@@ -1465,9 +1942,26 @@ window.addEventListener("popstate",()=>{
     S.pos[c.id]=(typeof p==="number"&&p>=0&&p<=lastIndex(c))?p:0;
     const s=await get("meta","script:"+c.id);
     if(s&&c.scripts.some(x=>x.id===s)) S.script[c.id]=s;
+    // A stored split is honoured only while it still covers this text — a cut
+    // that no longer fits falls back to the default rather than to a gap.
+    const dv=await get("meta","div:"+c.id);
+    if(cutsValid(0,lastIndex(c),dv)) S.div[c.id]=dv;
+    const sb=await get("meta","sub:"+c.id);
+    if(sb&&typeof sb==="object") S.sub[c.id]=sb;
+    const au=await get("meta","auto:"+c.id);
+    if(au!==undefined) S.auto[c.id]=!!au;
   }
   const ap=await get("meta","autoplay"); S.autoplay=ap===undefined?true:ap;
   $("autoplaySw").classList.toggle("on",S.autoplay);
+  const sl=await get("meta","silent"); S.silent=!!sl;
+  const sp=await get("meta","speed");
+  if(typeof sp==="number"&&sp>=SPD_MIN&&sp<=SPD_MAX) S.speed=sp;
+  audio.playbackRate=S.speed;
+  const rp=await get("meta","repeat"); S.repeat=!!rp;
+  const fs=await get("meta","fontsize");
+  S.font=(typeof fs==="number"&&fs>=FONT_MIN&&fs<=FONT_MAX)?fs:FONT_DEF;
+  document.documentElement.style.setProperty("--verse-size",S.font+"px");
+  paintPanel(); paintReader();
   $("bigPlay").innerHTML=PLAY;$("miniPlay").innerHTML=PLAY;
   history.pushState(null,"");
   await render();
