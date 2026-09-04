@@ -987,6 +987,7 @@ const S={man:FALLBACK,view:"home",cwd:"root",stack:[],coll:null,grp:0,
   auto:{},     // path id -> carry on into the next one (persisted "auto:<id>")
   divEdit:null,// which text the division sheet is editing
   read:null,   // {id,n} while a text-only slide is open (सेवक वाणी)
+  vpos:{},     // id -> {section: verse} — how far into each प्रकरण  ("vpos:<id>")
   gloss:false, // are the व्याख्या blocks open  (persisted "gloss")
   // Reading with the music off is a HABIT, not a property of a text: one flag
   // for the app, remembered across items and across launches. Only an explicit
@@ -1481,6 +1482,31 @@ function paintReader(){
    One section fills the reader: its verses in order, each with its own व्याख्या
    folded underneath. The fold is per verse, and the bar's own button opens or
    closes every one of them at once — that choice is remembered. */
+/* A प्रकरण is one item but many verses — twenty-three in भक्त-भजन — so the
+   section alone is not "where I am". Each verse is tagged, the one at the top of
+   the screen is remembered as you read, and reopening puts it back there. */
+function versesIn(){return $("verseRich").querySelectorAll(".versetext");}
+function verseAt(){
+  const vs=$("verseScroll"),base=vs.getBoundingClientRect().top+56,all=versesIn();
+  let k=0;
+  for(let i=0;i<all.length;i++) if(all[i].getBoundingClientRect().top<=base) k=i;
+  return k;
+}
+function scrollToVerse(k){
+  const vs=$("verseScroll"),all=versesIn();
+  if(k>0&&all[k])
+    vs.scrollTop+=all[k].getBoundingClientRect().top-vs.getBoundingClientRect().top-10;
+}
+function vposOf(c,n){const m=S.vpos[c.id];const k=m&&m[n];return typeof k==="number"?k:0;}
+async function setVpos(c,n,k){
+  const m=Object.assign({},S.vpos[c.id]||{});
+  if(m[n]===k)return;
+  m[n]=k; S.vpos[c.id]=m; await put("meta",m,"vpos:"+c.id);
+}
+function paintWhere(c,n){
+  const all=versesIn(),k=verseAt();
+  $("nowName").textContent=itemTitle(c,n)+(all.length>1?"  ·  "+(k+1)+"/"+all.length:"");
+}
 function showSection(c,n){
   const box=$("verseRich"),row=rowFor(c,n);
   box.innerHTML=""; $("verseScroll").scrollTop=0;
@@ -1499,6 +1525,12 @@ function showSection(c,n){
       box.appendChild(el);
     }
   }
+  // back to the verse this प्रकरण was left on. Twice: once now, and once when
+  // the Devanagari face has loaded, because that shifts every offset.
+  const goto=()=>{ scrollToVerse(vposOf(c,n)); paintWhere(c,n); };
+  goto();
+  requestAnimationFrame(goto);
+  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(goto);
 }
 async function openSection(c,n,raise){
   await loadText(c);
@@ -1506,7 +1538,7 @@ async function openSection(c,n,raise){
   S.pos[c.id]=n; await put("meta",n,"pos:"+c.id);
   document.body.classList.remove("path-play");
   document.body.classList.add("text-play");
-  const nm=$("nowName"); nm.textContent=itemTitle(c,n); nm.className="now-name dv";
+  $("nowName").className="now-name dv";
   showSection(c,n);
   if(raise) document.body.classList.add("player-open");
   paintReader(); render();
@@ -1517,7 +1549,12 @@ function closeReader(){
 }
 async function setGloss(v){
   S.gloss=!!v; await put("meta",S.gloss,"gloss");
+  const k=verseAt();
   for(const d of $("verseRich").querySelectorAll("details.gloss")) d.open=S.gloss;
+  // hold the verse you were on: opening every gloss would otherwise push it
+  // hundreds of pixels down the page
+  scrollToVerse(k);
+  if(S.read){const c=collById(S.read.id); if(c) paintWhere(c,S.read.n);}
   paintReader();
 }
 
@@ -1587,6 +1624,17 @@ function openTitlePicker(c,cur){
 }
 function hidePicker(){$("pickOv").classList.remove("on");}
 const pickerOpen=()=>$("pickOv").classList.contains("on");
+
+/* Reading IS the gesture that moves the place, so the scroll records it —
+   settled, not on every frame, and only on a text slide. */
+let vT=null;
+$("verseScroll").addEventListener("scroll",()=>{
+  if(!S.read)return;
+  const c=collById(S.read.id); if(!c)return;
+  paintWhere(c,S.read.n);
+  clearTimeout(vT);
+  vT=setTimeout(()=>setVpos(c,S.read.n,verseAt()),400);
+},{passive:true});
 
 /* ---------- the audio panel ---------- */
 function paintPanel(){
@@ -2122,6 +2170,8 @@ window.addEventListener("popstate",()=>{
     if(sb&&typeof sb==="object") S.sub[c.id]=sb;
     const au=await get("meta","auto:"+c.id);
     if(au!==undefined) S.auto[c.id]=!!au;
+    const vp=await get("meta","vpos:"+c.id);
+    if(vp&&typeof vp==="object") S.vpos[c.id]=vp;
   }
   const ap=await get("meta","autoplay"); S.autoplay=ap===undefined?true:ap;
   $("autoplaySw").classList.toggle("on",S.autoplay);
