@@ -273,6 +273,43 @@
   .versemuted{color:var(--muted);font-size:14px;line-height:1.7;white-space:normal;
     padding:0 6px}
 
+  /* ---------- a text-only slide: श्री हित सेवक वाणी ----------
+     A section is a run of verses, most of them followed by their own व्याख्या.
+     The gloss is folded away so the page reads as verse until it is asked for. */
+  .versrich{display:none;padding-bottom:8px}
+  body.text-play .versrich{display:block}
+  body.text-play #verseText{display:none}
+  .versrich .versetext{margin:0 0 4px}
+  .vnote{font-size:13px;color:var(--muted);text-align:center;margin:2px 0 10px}
+  .vcolo{font-size:12.5px;color:var(--gold);text-align:center;margin:14px 0 4px;
+    letter-spacing:.3px}
+  .gloss{margin:2px 0 18px}
+  .gloss summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:7px;
+    justify-content:center;font-size:12px;letter-spacing:.5px;color:var(--muted);
+    padding:5px 0}
+  .gloss summary::-webkit-details-marker{display:none}
+  .gloss summary::before{content:"›";display:inline-block;font-size:15px;line-height:1;
+    transition:transform .15s;color:var(--gold)}
+  .gloss[open] summary::before{transform:rotate(90deg)}
+  .gloss summary:active{color:var(--gold)}
+  .gbody{font-size:calc(var(--verse-size,18px) * .8);line-height:1.85;color:var(--muted);
+    text-align:left;white-space:pre-wrap;overflow-wrap:anywhere;
+    border-left:2px solid rgba(201,162,39,.28);padding:2px 0 2px 12px;margin:2px 4px 0}
+  /* the same furniture as a path slide, minus everything that is about sound */
+  body.text-play .disc,body.text-play .now-folder,body.text-play #seek,
+  body.text-play .player>.times,body.text-play .transport,
+  body.text-play .chainline{display:none}
+  body.text-play .versewrap{display:flex}
+  body.text-play .rbar{display:flex}
+  body.text-play .now-name{order:-1;font-size:15px;color:var(--muted);font-weight:600;
+    letter-spacing:.3px;margin:0 0 10px}
+  body.text-play #rbAudio,body:not(.text-play) #rbGloss{display:none}
+  /* the picker lists sections by their titles, one to a row */
+  .pick-grid.titles{grid-template-columns:1fr;gap:7px}
+  .titles .pcell{aspect-ratio:auto;display:flex;align-items:center;gap:12px;
+    padding:13px 14px;text-align:left;font-size:15px}
+  .titles .pcell.on{font-weight:600}
+
   /* ---------- रसिक पदावली — the library, laid out as tiles ---------- */
   .ltiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px var(--pad) 0}
   .ltile{position:relative;aspect-ratio:1/1;border-radius:16px;overflow:hidden;padding:13px;
@@ -738,7 +775,10 @@
   <!-- On the path slides the words are the point of the screen, so they take
        the room the disc had. Which of the two shows is body.path-play. -->
   <div class="versewrap">
-    <div class="versescroll" id="verseScroll"><p class="versetext dv" id="verseText"></p></div>
+    <div class="versescroll" id="verseScroll">
+      <p class="versetext dv" id="verseText"></p>
+      <div class="versrich dv" id="verseRich"></div>
+    </div>
   </div>
   <h2 class="now-name" id="nowName">—</h2>
   <div class="now-folder" id="nowFolder"></div>
@@ -769,6 +809,10 @@
     </button>
     <button class="rb" id="rbAudio" aria-label="Audio controls">
       <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg>
+    </button>
+    <!-- Only on a text slide: opens or closes every व्याख्या in the section. -->
+    <button class="rb" id="rbGloss" aria-label="Show or hide the commentary">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 015.5 4H10a2 2 0 012 2v13a2 2 0 00-2-1.6H4z"/><path d="M20 5.5A1.5 1.5 0 0018.5 4H14a2 2 0 00-2 2v13a2 2 0 012-1.6h6z"/></svg>
     </button>
     <button class="rb" id="rbPrev" aria-label="Previous item">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
@@ -942,6 +986,8 @@ const S={man:FALLBACK,view:"home",cwd:"root",stack:[],coll:null,grp:0,
   sub:{},      // path id -> {divIndex: cut points}     (persisted "sub:<id>")
   auto:{},     // path id -> carry on into the next one (persisted "auto:<id>")
   divEdit:null,// which text the division sheet is editing
+  read:null,   // {id,n} while a text-only slide is open (सेवक वाणी)
+  gloss:false, // are the व्याख्या blocks open  (persisted "gloss")
   // Reading with the music off is a HABIT, not a property of a text: one flag
   // for the app, remembered across items and across launches. Only an explicit
   // play gesture clears it — see setSilent().
@@ -1005,6 +1051,11 @@ function longPress(el,fn){let t=null,f=false;
    ================================================================ */
 
 const isPath=c=>!!c&&c.mode==="path";
+/* श्री हित सेवक वाणी: the same reader, with nothing to play. Its recordings are
+   YouTube embeds in the original app and cannot be lifted, so the slide is the
+   words alone — picker, size, prev, next, and the gloss. */
+const isText=c=>!!c&&c.mode==="text";
+const collById=id=>S.man.collections.find(c=>c.id===id)||null;
 function scriptOf(c){const id=S.script[c.id];
   return c.scripts.find(s=>s.id===id)||c.scripts[0];}
 function posOf(c){const p=S.pos[c.id];return typeof p==="number"?p:0;}
@@ -1028,6 +1079,9 @@ function bracketLabel(c,which){
   const sc=scriptOf(c),b=c[which];
   return (which==="open"?sc.openLabel:sc.closeLabel)||(b&&b.label)||"";}
 function itemTitle(c,n){
+  // the titles are in the manifest too, so a tile can name the section it
+  // stands on without pulling the whole 400 KB of text first
+  if(isText(c)){const r=rowFor(c,n);return r?r.title:((c.sections&&c.sections[n])||"");}
   if(c.open&&n===c.open.n) return bracketLabel(c,"open");
   if(c.close&&n===c.close.n) return bracketLabel(c,"close");
   return scriptOf(c).itemLabel+" "+n;}
@@ -1205,6 +1259,7 @@ const TILE_INK={"sevak-vani":"#C2557A"};
 
 /* the line under a tile's name: for a path, where it currently stands */
 function tileRange(c){
+  if(isText(c)) return itemTitle(c,posOf(c))||"आरम्भ";
   if(isPath(c)){
     const p=posOf(c);
     if(p===0) return c.open?bracketLabel(c,"open"):"आरम्भ";
@@ -1397,10 +1452,10 @@ async function jumpTo(c,n){
   render();
 }
 function readerStep(delta){
-  const t=S.cur; if(!t||!t.path)return;
-  const c=t.path,n=t.n+delta;
-  if(n<0||n>lastIndex(c))return;
-  jumpTo(c,n);
+  const x=readerCtx(); if(!x)return;
+  const n=x.n+delta;
+  if(n<0||n>lastIndex(x.c))return;
+  x.text?openSection(x.c,n):jumpTo(x.c,n);
 }
 
 async function setFont(px){
@@ -1413,12 +1468,64 @@ async function setFont(px){
 
 /* The bar's own state: what is reachable from where the reader stands. */
 function paintReader(){
-  const t=S.cur,path=t&&t.path;
-  $("rbPrev").disabled=!path||t.n<=0;
-  $("rbNext").disabled=!path||t.n>=lastIndex(path);
+  const x=readerCtx();
+  $("rbPrev").disabled=!x||x.n<=0;
+  $("rbNext").disabled=!x||x.n>=lastIndex(x.c);
   $("rbSmaller").disabled=S.font<=FONT_MIN;
   $("rbBigger").disabled=S.font>=FONT_MAX;
   $("rbAudio").classList.toggle("on",openSh===$("audioPanel"));
+  $("rbGloss").classList.toggle("on",S.gloss);
+}
+
+/* ---------- a text-only section ----------
+   One section fills the reader: its verses in order, each with its own व्याख्या
+   folded underneath. The fold is per verse, and the bar's own button opens or
+   closes every one of them at once — that choice is remembered. */
+function showSection(c,n){
+  const box=$("verseRich"),row=rowFor(c,n);
+  box.innerHTML=""; $("verseScroll").scrollTop=0;
+  if(!row){box.textContent="";return;}
+  for(const [k,t] of row.b){
+    if(k==="c"){
+      const d=document.createElement("details"); d.className="gloss"; d.open=S.gloss;
+      const sm=document.createElement("summary"); sm.className="dv"; sm.textContent="व्याख्या";
+      const bd=document.createElement("div"); bd.className="gbody dv"; bd.textContent=t;
+      d.appendChild(sm); d.appendChild(bd); box.appendChild(d);
+    }else{
+      const el=document.createElement(k==="v"?"p":"div");
+      el.className=k==="v"?"versetext dv":(k==="k"?"vcolo dv":"vnote dv");
+      // a wrapped line must not leave its danda stranded, as on the path slides
+      el.textContent=k==="v"?t.replace(/ +([।॥])/g,"\u00A0$1"):t;
+      box.appendChild(el);
+    }
+  }
+}
+async function openSection(c,n,raise){
+  await loadText(c);
+  S.read={id:c.id,n:n};
+  S.pos[c.id]=n; await put("meta",n,"pos:"+c.id);
+  document.body.classList.remove("path-play");
+  document.body.classList.add("text-play");
+  const nm=$("nowName"); nm.textContent=itemTitle(c,n); nm.className="now-name dv";
+  showSection(c,n);
+  if(raise) document.body.classList.add("player-open");
+  paintReader(); render();
+}
+function closeReader(){
+  document.body.classList.remove("player-open");
+  if(S.read){S.read=null;document.body.classList.remove("text-play");render();}
+}
+async function setGloss(v){
+  S.gloss=!!v; await put("meta",S.gloss,"gloss");
+  for(const d of $("verseRich").querySelectorAll("details.gloss")) d.open=S.gloss;
+  paintReader();
+}
+
+/* Where the reader stands, whichever kind of slide it is. */
+function readerCtx(){
+  if(S.read){const c=collById(S.read.id);return c?{c:c,n:S.read.n,text:true}:null;}
+  const t=S.cur;
+  return t&&t.path?{c:t.path,n:t.n,text:false}:null;
 }
 
 /* ---------- the item picker ----------
@@ -1436,12 +1543,13 @@ function pickScope(c,n){
   return hasSubs(c)?subsOf(c,i)[subIndex(c,i,n)]:divsOf(c)[i];
 }
 function openPicker(){
-  const t=S.cur; if(!t||!t.path)return;
-  const c=t.path,sp=pickScope(c,t.n);
+  const x=readerCtx(); if(!x)return;
+  if(x.text) return openTitlePicker(x.c,x.n);
+  const t=S.cur,c=t.path,sp=pickScope(c,t.n);
   const ttl=$("pickTitle");
   ttl.textContent=rangeText(c,sp);
   ttl.className="pick-title "+(scriptOf(c).cls||"dv");
-  const g=$("pickGrid"); g.innerHTML=""; let here=null;
+  const g=$("pickGrid"); g.className="pick-grid"; g.innerHTML=""; let here=null;
   for(let n=sp.from;n<=sp.to;n++){
     const isOpen=!!(c.open&&n===c.open.n),isClose=!!(c.close&&n===c.close.n);
     const b=document.createElement("button");
@@ -1452,6 +1560,26 @@ function openPicker(){
     b.setAttribute("aria-label",itemTitle(c,n));
     b.addEventListener("click",()=>{hidePicker();jumpTo(c,n);});
     if(n===t.n)here=b;
+    g.appendChild(b);
+  }
+  $("pickOv").classList.add("on");
+  if(here)here.scrollIntoView({block:"center"});
+}
+/* सेवक वाणी has no numbers to offer — प्रकरण 7 means nothing, "श्रीहित रस-रीति"
+   means everything — so its picker lists the eighteen sections by name. */
+function openTitlePicker(c,cur){
+  $("pickTitle").textContent=c.title;
+  $("pickTitle").className="pick-title dv";
+  const g=$("pickGrid"); g.className="pick-grid titles"; g.innerHTML=""; let here=null;
+  for(let n=0;n<=lastIndex(c);n++){
+    const b=document.createElement("button");
+    b.className="pcell"+(n===cur?" on":"");
+    // the titles carry their own numbering — 1. श्रीहित जस विलास — so a chip
+    // beside them would only say it twice
+    const nm=document.createElement("span"); nm.className="dv"; nm.textContent=itemTitle(c,n);
+    b.appendChild(nm);
+    b.addEventListener("click",()=>{hidePicker();openSection(c,n);});
+    if(n===cur)here=b;
     g.appendChild(b);
   }
   $("pickOv").classList.add("on");
@@ -1627,6 +1755,7 @@ async function openTile(c){
     showSheet($("soonSheet")); return;
   }
   if(c.mode==="library"){S.view="library";S.cwd="root";S.stack=[];$("list").scrollTop=0;render();return;}
+  if(isText(c)){S.coll=c; await openSection(c,posOf(c),true); return;}
   S.coll=c; S.grp=0;
   S.view=isPath(c)?"path":"collection";
   $("list").scrollTop=0; render();
@@ -1694,7 +1823,9 @@ async function playTrack(t,fromStart,startPaused){
   $("nowFolder").textContent=grp?(grp.title+(grp.range?" "+grp.range:"")):"रसिक पदावली";
   $("nowFolder").classList.toggle("dv",true);
 
-  // the words, in place of the disc
+  // the words, in place of the disc. A path item takes the reader back from a
+  // text slide, so the two can never disagree about whose words are on screen.
+  if(t.path){S.read=null;document.body.classList.remove("text-play");}
   document.body.classList.toggle("path-play",!!t.path);
   if(t.path) showVerse(t.path,t.n);
   render(); mediaMeta(t);
@@ -1895,8 +2026,13 @@ $("autoplayRow").addEventListener("click",async()=>{S.autoplay=!S.autoplay;
 
 /* ---------- controls ---------- */
 $("backBtn").addEventListener("click",goBack);
-$("miniOpen").addEventListener("click",()=>document.body.classList.add("player-open"));
-$("playerClose").addEventListener("click",()=>document.body.classList.remove("player-open"));
+$("miniOpen").addEventListener("click",()=>{
+  // the mini bar belongs to whatever is playing, so it takes the reader back
+  const t=S.cur;
+  if(t&&t.path&&S.read){S.read=null;document.body.classList.remove("text-play");
+    document.body.classList.add("path-play");showVerse(t.path,t.n);render();}
+  document.body.classList.add("player-open");});
+$("playerClose").addEventListener("click",closeReader);
 $("miniPlay").addEventListener("click",toggleAudio);
 $("bigPlay").addEventListener("click",toggleAudio);
 
@@ -1909,6 +2045,7 @@ $("rbReset").addEventListener("click",()=>setFont(FONT_DEF));
 $("rbAudio").addEventListener("click",()=>{
   if(openSh===$("audioPanel"))hideSheets();
   else{paintPanel();showSheet($("audioPanel"));paintReader();}});
+$("rbGloss").addEventListener("click",()=>setGloss(!S.gloss));
 $("rbPrev").addEventListener("click",()=>readerStep(-1));
 $("rbNext").addEventListener("click",()=>readerStep(1));
 
@@ -1960,7 +2097,7 @@ seek.addEventListener("change",()=>{const d=audio.duration||0;
 window.addEventListener("popstate",()=>{
   if(pickerOpen())hidePicker();
   else if(openSh)hideSheets();
-  else if(document.body.classList.contains("player-open"))document.body.classList.remove("player-open");
+  else if(document.body.classList.contains("player-open"))closeReader();
   else if(S.view!=="home")goBack();
   history.pushState(null,"");});
 
@@ -1972,7 +2109,7 @@ window.addEventListener("popstate",()=>{
     if(r.ok){const m=await r.json();
       if(m&&Array.isArray(m.collections)&&m.collections.length)S.man=m;}}catch(e){}
   for(const c of S.man.collections){
-    if(!isPath(c))continue;
+    if(!isPath(c)&&!isText(c))continue;
     const p=await get("meta","pos:"+c.id);
     S.pos[c.id]=(typeof p==="number"&&p>=0&&p<=lastIndex(c))?p:0;
     const s=await get("meta","script:"+c.id);
@@ -1993,6 +2130,7 @@ window.addEventListener("popstate",()=>{
   if(typeof sp==="number"&&sp>=SPD_MIN&&sp<=SPD_MAX) S.speed=sp;
   audio.playbackRate=S.speed;
   const rp=await get("meta","repeat"); S.repeat=!!rp;
+  const gl=await get("meta","gloss"); S.gloss=!!gl;
   const fs=await get("meta","fontsize");
   S.font=(typeof fs==="number"&&fs>=FONT_MIN&&fs<=FONT_MAX)?fs:FONT_DEF;
   document.documentElement.style.setProperty("--verse-size",S.font+"px");

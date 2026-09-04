@@ -10,7 +10,7 @@
  *   AUDIO_VERSION — bump ONLY when an mp3 under audio/ is replaced. Expensive:
  *                   every track has to be downloaded again.
  */
-var SHELL_VERSION = 'v22';  // v22: the picker is bounded by the sitting you are in
+var SHELL_VERSION = 'v23';  // v23: श्री हित सेवक वाणी, a slide of words with no sound
 var AUDIO_VERSION = 'v1';   // untouched: this release only ADDS mp3s, it replaces none
 var SHELL_CACHE = 'radha-shell-' + SHELL_VERSION;
 var AUDIO_CACHE = 'radha-audio-' + AUDIO_VERSION;
@@ -35,6 +35,7 @@ var SHELL = [
   // the recitation text: small, and the path slides are useless without it
   'text/shcj.json',
   'text/rsn-bn.json',
+  'text/sevakvani.json',
   'icons/icon-192.png',
   'icons/icon-512.png',
   'icons/icon-maskable-192.png',
