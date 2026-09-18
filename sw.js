@@ -10,7 +10,7 @@
  *   AUDIO_VERSION — bump ONLY when an mp3 under audio/ is replaced. Expensive:
  *                   every track has to be downloaded again.
  */
-var SHELL_VERSION = 'v26';  // v26: the Sudha Nidhi's frame follows its script
+var SHELL_VERSION = 'v27';  // v27: the ব্যাখ্যা reads with the verse; only শব্দার্থ folds
 var AUDIO_VERSION = 'v1';   // untouched: this release only ADDS mp3s, it replaces none
 var SHELL_CACHE = 'radha-shell-' + SHELL_VERSION;
 var AUDIO_CACHE = 'radha-audio-' + AUDIO_VERSION;

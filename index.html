@@ -297,6 +297,12 @@
     transition:transform .15s;color:var(--gold)}
   .gloss[open] summary::before{transform:rotate(90deg)}
   .gloss summary:active{color:var(--gold)}
+  /* A meaning that is NEVER folded. It belongs to the same chunk as the verse
+     it explains, so it carries the same body styling as a fold's — only its
+     heading is a label rather than something to press. */
+  .gopen{margin:2px 0 18px}
+  .gopen .ghead{display:flex;align-items:center;justify-content:center;gap:7px;
+    font-size:12px;letter-spacing:.5px;color:var(--muted);padding:5px 0}
   .gbody{font-size:calc(var(--verse-size,18px) * .8);line-height:1.85;color:var(--muted);
     text-align:left;white-space:pre-wrap;overflow-wrap:anywhere;
     border-left:2px solid rgba(201,162,39,.28);padding:2px 0 2px 12px;margin:2px 4px 0}
@@ -1555,6 +1561,15 @@ function paintWhere(c,n){
 /* One fold. Sevak Vani has one kind and names it in the code; the Sudha Nidhi
    has two and carries their names in the text, because they are Bengali and the
    face they need is not the one a Devanagari heading needs. */
+/* The same meaning, shown outright. Which heading gets this is the script's
+   own `openGloss` in the manifest — never a heading hardcoded here, which is
+   the mistake `glossFold` was factored out of. */
+function glossOpen(label,body,cls){
+  const d=document.createElement("div"); d.className="gopen";
+  const h=document.createElement("div"); h.className="ghead "+cls; h.textContent=label;
+  const bd=document.createElement("div"); bd.className="gbody "+cls; bd.textContent=body;
+  d.appendChild(h); d.appendChild(bd); return d;
+}
 function glossFold(label,body,cls){
   const d=document.createElement("details"); d.className="gloss"; d.open=S.gloss;
   const sm=document.createElement("summary"); sm.className=cls; sm.textContent=label;
@@ -1950,10 +1965,17 @@ function showVerse(c,n){
   el.textContent=row?row.t.replace(/ +([।॥])/g,"\u00A0$1")
     :(sc.placeholderTitle?sc.placeholderTitle+"\n\n"+(sc.placeholderBody||""):"");
   box.innerHTML="";
-  const g=row&&row.g;
-  if(g) for(const [label,body] of g) box.appendChild(glossFold(label,body,sc.cls||"dv"));
-  // the bar's fold-everything button is only worth offering where folds exist
-  document.body.classList.toggle("glossable",!!g);
+  const g=row&&row.g,cls=sc.cls||"dv";
+  // The sense of the verse reads with the verse; the word list is what the
+  // book button reveals. Which is which is `openGloss` in the manifest, so a
+  // text whose script names none keeps every block folded, as before.
+  let folds=0;
+  if(g) for(const [label,body] of g){
+    if(sc.openGloss&&label===sc.openGloss) box.appendChild(glossOpen(label,body,cls));
+    else{ box.appendChild(glossFold(label,body,cls)); folds++; }
+  }
+  // the bar's button belongs to whatever actually folds, not to having a meaning
+  document.body.classList.toggle("glossable",folds>0);
 }
 
 function paint(){
