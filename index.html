@@ -303,9 +303,13 @@
   .gopen{margin:2px 0 18px}
   .gopen .ghead{display:flex;align-items:center;justify-content:center;gap:7px;
     font-size:12px;letter-spacing:.5px;color:var(--muted);padding:5px 0}
-  .gbody{font-size:calc(var(--verse-size,18px) * .8);line-height:1.85;color:var(--muted);
+  /* The meaning is read, not consulted: it carries the SAME size as the verse
+     it explains — `--verse-size`, so A+ / A- moves both together — and no rule
+     down its left, which was furniture the verse itself does not wear. It stays
+     left-aligned prose against the centred verse, and a shade quieter. */
+  .gbody{font-size:var(--verse-size,18px);line-height:1.85;color:var(--muted);
     text-align:left;white-space:pre-wrap;overflow-wrap:anywhere;
-    border-left:2px solid rgba(201,162,39,.28);padding:2px 0 2px 12px;margin:2px 4px 0}
+    padding:2px 0;margin:2px 4px 0}
   /* the same furniture as a path slide, minus everything that is about sound */
   body.text-play .disc,body.text-play .now-folder,body.text-play #seek,
   body.text-play .player>.times,body.text-play .transport,
