@@ -1096,6 +1096,34 @@ function itemTitle(c,n){
   if(c.close&&n===c.close.n) return bracketLabel(c,"close");
   return scriptOf(c).itemLabel+" "+n;}
 
+/* ---------- the frame, in the script the text is read in ----------
+   A path's furniture — भाग, एक साथ, यहीं, the name at the top — was written in
+   Devanagari because both paths were Hindi. The Sudha Nidhi is read in Bengali,
+   so the frame follows the verse: a manifest script entry may carry its own
+   `title` and a `words` map, and whatever it does not carry falls back to the
+   Devanagari below. चौरासी जी and सेवक वाणी carry neither and are untouched.
+
+   These are one screen's worth of words, not a translation layer — there is no
+   locale here and nothing to negotiate with the browser. A text is read in the
+   script it was written in, which the manifest already says. */
+const WORDS={
+  part:"भाग", subpart:"उपभाग", subsOf:"भाग {n} के उपभाग",
+  together:"एक साथ", here:"यहीं", start:"आरम्भ",
+  fromStart:"आरम्भ से", sessionDone:"सत्र पूर्ण", alsoSubs:"उपभाग भी",
+  opensWith:"पहला भाग सदा {op} से खुलता है।",
+  closesWith:"अन्तिम भाग {cl} पर पूरा होता है।",
+  opensCloses:"पहला भाग सदा {op} से खुलता है और अन्तिम {cl} पर पूरा होता है।"};
+function W(c,k,vals){
+  const sc=(c&&c.scripts)?scriptOf(c):null;
+  let t=(sc&&sc.words&&sc.words[k])||WORDS[k];
+  if(vals) for(const v in vals) t=t.split("{"+v+"}").join(vals[v]);
+  return t;}
+/* the face a collection's own frame wears — its verses' face where it has one */
+const clsOf=c=>((c&&c.scripts)?(scriptOf(c).cls||"dv"):"dv");
+/* the name it wears, in that same script */
+const titleOf=c=>{const sc=(c&&c.scripts)?scriptOf(c):null;
+  return (sc&&sc.title)||c.title;};
+
 /* ---------- how a path is divided into sittings ----------
 
    A division is stored as its CUT POINTS — the item each division ends on, bar
@@ -1217,7 +1245,7 @@ async function startSession(c,d){
    plays IS the item the path stands on, so nothing is pushed forward silently. */
 async function restartPath(c,d){
   S.session=null;S.pos[c.id]=0;await put("meta",0,"pos:"+c.id);
-  toast("आरम्भ से");
+  toast(W(c,"fromStart"));
   const items=[];for(let n=d.from;n<=d.to;n++) items.push(n);
   S.session={pathId:c.id,items:items,i:0,from:d.from,to:d.to};
   await setSilent(false);
@@ -1234,14 +1262,14 @@ async function render(){
     setTitle("राधा","",true); await renderTiles(L); return;
   }
   if(S.view==="collection"){
-    setTitle(S.coll.title,S.coll.range||"",true); await renderColl(S.coll,L); return;
+    setTitle(titleOf(S.coll),S.coll.range||"",clsOf(S.coll)); await renderColl(S.coll,L); return;
   }
   if(S.view==="path"){
-    setTitle(S.coll.title,"",true); await renderPath(S.coll,L); return;
+    setTitle(titleOf(S.coll),"",clsOf(S.coll)); await renderPath(S.coll,L); return;
   }
   if(S.view==="pathsub"){
     const d=divsOf(S.coll)[S.grp];
-    setTitle(S.coll.title,rangeText(S.coll,d),true);
+    setTitle(titleOf(S.coll),rangeText(S.coll,d),clsOf(S.coll));
     await renderPathSub(S.coll,L); return;
   }
   if(S.stack.length) setTitle(S.stack[S.stack.length-1].name,
@@ -1249,9 +1277,14 @@ async function render(){
   else setTitle("रसिक पदावली","",true);
   await renderUser(L);
 }
-function setTitle(t,crumb,dv){
-  $("pageTitle").firstChild.nodeValue=t;
-  $("pageTitle").classList.toggle("dv",!!dv);
+/* `face` is the class the name is set in — "dv", "bn", or true for Devanagari,
+   which is what the fixed titles (राधा, रसिक पदावली) still pass. */
+function setTitle(t,crumb,face){
+  const p=$("pageTitle");
+  p.firstChild.nodeValue=t;
+  const cls=(face===true?"dv":face)||"";
+  p.classList.toggle("dv",cls==="dv");
+  p.classList.toggle("bn",cls==="bn");
   $("crumb").textContent=crumb;
 }
 
@@ -1269,10 +1302,10 @@ const TILE_INK={"sevak-vani":"#C2557A"};
 
 /* the line under a tile's name: for a path, where it currently stands */
 function tileRange(c){
-  if(isText(c)) return itemTitle(c,posOf(c))||"आरम्भ";
+  if(isText(c)) return itemTitle(c,posOf(c))||W(c,"start");
   if(isPath(c)){
     const p=posOf(c);
-    if(p===0) return c.open?bracketLabel(c,"open"):"आरम्भ";
+    if(p===0) return c.open?bracketLabel(c,"open"):W(c,"start");
     if(c.close&&p===c.close.n) return bracketLabel(c,"close");
     return scriptOf(c).itemLabel+" "+p+" / "+c.count;
   }
@@ -1293,13 +1326,13 @@ async function renderTiles(L){
     if(soon) sub='<span class="tile-soon dv">शीघ्र</span>';
     else{
       const r=c.mode==="library"?(libCount?libCount+" item"+(libCount>1?"s":""):"अपने गीत"):tileRange(c);
-      if(r) sub='<span class="tile-range '+(isPath(c)?(scriptOf(c).cls||"dv"):"dv")+'"></span>';
+      if(r) sub='<span class="tile-range '+clsOf(c)+'"></span>';
       t.dataset.sub=r||"";
     }
     t.innerHTML='<span class="tile-alpona"><svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><use href="#m-alpona"/></svg></span>'+
       (mk?'<span class="tile-art"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#m-'+mk+'"/></svg></span>':'')+
-      '<span class="tile-hi dv"></span>'+sub;
-    t.querySelector(".tile-hi").textContent=c.title;
+      '<span class="tile-hi '+clsOf(c)+'"></span>'+sub;
+    t.querySelector(".tile-hi").textContent=titleOf(c);
     const rr=t.querySelector(".tile-range");
     if(rr) rr.textContent=t.dataset.sub;
     t.addEventListener("click",()=>openTile(c));
@@ -1336,14 +1369,16 @@ async function renderColl(c,L){
 
 /* one leaf of paper: a sitting, what it covers, and how many items that is */
 function stile(c,name,range,count,now){
+  const cls=clsOf(c);
   const t=document.createElement("button");
   t.className="stile"+(now?" now":"");
   t.style.setProperty("--tint",c.tint||"#8C5A28");
-  t.innerHTML=(now?'<span class="snow dv">यहीं</span>':"")+
-    '<span class="sname dv"></span><span class="srange"></span><span class="scount"></span>';
+  t.innerHTML=(now?'<span class="snow '+cls+'"></span>':"")+
+    '<span class="sname '+cls+'"></span><span class="srange"></span><span class="scount"></span>';
+  if(now) t.querySelector(".snow").textContent=W(c,"here");
   t.querySelector(".sname").textContent=name;
   const r=t.querySelector(".srange");
-  r.textContent=range; r.className="srange "+(scriptOf(c).cls||"dv");
+  r.textContent=range; r.className="srange "+cls;
   t.querySelector(".scount").textContent=count;
   return t;
 }
@@ -1382,11 +1417,12 @@ async function renderPath(c,L){
   await loadText(c);
   pathHead(c,L);
   const p=posOf(c),ds=divsOf(c),cur=divIndex(c,p);
-  const h=document.createElement("div"); h.className="sect dv"; h.textContent="भाग";
+  const h=document.createElement("div"); h.className="sect "+clsOf(c);
+  h.textContent=W(c,"part");
   L.appendChild(h);
   const grid=document.createElement("div"); grid.className="stiles";
   ds.forEach((d,i)=>{
-    const t=stile(c,"भाग "+(i+1),rangeText(c,d),d.to-d.from+1,i===cur);
+    const t=stile(c,W(c,"part")+" "+(i+1),rangeText(c,d),d.to-d.from+1,i===cur);
     t.addEventListener("click",()=>{
       if(hasSubs(c)){S.grp=i;S.view="pathsub";$("list").scrollTop=0;render();}
       else startSession(c,d);
@@ -1395,7 +1431,7 @@ async function renderPath(c,L){
     grid.appendChild(t);
   });
   const all={from:0,to:lastIndex(c)};
-  const one=stile(c,"एक साथ",rangeText(c,all),all.to+1,false);
+  const one=stile(c,W(c,"together"),rangeText(c,all),all.to+1,false);
   // Three sittings and एक साथ make a clean 2×2 of equal leaves. Only when the
   // count leaves an odd tile does एक साथ span the row, so there is never a
   // half-empty line at the bottom.
@@ -1410,12 +1446,12 @@ async function renderPath(c,L){
 async function renderPathSub(c,L){
   await loadText(c);
   const p=posOf(c),i=S.grp,ss=subsOf(c,i),inHere=divIndex(c,p)===i,cur=subIndex(c,i,p);
-  const h=document.createElement("div"); h.className="sect dv";
-  h.textContent="भाग "+(i+1)+" के उपभाग";
+  const h=document.createElement("div"); h.className="sect "+clsOf(c);
+  h.textContent=W(c,"subsOf",{n:i+1});
   L.appendChild(h);
   const grid=document.createElement("div"); grid.className="stiles";
   ss.forEach((d,k)=>{
-    const t=stile(c,"उपभाग "+(k+1),rangeText(c,d),d.to-d.from+1,inHere&&k===cur);
+    const t=stile(c,W(c,"subpart")+" "+(k+1),rangeText(c,d),d.to-d.from+1,inHere&&k===cur);
     t.addEventListener("click",()=>startSession(c,d));
     longPress(t,()=>restartPath(c,d));
     grid.appendChild(t);
@@ -1693,7 +1729,7 @@ function stepBtn(txt,dis,fn){
 function divLevel(c,title,from,to,cuts,note,onCuts){
   const wrap=document.createElement("div"); wrap.className="dlevel";
   const head=document.createElement("div"); head.className="dhead";
-  const h=document.createElement("span"); h.className="dh-t dv"; h.textContent=title;
+  const h=document.createElement("span"); h.className="dh-t "+clsOf(c); h.textContent=title;
   const nn=document.createElement("span"); nn.className="dh-n";
   const n=cuts.length+1;
   nn.appendChild(stepBtn("−",n<=DIV_MIN,()=>onCuts(null,n-1)));
@@ -1716,7 +1752,8 @@ function divLevel(c,title,from,to,cuts,note,onCuts){
     row.appendChild(dn);row.appendChild(dr);row.appendChild(dc);row.appendChild(st);
     wrap.appendChild(row);
   });
-  if(note){const p=document.createElement("div");p.className="dnote";p.textContent=note;wrap.appendChild(p);}
+  if(note){const p=document.createElement("div");p.className="dnote "+clsOf(c);
+    p.textContent=note;wrap.appendChild(p);}
   return wrap;
 }
 async function setDivCuts(c,cuts,n){
@@ -1733,19 +1770,19 @@ async function setSubCuts(c,i,cuts,n){
 }
 function renderDivBody(){
   const c=S.divEdit; if(!c)return;
-  $("divTitle").textContent=c.title;
+  $("divTitle").textContent=titleOf(c); $("divTitle").className=clsOf(c);
   const box=$("divBody"); box.innerHTML="";
   const to=lastIndex(c),cuts=divsOf(c).slice(0,-1).map(d=>d.to);
   // Said in the text's own words: RSN opens on मङ्गलाचरण and has no closing pad,
   // so the note must not promise it a फलस्तुति.
   const op=c.open?bracketLabel(c,"open"):"",cl=c.close?bracketLabel(c,"close"):"";
-  const note=op&&cl?"पहला भाग सदा "+op+" से खुलता है और अन्तिम "+cl+" पर पूरा होता है।"
-            :op?"पहला भाग सदा "+op+" से खुलता है।"
-            :cl?"अन्तिम भाग "+cl+" पर पूरा होता है।":"";
-  box.appendChild(divLevel(c,"भाग",0,to,cuts,note,(x,n)=>setDivCuts(c,x,n)));
+  const note=op&&cl?W(c,"opensCloses",{op:op,cl:cl})
+            :op?W(c,"opensWith",{op:op})
+            :cl?W(c,"closesWith",{cl:cl}):"";
+  box.appendChild(divLevel(c,W(c,"part"),0,to,cuts,note,(x,n)=>setDivCuts(c,x,n)));
   if(hasSubs(c)) divsOf(c).forEach((d,i)=>{
     const sc=subsOf(c,i).slice(0,-1).map(r=>r.to);
-    box.appendChild(divLevel(c,"भाग "+(i+1)+" के उपभाग",d.from,d.to,sc,null,
+    box.appendChild(divLevel(c,W(c,"subsOf",{n:i+1}),d.from,d.to,sc,null,
       (x,n)=>setSubCuts(c,i,x,n)));
   });
 }
@@ -1759,11 +1796,11 @@ function renderDivRows(){
   for(const c of S.man.collections){
     if(!isPath(c))continue;
     const b=document.createElement("button"); b.className="toggle";
-    b.innerHTML='<span class="meta"><span class="name dv"></span>'+
-                '<span class="sub"></span></span>'+CHEV;
-    b.querySelector(".name").textContent=c.title;
-    b.querySelector(".sub").textContent="भाग "+divsOf(c).map(d=>d.to-d.from+1).join(" · ")+
-      (hasSubs(c)?"  ·  उपभाग भी":"");
+    b.innerHTML='<span class="meta"><span class="name '+clsOf(c)+'"></span>'+
+                '<span class="sub '+clsOf(c)+'"></span></span>'+CHEV;
+    b.querySelector(".name").textContent=titleOf(c);
+    b.querySelector(".sub").textContent=W(c,"part")+" "+divsOf(c).map(d=>d.to-d.from+1).join(" · ")+
+      (hasSubs(c)?"  ·  "+W(c,"alsoSubs"):"");
     b.addEventListener("click",()=>openDivSheet(c));
     box.appendChild(b);
   }
@@ -1883,8 +1920,10 @@ async function playTrack(t,fromStart,startPaused){
     el.textContent=t.name;
     el.classList.toggle("dv",cls==="dv"); el.classList.toggle("bn",cls==="bn");
   }
-  $("nowFolder").textContent=grp?(grp.title+(grp.range?" "+grp.range:"")):"रसिक पदावली";
-  $("nowFolder").classList.toggle("dv",true);
+  $("nowFolder").textContent=grp?(titleOf(grp)+(grp.range?" "+grp.range:"")):"रसिक पदावली";
+  const fcls=grp?clsOf(grp):"dv";
+  $("nowFolder").classList.toggle("dv",fcls==="dv");
+  $("nowFolder").classList.toggle("bn",fcls==="bn");
 
   // the words, in place of the disc. A path item takes the reader back from a
   // text slide, so the two can never disagree about whose words are on screen.
@@ -1997,7 +2036,7 @@ audio.addEventListener("ended",async()=>{
     if(s&&s.pathId===c.id&&s.items[s.i]===t.n&&s.i+1<s.items.length){
       s.i++; await playPath(c,s.items[s.i],false,false,false); return;
     }
-    if(s&&s.pathId===c.id){S.session=null;toast("सत्र पूर्ण");}
+    if(s&&s.pathId===c.id){S.session=null;toast(W(c,"sessionDone"));}
     // A pad tapped on its own is not part of a session, but the reciter still
     // expects the path to carry on into the next one. Auto-play is the path's
     // OWN setting now — the one in Settings governs रसिक पदावली alone. It walks

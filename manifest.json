@@ -117,7 +117,22 @@
           "text": "text/rsn-bn.json",
           "cls": "bn",
           "itemLabel": "শ্লোক",
-          "openLabel": "মঙ্গলাচরণ"
+          "openLabel": "মঙ্গলাচরণ",
+          "title": "শ্রীমদ্ রাধাসুধানিধি",
+          "words": {
+            "part": "ভাগ",
+            "subpart": "উপভাগ",
+            "subsOf": "ভাগ {n}-এর উপভাগ",
+            "together": "একসাথে",
+            "here": "এখানেই",
+            "start": "আরম্ভ",
+            "fromStart": "আরম্ভ থেকে",
+            "sessionDone": "পাঠ সম্পূর্ণ",
+            "alsoSubs": "উপভাগও",
+            "opensWith": "প্রথম ভাগ সর্বদা {op} দিয়ে শুরু হয়।",
+            "closesWith": "শেষ ভাগ {cl} দিয়ে সম্পূর্ণ হয়।",
+            "opensCloses": "প্রথম ভাগ সর্বদা {op} দিয়ে শুরু হয় এবং শেষ ভাগ {cl} দিয়ে সম্পূর্ণ হয়।"
+          }
         }
       ]
     },
