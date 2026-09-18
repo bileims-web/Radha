@@ -191,6 +191,12 @@
   .toggle{display:flex;align-items:center;gap:16px;padding:14px 22px;width:100%;text-align:left}
   .toggle .meta{flex:1}
   .toggle .sub{white-space:normal;margin-top:2px}
+  /* the action at the end of a "keep on this phone" row: a word, not a switch,
+     because it does something rather than remembering something */
+  .offbtn{flex:0 0 auto;padding:8px 14px;border-radius:999px;border:1px solid var(--line);
+    font-size:12.5px;letter-spacing:.3px;color:var(--text);white-space:nowrap;background:none}
+  .offbtn.on{color:var(--gold);border-color:rgba(201,162,39,.45)}
+  .offbtn:active{background:var(--surface2)}
   .sw{flex:0 0 50px;width:50px;height:30px;border-radius:15px;background:var(--line);
     position:relative;transition:background .16s}
   .sw::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;
@@ -952,6 +958,11 @@
     <span class="sw" id="autoplaySw"></span>
   </button>
   <div id="divRows"></div>
+  <!-- Audio is cached only as it is played, so a text nobody has listened
+       through is not on the phone. These rows fetch one whole text at a time,
+       for a journey, or for a phone that is about to lose the site. -->
+  <h3>Keep on this phone</h3>
+  <div id="offRows"></div>
   <div class="toggle">
     <span class="meta"><span class="name">Storage used</span>
     <span class="sub" id="storageLine">Checking…</span></span>
@@ -1856,6 +1867,89 @@ function renderDivRows(){
   }
 }
 
+/* ---------- keeping a text on the phone ----------
+   The worker caches a file when it is PLAYED, which is right for reading one
+   verse at a time and useless for a journey: a text nobody has listened through
+   is simply not there when the network is. These rows hand the worker the whole
+   list at once and then count what has landed.
+
+   The count is read from the cache itself, never from a running total: a fill
+   that was interrupted, a phone that was cleared, a file already there from
+   playback — all of it shows up correctly because the cache is the truth. */
+const absUrl=u=>new URL(u,location.href).href;
+function audioUrls(c){
+  if(c.tracks) return c.tracks.map(t=>t.file);
+  if(!c.audio) return [];
+  const out=[]; for(let n=0;n<=lastIndex(c);n++) out.push(c.audio.replace("{n}",n));
+  return out;
+}
+/* The worker owns the cache's name — it carries AUDIO_VERSION, which only sw.js
+   may decide. So find it by its prefix rather than spelling a version here. */
+async function audioCache(){
+  if(!window.caches)return null;
+  const ks=await caches.keys();
+  const n=ks.find(k=>k.indexOf("radha-audio-")===0);
+  return n?await caches.open(n):null;
+}
+async function cachedSet(){
+  const c=await audioCache(); if(!c) return new Set();
+  return new Set((await c.keys()).map(r=>r.url));
+}
+let offTimer=null,offBusy=null;   // the poll, and which collection is downloading
+function stopOfflinePoll(){if(offTimer){clearInterval(offTimer);offTimer=null;}}
+async function paintOffline(){
+  const box=$("offRows"); if(!box)return;
+  const have=await cachedSet();
+  box.innerHTML="";
+  for(const c of S.man.collections){
+    const urls=audioUrls(c); if(!urls.length)continue;
+    const n=urls.filter(u=>have.has(absUrl(u))).length, all=n===urls.length;
+    const row=document.createElement("div"); row.className="toggle";
+    row.innerHTML='<span class="meta"><span class="name '+clsOf(c)+'"></span>'+
+                  '<span class="sub"></span></span>';
+    row.querySelector(".name").textContent=titleOf(c);
+    const sub=row.querySelector(".sub");
+    sub.textContent=all?("On this phone  ·  "+(c.bytes?bytes(c.bytes):urls.length+" files"))
+      :(n?n+" of "+urls.length+" here":urls.length+" recordings")+
+       (c.bytes?"  ·  "+bytes(c.bytes):"");
+    const b=document.createElement("button"); b.className="offbtn"+(all?" on":"");
+    b.textContent=all?"Remove":(offBusy===c.id?"Stop":"Download");
+    b.addEventListener("click",()=>all?removeOffline(c):
+                                 offBusy===c.id?stopOffline():startOffline(c,urls));
+    row.appendChild(b);
+    box.appendChild(row);
+  }
+}
+function startOffline(c,urls){
+  const sw=navigator.serviceWorker;
+  if(!sw||!sw.controller){toast("Open the app once more, then try — the worker is still starting.");return;}
+  offBusy=c.id;
+  sw.controller.postMessage({type:"fill",urls:urls.map(absUrl)});
+  toast("Downloading "+titleOf(c));
+  stopOfflinePoll(); offTimer=setInterval(paintOffline,2500);
+  paintOffline();
+}
+function stopOffline(){
+  const sw=navigator.serviceWorker;
+  if(sw&&sw.controller) sw.controller.postMessage({type:"stopFill"});
+  offBusy=null; stopOfflinePoll(); paintOffline();
+}
+async function removeOffline(c){
+  if(!confirm("Remove “"+titleOf(c)+"” from this phone? It will play again when the app can reach the network."))return;
+  const cache=await audioCache(); if(!cache)return;
+  for(const u of audioUrls(c)) await cache.delete(absUrl(u));
+  if(offBusy===c.id) stopOffline();
+  toast("Removed"); paintOffline();
+}
+/* The worker speaks when a file lands or the disk says no. */
+if(navigator.serviceWorker) navigator.serviceWorker.addEventListener("message",e=>{
+  const d=e.data||{};
+  if(d.type!=="fillState")return;
+  if(d.outOfSpace){offBusy=null;stopOfflinePoll();toast("No room left on this phone.");}
+  else if(!d.left) offBusy=null;
+  if(openSh===$("setSheet")) paintOffline();
+});
+
 /* ---------- रसिक पदावली ---------- */
 async function renderUser(L){
   const list=await kids(S.cwd);
@@ -2161,10 +2255,11 @@ function mediaMeta(t){
 let openSh=null;
 function showSheet(e){openSh=e;e.classList.add("on");$("scrim").classList.add("on");}
 function hideSheets(){if(openSh)openSh.classList.remove("on");openSh=null;
+  stopOfflinePoll();
   $("scrim").classList.remove("on");$("dlg").classList.remove("on");paintReader();}
 $("scrim").addEventListener("click",hideSheets);
 $("fab").addEventListener("click",()=>showSheet($("addSheet")));
-$("settingsBtn").addEventListener("click",async()=>{renderDivRows();showSheet($("setSheet"));
+$("settingsBtn").addEventListener("click",async()=>{renderDivRows();paintOffline();showSheet($("setSheet"));
   if(navigator.storage&&navigator.storage.estimate){const e=await navigator.storage.estimate();
     $("storageLine").textContent=bytes(e.usage||0)+" used";}
   else $("storageLine").textContent="Not reported by this browser";});

@@ -5,6 +5,7 @@
       "title": "आरती",
       "mode": "arati",
       "tint": "#6E1F1F",
+      "bytes": 28283919,
       "tracks": [
         {
           "file": "audio/arati/01.mp3",
@@ -39,6 +40,7 @@
       "title": "श्री हित चौरासी जी",
       "mode": "path",
       "tint": "#26365A",
+      "bytes": 48467767,
       "audio": "audio/shcj/SHCJ{n}.mp3",
       "count": 84,
       "open": {
@@ -81,6 +83,7 @@
       "title": "श्री हित चौरासी पद गायन",
       "mode": "coll",
       "tint": "#26365A",
+      "bytes": 188603647,
       "range": "दो संस्करण",
       "tracks": [
         {
@@ -100,6 +103,7 @@
       "title": "श्री मद् राधा सुधा निधि",
       "mode": "path",
       "tint": "#4A2F5C",
+      "bytes": 79086418,
       "audio": "audio/rsn/SMRSNJ_{n}.mp3",
       "count": 270,
       "open": {

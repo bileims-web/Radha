@@ -10,7 +10,7 @@
  *   AUDIO_VERSION — bump ONLY when an mp3 under audio/ is replaced. Expensive:
  *                   every track has to be downloaded again.
  */
-var SHELL_VERSION = 'v31';  // v31: पद गायन is visible, and a SONG resumes where a verse begins again
+var SHELL_VERSION = 'v32';  // v32: Settings can keep a whole text on the phone
 var AUDIO_VERSION = 'v1';   // untouched: this release only ADDS mp3s, it replaces none
 var SHELL_CACHE = 'radha-shell-' + SHELL_VERSION;
 var AUDIO_CACHE = 'radha-audio-' + AUDIO_VERSION;
@@ -101,9 +101,36 @@ function runQueue() {
     if (err && (err.name === 'QuotaExceededError' || err.code === 22)) outOfSpace = true;
   }).then(function () {
     filling = false;
+    tellClients();
     if (fillQueue.length) runQueue();
   });
 }
+
+/* Settings shows how far a "keep this text on the phone" download has got. The
+ * page COUNTS what is in the cache rather than trusting a running total — this
+ * only tells it when to look again, and whether the disk said no. */
+function tellClients() {
+  self.clients.matchAll().then(function (cs) {
+    cs.forEach(function (c) {
+      c.postMessage({ type: 'fillState', left: fillQueue.length, outOfSpace: outOfSpace });
+    });
+  });
+}
+
+/* Keeping a whole text offline is the SAME queue as the one that fills behind
+ * playback: one file at a time, skipping what is already there, stopping on a
+ * full disk. A separate downloader would race it for the network and the quota.
+ */
+self.addEventListener('message', function (e) {
+  var d = e.data || {};
+  if (d.type === 'fill' && d.urls && d.urls.length) {
+    outOfSpace = false;                    // a new ask deserves a fresh try
+    d.urls.forEach(queueFill);
+  } else if (d.type === 'stopFill') {
+    fillQueue.length = 0;                  // the file in flight finishes; nothing follows it
+    tellClients();
+  }
+});
 
 function sliceRange(full, rangeHeader) {
   return full.blob().then(function (blob) {
