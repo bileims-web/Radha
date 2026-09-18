@@ -111,9 +111,6 @@
   .meta{flex:1;min-width:0}
   .name{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:16px}
   .sub{display:block;font-size:12.5px;color:var(--muted);margin-top:3px;font-variant-numeric:tabular-nums}
-  .sub .mark{color:var(--gold)}
-  .track-bar{height:2px;background:var(--line);border-radius:2px;margin-top:7px;overflow:hidden}
-  .track-bar i{display:block;height:100%;background:var(--gold);border-radius:2px}
   .empty{padding:44px 30px;text-align:center;color:var(--muted);font-size:14px}
   .empty b{display:block;color:var(--text);font-size:17px;font-weight:600;margin-bottom:8px}
 
@@ -318,7 +315,7 @@
   body.text-play .rbar{display:flex}
   body.text-play .now-name{order:-1;font-size:15px;color:var(--muted);font-weight:600;
     letter-spacing:.3px;margin:0 0 10px}
-  body.text-play #rbAudio{display:none}
+  body.text-play #rbAudio,body.text-play #rbPlay{display:none}
   /* the fold-everything button belongs to whatever has folds: every section of
      सेवक वाणी, and the verses of the Sudha Nidhi that have their meaning */
   #rbGloss{display:none}
@@ -341,9 +338,6 @@
   .lname{font-size:15px;font-weight:600;line-height:1.32;
     display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
   .lsub{font-size:11.5px;color:var(--muted);margin-top:4px;font-variant-numeric:tabular-nums}
-  .lsub .mark{color:var(--gold)}
-  .lbar{height:2px;background:var(--line);border-radius:2px;margin-top:7px;overflow:hidden}
-  .lbar i{display:block;height:100%;background:var(--gold);border-radius:2px}
 
   /* The two slides that are not built yet. They hold their place in the grid
      so the layout is whole, but they are plainly not ready: no ink of their
@@ -826,6 +820,9 @@
     <button class="rb" id="rbReset" aria-label="Reset text size">
       <span class="az sm">A</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:2px"><path d="M3 12a9 9 0 109-9"/><path d="M3 4v5h5"/></svg>
     </button>
+    <!-- Play/pause, the same gesture as a tap on the words. Its icon is filled
+         in by paintReader(), so it is right from the slide's first frame. -->
+    <button class="rb" id="rbPlay" aria-label="Play or pause"></button>
     <button class="rb" id="rbAudio" aria-label="Audio controls">
       <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg>
     </button>
@@ -871,9 +868,6 @@
   <h3 id="itemSheetTitle">Item</h3>
   <button class="item" id="actRename">
     <span class="glyph"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></span>Rename
-  </button>
-  <button class="item" id="actClearMark">
-    <span class="glyph"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 109-9"/><path d="M3 4v5h5"/></svg></span>Start from beginning
   </button>
   <button class="item danger" id="actDelete">
     <span class="glyph"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V5h6v2"/><path d="M6 7l1 13h10l1-13"/></svg></span>Delete
@@ -975,7 +969,10 @@ function openDB(){return new Promise((res,rej)=>{
   r.onupgradeneeded=e=>{const d=e.target.result;
     if(!d.objectStoreNames.contains("nodes")) d.createObjectStore("nodes",{keyPath:"id"}).createIndex("parent","parentId");
     if(!d.objectStoreNames.contains("blobs")) d.createObjectStore("blobs");
-    if(!d.objectStoreNames.contains("marks")) d.createObjectStore("marks");
+    /* There was a "marks" store here — how far into an item you had got, so it
+       could resume there. Nothing resumes any more (see playTrack): a song or a
+       verse ALWAYS starts at its beginning. A phone installed before v30 keeps
+       the store, empty and unread; nothing opens it, so there is no migration. */
     if(!d.objectStoreNames.contains("meta"))  d.createObjectStore("meta");};
   r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);});}
 const st=(s,m)=>db.transaction(s,m).objectStore(s);
@@ -1009,9 +1006,11 @@ const S={man:FALLBACK,view:"home",cwd:"root",stack:[],coll:null,grp:0,
   vpos:{},     // id -> {section: verse} — how far into each प्रकरण  ("vpos:<id>")
   gloss:false, // are the व्याख्या blocks open  (persisted "gloss")
   // Reading with the music off is a HABIT, not a property of a text: one flag
-  // for the app, remembered across items and across launches. Only an explicit
-  // play gesture clears it — see setSilent().
-  silent:false,// (persisted "silent")
+  // for the app, remembered across items, across sittings and across launches.
+  // It STARTS silent — a book opens as words — and only an explicit play
+  // gesture clears it: the bar's play, a tap on the words, the mini bar, the
+  // phone's media keys. See setSilent().
+  silent:true, // (persisted "silent")
   speed:1,     // playback rate 0.50–2.00               (persisted "speed")
   repeat:false,// repeat this item, holding the position(persisted "repeat")
   font:18,     // the words' size in px                 (persisted "fontsize")
@@ -1037,6 +1036,10 @@ let tT;function toast(m){const t=$("toast");t.textContent=m;t.classList.add("on"
   clearTimeout(tT);tT=setTimeout(()=>t.classList.remove("on"),2400);}
 const PLAY='<svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg>';
 const PAUSE='<svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><rect x="7" y="5" width="3.4" height="14" rx="1"/><rect x="13.6" y="5" width="3.4" height="14" rx="1"/></svg>';
+/* the same two, at the reader bar's size — the bar's icons are 21px, the
+   player's are 26, and one shared constant would make one of them wrong */
+const RB_PLAY='<svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5z"/></svg>';
+const RB_PAUSE='<svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor"><rect x="7" y="5" width="3.4" height="14" rx="1"/><rect x="13.6" y="5" width="3.4" height="14" rx="1"/></svg>';
 const NOTE='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg>';
 const FOLDER='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>';
 const CHEV='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
@@ -1212,12 +1215,12 @@ function autoOf(c){const a=S.auto[c.id];return a===undefined?true:!!a;}
 
 /* THE COMPLETION RULE. A pad counts as done ONLY if it played through to its
    end — the `ended` event, nothing else. There is no time window and nothing
-   to tune. Stopping part-way leaves pos where it is, and the item's own
-   `marks` entry remembers how far in you were, so it resumes mid-pad.
+   to tune. Stopping part-way leaves pos where it is, and coming back begins
+   that item AGAIN, from its top — there is no longer any record of how far in
+   you were, and there must not be one.
 
-   Do NOT reintroduce a near-the-end test here. saveMark() below clears a mark
-   within 5s of the end; that is a resume convenience and must never be read
-   as completion. */
+   Do NOT reintroduce a near-the-end test here, and do not reintroduce a resume
+   mark to hang one on: "nearly finished" is not finished. */
 async function advance(c,n){
   const last=lastIndex(c);
   const next=(n>=last)?0:n+1;   // the cycle closes by parking at 0, the opening pad
@@ -1225,12 +1228,12 @@ async function advance(c,n){
   await put("meta",next,"pos:"+c.id);
 }
 
-async function playPath(c,n,fromStart,raise,startPaused){
+async function playPath(c,n,raise,startPaused){
   clearChain();
   await loadText(c);
   if(startPaused===undefined) startPaused=S.silent;
   playTrack({id:"px:"+c.id+":"+n,name:itemTitle(c,n),url:c.audio.replace("{n}",n),
-             path:c,n:n,kind:"path"},fromStart,startPaused);
+             path:c,n:n,kind:"path"},startPaused);
   // The words are the point of a path slide, so a deliberate start shows them
   // straight away instead of leaving them behind a tap on the mini bar. An
   // automatic advance mid-session passes no flag, so a player the user has
@@ -1240,17 +1243,19 @@ async function playPath(c,n,fromStart,raise,startPaused){
 /* A session is one division read, and played to its end if it is played at all.
    If the path already stands inside it we resume there; if it stands elsewhere
    the position MOVES to this division's first item, so "where I am" stays honest
-   and finishing a sitting walks the highlight on to the next tile. The sitting
-   OPENS SILENT — the words are what a tap on a tile asks for — and once play is
-   pressed it runs to its own end; the auto-play toggle governs what happens
-   OUTSIDE one. */
+   and finishing a sitting walks the highlight on to the next tile. The tile
+   inherits the silence habit — words only, unless you were listening when you
+   left — and a sounding session runs to its own end; the auto-play toggle
+   governs what happens OUTSIDE one. */
 async function startSession(c,d){
   let p=posOf(c);
   if(p<d.from||p>d.to){p=d.from;S.pos[c.id]=p;await put("meta",p,"pos:"+c.id);}
   const items=[];for(let n=p;n<=d.to;n++) items.push(n);
   S.session={pathId:c.id,items:items,i:0,from:d.from,to:d.to};
-  await setSilent(true);             // opening a sitting is a READING gesture
-  await playPath(c,items[0],false,true,true);
+  // no setSilent here, either way: the tile INHERITS the habit. Left playing,
+  // the next sitting plays; left silent, it opens as words. playPath defaults
+  // startPaused to S.silent, so saying nothing is saying "as I left it".
+  await playPath(c,items[0],true);
 }
 /* Long press: put the text back to its start and begin this sitting at its own
    first item. `pos` stays at 0, and advance() only moves it when the item that
@@ -1260,8 +1265,7 @@ async function restartPath(c,d){
   toast(W(c,"fromStart"));
   const items=[];for(let n=d.from;n<=d.to;n++) items.push(n);
   S.session={pathId:c.id,items:items,i:0,from:d.from,to:d.to};
-  await setSilent(true);
-  await playPath(c,d.from,true,true,true);
+  await playPath(c,d.from,true);        // inherits the habit, like every tile
 }
 
 /* ---------- render ---------- */
@@ -1355,7 +1359,7 @@ async function renderTiles(L){
 
 async function renderColl(c,L){
   if(!c.tracks||!c.tracks.length){L.innerHTML='<div class="empty"><b>No recordings yet</b>Add the files to audio/'+c.id+'/ in the repo.</div>';return;}
-  const allMarks=await mapOf("marks"), allMeta=await mapOf("meta");
+  const allMeta=await mapOf("meta");
   for(let i=0;i<c.tracks.length;i++){
     const t=c.tracks[i], id=tid(c.id,t.file);
     const row=document.createElement("button");
@@ -1364,14 +1368,10 @@ async function renderColl(c,L){
     const meta=document.createElement("span"); meta.className="meta";
     const nm=document.createElement("span"); nm.className="name dv"; nm.textContent=t.title;
     meta.appendChild(nm);
-    const mark=allMarks.get(id), dur=allMeta.get("dur:"+id);
+    const dur=allMeta.get("dur:"+id);
     const sub=document.createElement("span"); sub.className="sub";
-    if(mark&&mark.pos>15) sub.innerHTML='<span class="mark">Resume '+fmt(mark.pos)+'</span>'+(dur?' · '+fmt(dur):'');
-    else sub.textContent=dur?fmt(dur):"Tap to play";
+    sub.textContent=dur?fmt(dur):"Tap to play";
     meta.appendChild(sub);
-    if(mark&&dur&&mark.pos>15){const b=document.createElement("span");b.className="track-bar";
-      const ii=document.createElement("i");ii.style.width=Math.min(100,mark.pos/dur*100)+"%";
-      b.appendChild(ii);meta.appendChild(b);}
     row.appendChild(meta);
     row.addEventListener("click",()=>playFixed(c,i));
     longPress(row,()=>openItemSheet({kind:"fixed",id,name:t.title}));
@@ -1479,12 +1479,14 @@ async function renderPathSub(c,L){
    toggles a reciter changes mid-sitting.
    ================================================================ */
 
-/* Silence is sticky, and OPENING SOMETHING NEVER SOUNDS IT. A sitting tile puts
-   the words on the screen with the pad loaded and paused; only an explicit play
-   — the panel's play, the mini bar's play, the phone's own media keys — starts
-   the recitation. Pausing sets silence again. Prev, next, a jump from the
-   picker and reopening the app all inherit it, so reading with the music off
-   stays off, and a text slide opened by hand never starts talking. */
+/* Silence is sticky, and it is the app's ONE memory of how you read. It starts
+   on — a book opens as words — and every route into an item inherits it:
+   a sitting tile, prev, next, a jump from the picker, and the next launch.
+
+   What clears it is always the same thing: PLAY — the bar's play button, a tap
+   on the words, the panel's play, the mini bar's play, the phone's own media
+   keys. Any pause sets it again. So the last thing you did is what you get next
+   time, on this item and on every item after it. */
 async function setSilent(v){
   v=!!v; if(S.silent===v)return;
   S.silent=v; await put("meta",v,"silent");
@@ -1508,7 +1510,7 @@ async function jumpTo(c,n){
   }
   else S.session=null;               // a move out of the sitting ends it
   S.pos[c.id]=n; await put("meta",n,"pos:"+c.id);
-  await playPath(c,n,true,false,S.silent);   // deliberate: from the top, not the mark
+  await playPath(c,n,false,S.silent);
   render();
 }
 function readerStep(delta){
@@ -1535,6 +1537,9 @@ function paintReader(){
   $("rbBigger").disabled=S.font>=FONT_MAX;
   $("rbAudio").classList.toggle("on",openSh===$("audioPanel"));
   $("rbGloss").classList.toggle("on",S.gloss);
+  // the bar's play icon lives here rather than in paint(), so it is right from
+  // the first frame of a slide — paint() does not run until metadata arrives
+  $("rbPlay").innerHTML=audio.paused?RB_PLAY:RB_PAUSE;
 }
 
 /* ---------- a text-only section ----------
@@ -1836,7 +1841,6 @@ async function renderUser(L){
     :a.name.localeCompare(b.name,undefined,{numeric:true,sensitivity:"base"}));
   if(!list.length){const e=document.createElement("div");e.className="empty";
     e.innerHTML='<b class="dv">अभी कुछ नहीं</b>Tap + to make a folder or add songs.';L.appendChild(e);return;}
-  const allMarks=await mapOf("marks");
   const grid=document.createElement("div"); grid.className="ltiles";
   for(const n of list){
     const t=document.createElement("button");
@@ -1848,15 +1852,7 @@ async function renderUser(L){
     if(n.type==="folder"){
       const k=(await kids(n.id)).length;
       sub.textContent=k?k+" item"+(k>1?"s":""):"empty";
-    }else{
-      const mark=allMarks.get(n.id);
-      if(mark&&mark.pos>15){
-        sub.innerHTML='<span class="mark">Resume '+fmt(mark.pos)+'</span>';
-        if(n.duration){const b=document.createElement("span");b.className="lbar";
-          const ii=document.createElement("i");ii.style.width=Math.min(100,mark.pos/n.duration*100)+"%";
-          b.appendChild(ii);t.appendChild(b);}
-      } else sub.textContent=n.duration?fmt(n.duration):bytes(n.size);
-    }
+    }else sub.textContent=n.duration?fmt(n.duration):bytes(n.size);
     t.addEventListener("click",()=>{
       if(n.type==="folder"){S.stack.push({id:n.id,name:n.name});S.cwd=n.id;$("list").scrollTop=0;render();return;}
       const files=list.filter(x=>x.type==="file");
@@ -1893,23 +1889,27 @@ function goBack(){
 }
 
 /* ---------- playback ---------- */
-let objUrl=null,saveAt=0,chainTimer=null,chainTick=null;
+let objUrl=null,chainTimer=null,chainTick=null;
 let curSrc=null,retries=0,stallAt=-1,stallTicks=0;
 
 function clearChain(){if(chainTimer){clearTimeout(chainTimer);chainTimer=null;}
   if(chainTick){clearInterval(chainTick);chainTick=null;} $("chainLine").textContent="";}
 
-function playFixed(c,i,fromStart){
+function playFixed(c,i){
   clearChain(); S.session=null;
   const t=c.tracks[i];
-  playTrack({id:tid(c.id,t.file),name:t.title,url:t.file,coll:c,idx:i,kind:"fixed"},fromStart);
+  playTrack({id:tid(c.id,t.file),name:t.title,url:t.file,coll:c,idx:i,kind:"fixed"});
 }
 
-/* `startPaused` is how reading in silence works: the item is loaded, its words
-   are painted and its mark is honoured, but nothing sounds until a play gesture.
-   Callers that mean "play this" pass false; callers that are only moving the
-   reader pass S.silent, so the habit carries. */
-async function playTrack(t,fromStart,startPaused){
+/* EVERY ITEM STARTS AT ITS BEGINNING. A verse or a song left half-heard is
+   begun again, not resumed mid-word — the user's rule, and the reason the whole
+   resume-mark machinery is gone rather than merely unused.
+
+   `startPaused` is how reading in silence works: the item is loaded and its
+   words are painted, but nothing sounds until a play gesture. Callers that mean
+   "play this" pass false; callers that are only moving the reader pass S.silent,
+   so the habit carries. */
+async function playTrack(t,startPaused){
   if(objUrl){URL.revokeObjectURL(objUrl);objUrl=null;}
   let src;
   if(t.blobId){const b=await get("blobs",t.blobId);
@@ -1923,7 +1923,6 @@ async function playTrack(t,fromStart,startPaused){
     $("discLabel").setAttribute("fill",grp.tint||"#6E1F1F");}
   else $("discLabel").setAttribute("fill","#6E1F1F");
 
-  const mark=fromStart?null:await get("marks",t.id);
   curSrc=src; retries=0; stallAt=-1; stallTicks=0;
   audio.src=src;
   audio.onerror=recover;
@@ -1932,8 +1931,6 @@ async function playTrack(t,fromStart,startPaused){
       if(t.node){if(Math.abs((t.node.duration||0)-audio.duration)>1){t.node.duration=audio.duration;await put("nodes",t.node);}}
       else await put("meta",audio.duration,"dur:"+t.id);
     }
-    if(mark&&mark.pos>0&&mark.pos<audio.duration-3){
-      audio.currentTime=mark.pos; toast("Resuming from "+fmt(mark.pos));}
     audio.playbackRate=S.speed;
     paint(); if(!startPaused) audio.play().catch(paint);
   };
@@ -1953,7 +1950,7 @@ async function playTrack(t,fromStart,startPaused){
   if(t.path){S.read=null;document.body.classList.remove("text-play");}
   document.body.classList.toggle("path-play",!!t.path);
   if(t.path) showVerse(t.path,t.n);
-  render(); mediaMeta(t);
+  render(); paintReader(); mediaMeta(t);
 }
 
 /* text and audio in sync: one file per item, so the text for the item that is
@@ -2001,15 +1998,6 @@ function paint(){
   if(openSh===$("audioPanel")) paintPanel();
 }
 
-/* Clears the mark near the end so a finished item does not offer to resume at
-   its last second. This is a RESUME convenience only — completion is `ended`,
-   never this test. See advance(). */
-async function saveMark(){
-  if(!S.cur)return; const c=audio.currentTime;
-  if(!isFinite(c))return;
-  if(audio.duration&&c>audio.duration-5) await del("marks",S.cur.id);
-  else await put("marks",{pos:c,updated:Date.now()},S.cur.id);
-}
 
 /* A hiccup must not end the sitting. The network changes, the stream is cut,
    the phone comes back from sleep: the element fires `error`, or simply stops
@@ -2045,14 +2033,10 @@ setInterval(()=>{
   else { if(stallAt>=0) retries=0; stallAt=t; stallTicks=0; }
 },5000);
 
-audio.addEventListener("timeupdate",()=>{
-  paint();
-  const n=Date.now(); if(n-saveAt>5000){saveAt=n;saveMark();}
-});
+audio.addEventListener("timeupdate",paint);
 audio.addEventListener("play",paint);
-audio.addEventListener("pause",()=>{paint();saveMark();});
+audio.addEventListener("pause",paint);
 audio.addEventListener("ended",async()=>{
-  if(S.cur) await del("marks",S.cur.id);
   const t=S.cur;
 
   // a path item has played through to its end — the one thing that counts as done
@@ -2060,18 +2044,21 @@ audio.addEventListener("ended",async()=>{
     const c=t.path;
     // Repeat HOLDS the position. Sitting with one pad plays it again and
     // again and never marks it done, which is the whole point of dwelling.
-    if(S.repeat){ await playPath(c,t.n,true,false,false); return; }
+    if(S.repeat){ await playPath(c,t.n,false,false); return; }
     if(posOf(c)===t.n) await advance(c,t.n);
+    /* An item you arrive at starts at its top — as every item now does. This
+       began as a bug report about exactly this line: a verse half-heard
+       yesterday came in mid-word behind the one that had just finished. */
     const s=S.session;
     if(s&&s.pathId===c.id&&s.items[s.i]===t.n&&s.i+1<s.items.length){
-      s.i++; await playPath(c,s.items[s.i],false,false,false); return;
+      s.i++; await playPath(c,s.items[s.i],false,false); return;
     }
     if(s&&s.pathId===c.id){S.session=null;toast(W(c,"sessionDone"));}
     // A pad tapped on its own is not part of a session, but the reciter still
     // expects the path to carry on into the next one. Auto-play is the path's
     // OWN setting now — the one in Settings governs रसिक पदावली alone. It walks
     // the path's order, closing pad included, and stops at the end.
-    else if(autoOf(c)&&t.n<lastIndex(c)){ await playPath(c,t.n+1,false,false,false); return; }
+    else if(autoOf(c)&&t.n<lastIndex(c)){ await playPath(c,t.n+1,false,false); return; }
     paint(); render(); return;
   }
 
@@ -2084,8 +2071,6 @@ audio.addEventListener("ended",async()=>{
   }
   paint(); render();
 });
-document.addEventListener("visibilitychange",()=>{if(document.hidden)saveMark();});
-window.addEventListener("pagehide",saveMark);
 
 /* आरती: the two pairs run on from one another after a short gap. Carried
    across unchanged — the behaviour lives in manifest.json's `chains`. */
@@ -2095,7 +2080,7 @@ function startChain(c,nextIdx){
   $("chainLine").textContent=c.tracks[nextIdx].title+" in "+left+"s";
   chainTick=setInterval(()=>{left--;
     if(left>0)$("chainLine").textContent=c.tracks[nextIdx].title+" in "+left+"s";},1000);
-  chainTimer=setTimeout(()=>{clearChain();playFixed(c,nextIdx,true);},gap*1000);
+  chainTimer=setTimeout(()=>{clearChain();playFixed(c,nextIdx);},gap*1000);
 }
 
 function mediaMeta(t){
@@ -2125,7 +2110,6 @@ function openItemSheet(t){S.target=t;$("itemSheetTitle").textContent=t.name;
   const fx=t.kind==="fixed";
   $("actRename").style.display=fx?"none":"";
   $("actDelete").style.display=fx?"none":"";
-  $("actClearMark").style.display=(fx||(t.node&&t.node.type==="file"))?"":"none";
   showSheet($("itemSheet"));}
 
 /* ---------- dialog ---------- */
@@ -2152,9 +2136,6 @@ $("actRename").addEventListener("click",()=>{const t=S.target;hideSheets();
   ask("Rename",t.name,async n=>{t.node.name=n;await put("nodes",t.node);
     if(S.cur&&S.cur.id===t.node.id){S.cur.name=n;$("miniName").textContent=n;$("nowName").textContent=n;}
     render();});});
-$("actClearMark").addEventListener("click",async()=>{const t=S.target;hideSheets();
-  await del("marks",t.id);if(S.cur&&S.cur.id===t.id)audio.currentTime=0;
-  toast("Will start from the beginning");render();});
 $("actDelete").addEventListener("click",async()=>{const t=S.target;hideSheets();
   if(!confirm("Delete “"+t.name+"”"+(t.node.type==="folder"?" and everything inside it":"")+"?"))return;
   await rm(t.node);
@@ -2162,7 +2143,7 @@ $("actDelete").addEventListener("click",async()=>{const t=S.target;hideSheets();
     $("mini").hidden=true;document.body.classList.remove("has-mini","player-open","path-play");}
   render();});
 async function rm(n){if(n.type==="folder"){for(const k of await kids(n.id))await rm(k);}
-  else{await del("blobs",n.id);await del("marks",n.id);} await del("nodes",n.id);}
+  else await del("blobs",n.id); await del("nodes",n.id);}
 
 $("autoplayRow").addEventListener("click",async()=>{S.autoplay=!S.autoplay;
   $("autoplaySw").classList.toggle("on",S.autoplay);await put("meta",S.autoplay,"autoplay");});
@@ -2188,6 +2169,7 @@ $("rbReset").addEventListener("click",()=>setFont(FONT_DEF));
 $("rbAudio").addEventListener("click",()=>{
   if(openSh===$("audioPanel"))hideSheets();
   else{paintPanel();showSheet($("audioPanel"));paintReader();}});
+$("rbPlay").addEventListener("click",toggleAudio);
 $("rbGloss").addEventListener("click",()=>setGloss(!S.gloss));
 $("rbPrev").addEventListener("click",()=>readerStep(-1));
 $("rbNext").addEventListener("click",()=>readerStep(1));
@@ -2195,6 +2177,9 @@ $("rbNext").addEventListener("click",()=>readerStep(1));
 /* Turning the page with the thumb. The words scroll up and down inside one
    item, so only a decisively sideways drag counts — and it is the same path as
    the prev/next buttons, nothing of its own. */
+/* When a swipe has just turned the page. A page turn can still be followed by a
+   click on some browsers, and that click must not also start the recitation. */
+let turnedAt=0;
 (function(){
   const vs=$("verseScroll"); let x0=null,y0=null;
   vs.addEventListener("touchstart",e=>{
@@ -2205,8 +2190,20 @@ $("rbNext").addEventListener("click",()=>readerStep(1));
     const t=e.changedTouches[0],dx=t.clientX-x0,dy=t.clientY-y0;
     x0=null;
     if(Math.abs(dx)<56||Math.abs(dx)<Math.abs(dy)*1.6)return;
+    turnedAt=Date.now();
     readerStep(dx<0?1:-1);},{passive:true});
 })();
+
+/* A tap on the words plays or pauses — the reader's own hand, without reaching
+   for the bar. `click` and not touchend on purpose: a scroll or a page-turn
+   swipe does not produce one, a mouse does, and the fold's summary keeps its
+   own tap. A text slide has nothing to sound, so it is left alone. */
+$("verseScroll").addEventListener("click",e=>{
+  if(!document.body.classList.contains("path-play"))return;
+  if(Date.now()-turnedAt<500)return;
+  if(e.target.closest("summary,button,a,input,select,textarea"))return;
+  toggleAudio();
+});
 
 /* ---------- the audio panel ---------- */
 $("apPlay").addEventListener("click",toggleAudio);
@@ -2215,7 +2212,7 @@ apSeek.addEventListener("input",()=>{apSeek.dragging=true;const d=audio.duration
   $("apCur").textContent=fmtHMS(d*apSeek.value/1000);
   apSeek.style.setProperty("--fill",(apSeek.value/10)+"%");});
 apSeek.addEventListener("change",()=>{const d=audio.duration||0;
-  audio.currentTime=d*apSeek.value/1000;apSeek.dragging=false;saveMark();});
+  audio.currentTime=d*apSeek.value/1000;apSeek.dragging=false;});
 $("apSlower").addEventListener("click",()=>setSpeed(S.speed-SPD_STEP));
 $("apFaster").addEventListener("click",()=>setSpeed(S.speed+SPD_STEP));
 $("apRepeatRow").addEventListener("click",()=>setRepeat(!S.repeat));
@@ -2236,7 +2233,7 @@ const seek=$("seek");
 seek.addEventListener("input",()=>{seek.dragging=true;const d=audio.duration||0;
   $("tCur").textContent=fmt(d*seek.value/1000);seek.style.setProperty("--fill",(seek.value/10)+"%");});
 seek.addEventListener("change",()=>{const d=audio.duration||0;
-  audio.currentTime=d*seek.value/1000;seek.dragging=false;saveMark();});
+  audio.currentTime=d*seek.value/1000;seek.dragging=false;});
 window.addEventListener("popstate",()=>{
   if(pickerOpen())hidePicker();
   else if(openSh)hideSheets();
@@ -2270,7 +2267,9 @@ window.addEventListener("popstate",()=>{
   }
   const ap=await get("meta","autoplay"); S.autoplay=ap===undefined?true:ap;
   $("autoplaySw").classList.toggle("on",S.autoplay);
-  const sl=await get("meta","silent"); S.silent=!!sl;
+  // undefined is a first launch, and a first launch is silent — `!!undefined`
+  // would have made it sound, which is the whole complaint this answers
+  const sl=await get("meta","silent"); S.silent=(sl===undefined)?true:!!sl;
   const sp=await get("meta","speed");
   if(typeof sp==="number"&&sp>=SPD_MIN&&sp<=SPD_MAX) S.speed=sp;
   audio.playbackRate=S.speed;
