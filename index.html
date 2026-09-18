@@ -279,6 +279,11 @@
   .versrich{display:none;padding-bottom:8px}
   body.text-play .versrich{display:block}
   body.text-play #verseText{display:none}
+  /* On a path slide the same box carries the folds that hang under a verse —
+     the Sudha Nidhi's ব্যাখ্যা and শব্দার্থ. Keyed on the box HAVING something
+     in it, so a verse with no meaning written yet needs no bookkeeping and
+     cannot leave an empty rule of gold behind. */
+  body.path-play .versrich:not(:empty){display:block}
   .versrich .versetext{margin:0 0 4px}
   .vnote{font-size:13px;color:var(--muted);text-align:center;margin:2px 0 10px}
   .vcolo{font-size:12.5px;color:var(--gold);text-align:center;margin:14px 0 4px;
@@ -303,7 +308,11 @@
   body.text-play .rbar{display:flex}
   body.text-play .now-name{order:-1;font-size:15px;color:var(--muted);font-weight:600;
     letter-spacing:.3px;margin:0 0 10px}
-  body.text-play #rbAudio,body:not(.text-play) #rbGloss{display:none}
+  body.text-play #rbAudio{display:none}
+  /* the fold-everything button belongs to whatever has folds: every section of
+     सेवक वाणी, and the verses of the Sudha Nidhi that have their meaning */
+  #rbGloss{display:none}
+  body.text-play #rbGloss,body.glossable #rbGloss{display:grid}
   /* the picker lists sections by their titles, one to a row */
   .pick-grid.titles{grid-template-columns:1fr;gap:7px}
   .titles .pcell{aspect-ratio:auto;display:flex;align-items:center;gap:12px;
@@ -1507,16 +1516,22 @@ function paintWhere(c,n){
   const all=versesIn(),k=verseAt();
   $("nowName").textContent=itemTitle(c,n)+(all.length>1?"  ·  "+(k+1)+"/"+all.length:"");
 }
+/* One fold. Sevak Vani has one kind and names it in the code; the Sudha Nidhi
+   has two and carries their names in the text, because they are Bengali and the
+   face they need is not the one a Devanagari heading needs. */
+function glossFold(label,body,cls){
+  const d=document.createElement("details"); d.className="gloss"; d.open=S.gloss;
+  const sm=document.createElement("summary"); sm.className=cls; sm.textContent=label;
+  const bd=document.createElement("div"); bd.className="gbody "+cls; bd.textContent=body;
+  d.appendChild(sm); d.appendChild(bd); return d;
+}
 function showSection(c,n){
   const box=$("verseRich"),row=rowFor(c,n);
   box.innerHTML=""; $("verseScroll").scrollTop=0;
   if(!row){box.textContent="";return;}
   for(const [k,t] of row.b){
     if(k==="c"){
-      const d=document.createElement("details"); d.className="gloss"; d.open=S.gloss;
-      const sm=document.createElement("summary"); sm.className="dv"; sm.textContent="व्याख्या";
-      const bd=document.createElement("div"); bd.className="gbody dv"; bd.textContent=t;
-      d.appendChild(sm); d.appendChild(bd); box.appendChild(d);
+      box.appendChild(glossFold("व्याख्या",t,"dv"));
     }else{
       const el=document.createElement(k==="v"?"p":"div");
       el.className=k==="v"?"versetext dv":(k==="k"?"vcolo dv":"vnote dv");
@@ -1880,15 +1895,26 @@ async function playTrack(t,fromStart,startPaused){
 }
 
 /* text and audio in sync: one file per item, so the text for the item that is
-   playing is simply the row with its number */
+   playing is simply the row with its number.
+
+   `t` is the verse and nothing else, whatever else the source held. What a row
+   may carry BESIDES the verse is `g` — the meaning, as [heading, body] pairs,
+   folded away underneath so the screen still reads as verse until it is asked
+   for. The Sudha Nidhi has it on shlokas 1-90; every other item on every path
+   has none, and for those the box below is emptied and hides itself. */
 function showVerse(c,n){
-  const el=$("verseText"),sc=scriptOf(c),row=rowFor(c,n);
+  const el=$("verseText"),sc=scriptOf(c),row=rowFor(c,n),box=$("verseRich");
   $("verseScroll").scrollTop=0;
   el.className="versetext "+(row?(sc.cls||"dv"):"versemuted dv");
   // A verse line that wraps must not leave its danda stranded on a line of
   // its own, so the space before । or ॥ is made non-breaking.
   el.textContent=row?row.t.replace(/ +([।॥])/g,"\u00A0$1")
     :(sc.placeholderTitle?sc.placeholderTitle+"\n\n"+(sc.placeholderBody||""):"");
+  box.innerHTML="";
+  const g=row&&row.g;
+  if(g) for(const [label,body] of g) box.appendChild(glossFold(label,body,sc.cls||"dv"));
+  // the bar's fold-everything button is only worth offering where folds exist
+  document.body.classList.toggle("glossable",!!g);
 }
 
 function paint(){
