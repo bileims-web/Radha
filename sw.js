@@ -10,7 +10,7 @@
  *   AUDIO_VERSION — bump ONLY when an mp3 under audio/ is replaced. Expensive:
  *                   every track has to be downloaded again.
  */
-var SHELL_VERSION = 'v28';  // v28: the ব্যাখ্যা is set at the verse's size, with no rule beside it
+var SHELL_VERSION = 'v29';  // v29: opening a sitting shows the words and sounds nothing
 var AUDIO_VERSION = 'v1';   // untouched: this release only ADDS mp3s, it replaces none
 var SHELL_CACHE = 'radha-shell-' + SHELL_VERSION;
 var AUDIO_CACHE = 'radha-audio-' + AUDIO_VERSION;

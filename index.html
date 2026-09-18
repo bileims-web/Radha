@@ -1237,18 +1237,20 @@ async function playPath(c,n,fromStart,raise,startPaused){
   // closed stays closed.
   if(raise) document.body.classList.add("player-open");
 }
-/* A session is one division played to its end. If the path already stands
-   inside it we resume there; if it stands elsewhere the position MOVES to this
-   division's first item, so "where I am" stays honest and finishing a sitting
-   walks the highlight on to the next tile. A session always runs to its end —
-   the auto-play toggle governs what happens OUTSIDE one. */
+/* A session is one division read, and played to its end if it is played at all.
+   If the path already stands inside it we resume there; if it stands elsewhere
+   the position MOVES to this division's first item, so "where I am" stays honest
+   and finishing a sitting walks the highlight on to the next tile. The sitting
+   OPENS SILENT — the words are what a tap on a tile asks for — and once play is
+   pressed it runs to its own end; the auto-play toggle governs what happens
+   OUTSIDE one. */
 async function startSession(c,d){
   let p=posOf(c);
   if(p<d.from||p>d.to){p=d.from;S.pos[c.id]=p;await put("meta",p,"pos:"+c.id);}
   const items=[];for(let n=p;n<=d.to;n++) items.push(n);
   S.session={pathId:c.id,items:items,i:0,from:d.from,to:d.to};
-  await setSilent(false);            // tapping a sitting is a play gesture
-  await playPath(c,items[0],false,true,false);
+  await setSilent(true);             // opening a sitting is a READING gesture
+  await playPath(c,items[0],false,true,true);
 }
 /* Long press: put the text back to its start and begin this sitting at its own
    first item. `pos` stays at 0, and advance() only moves it when the item that
@@ -1258,8 +1260,8 @@ async function restartPath(c,d){
   toast(W(c,"fromStart"));
   const items=[];for(let n=d.from;n<=d.to;n++) items.push(n);
   S.session={pathId:c.id,items:items,i:0,from:d.from,to:d.to};
-  await setSilent(false);
-  await playPath(c,d.from,true,true,false);
+  await setSilent(true);
+  await playPath(c,d.from,true,true,true);
 }
 
 /* ---------- render ---------- */
@@ -1477,10 +1479,12 @@ async function renderPathSub(c,L){
    toggles a reciter changes mid-sitting.
    ================================================================ */
 
-/* Silence is sticky. Pausing sets it, and only an explicit play gesture — the
-   panel's play, the mini bar's play, a session tile, the phone's own media
-   keys — clears it. Prev, next, a jump from the picker and reopening the app
-   all inherit it, so reading with the music off stays off. */
+/* Silence is sticky, and OPENING SOMETHING NEVER SOUNDS IT. A sitting tile puts
+   the words on the screen with the pad loaded and paused; only an explicit play
+   — the panel's play, the mini bar's play, the phone's own media keys — starts
+   the recitation. Pausing sets silence again. Prev, next, a jump from the
+   picker and reopening the app all inherit it, so reading with the music off
+   stays off, and a text slide opened by hand never starts talking. */
 async function setSilent(v){
   v=!!v; if(S.silent===v)return;
   S.silent=v; await put("meta",v,"silent");
