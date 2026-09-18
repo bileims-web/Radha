@@ -48,6 +48,12 @@
   .crumb{display:block;font-size:11px;color:var(--muted);font-weight:400;
     letter-spacing:.4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  /* …except when what it says is not Latin. The line under the title carries
+     ভাগ / পদ ranges and now दो संस्करण, and the stack above has no Indic face in
+     it, so those fell through to whatever the phone happened to own. The title's
+     own script class decides, exactly as it does for the title itself. */
+  .title.dv .crumb{font-family:"Noto Serif Devanagari","Noto Sans Devanagari",serif}
+  .title.bn .crumb{font-family:"Noto Serif Bengali","Noto Sans Bengali",serif}
 
   .scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:180px}
 
@@ -111,6 +117,9 @@
   .meta{flex:1;min-width:0}
   .name{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:16px}
   .sub{display:block;font-size:12.5px;color:var(--muted);margin-top:3px;font-variant-numeric:tabular-nums}
+  .sub .mark{color:var(--gold)}
+  .track-bar{height:2px;background:var(--line);border-radius:2px;margin-top:7px;overflow:hidden}
+  .track-bar i{display:block;height:100%;background:var(--gold);border-radius:2px}
   .empty{padding:44px 30px;text-align:center;color:var(--muted);font-size:14px}
   .empty b{display:block;color:var(--text);font-size:17px;font-weight:600;margin-bottom:8px}
 
@@ -338,6 +347,9 @@
   .lname{font-size:15px;font-weight:600;line-height:1.32;
     display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
   .lsub{font-size:11.5px;color:var(--muted);margin-top:4px;font-variant-numeric:tabular-nums}
+  .lsub .mark{color:var(--gold)}
+  .lbar{height:2px;background:var(--line);border-radius:2px;margin-top:7px;overflow:hidden}
+  .lbar i{display:block;height:100%;background:var(--gold);border-radius:2px}
 
   /* The two slides that are not built yet. They hold their place in the grid
      so the layout is whole, but they are plainly not ready: no ink of their
@@ -869,6 +881,9 @@
   <button class="item" id="actRename">
     <span class="glyph"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></span>Rename
   </button>
+  <button class="item" id="actClearMark">
+    <span class="glyph"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 109-9"/><path d="M3 4v5h5"/></svg></span>Start from beginning
+  </button>
   <button class="item danger" id="actDelete">
     <span class="glyph"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V5h6v2"/><path d="M6 7l1 13h10l1-13"/></svg></span>Delete
   </button>
@@ -969,10 +984,10 @@ function openDB(){return new Promise((res,rej)=>{
   r.onupgradeneeded=e=>{const d=e.target.result;
     if(!d.objectStoreNames.contains("nodes")) d.createObjectStore("nodes",{keyPath:"id"}).createIndex("parent","parentId");
     if(!d.objectStoreNames.contains("blobs")) d.createObjectStore("blobs");
-    /* There was a "marks" store here — how far into an item you had got, so it
-       could resume there. Nothing resumes any more (see playTrack): a song or a
-       verse ALWAYS starts at its beginning. A phone installed before v30 keeps
-       the store, empty and unread; nothing opens it, so there is no migration. */
+    /* How far into an item you had got. A SONG resumes there; a VERSE never
+       does — see playTrack. v30 deleted this store outright and v31 put it back
+       for the songs alone, which is why the rule lives next to every use of it. */
+    if(!d.objectStoreNames.contains("marks")) d.createObjectStore("marks");
     if(!d.objectStoreNames.contains("meta"))  d.createObjectStore("meta");};
   r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);});}
 const st=(s,m)=>db.transaction(s,m).objectStore(s);
@@ -1215,11 +1230,11 @@ function autoOf(c){const a=S.auto[c.id];return a===undefined?true:!!a;}
 
 /* THE COMPLETION RULE. A pad counts as done ONLY if it played through to its
    end — the `ended` event, nothing else. There is no time window and nothing
-   to tune. Stopping part-way leaves pos where it is, and coming back begins
-   that item AGAIN, from its top — there is no longer any record of how far in
-   you were, and there must not be one.
+   to tune. Stopping part-way leaves pos where it is, and coming back begins that
+   pad AGAIN, from its top: no mark is written for a path item, and none must be
+   (songs are the other case — see playTrack).
 
-   Do NOT reintroduce a near-the-end test here, and do not reintroduce a resume
+   Do NOT reintroduce a near-the-end test here, and do not reach for a song's
    mark to hang one on: "nearly finished" is not finished. */
 async function advance(c,n){
   const last=lastIndex(c);
@@ -1359,7 +1374,7 @@ async function renderTiles(L){
 
 async function renderColl(c,L){
   if(!c.tracks||!c.tracks.length){L.innerHTML='<div class="empty"><b>No recordings yet</b>Add the files to audio/'+c.id+'/ in the repo.</div>';return;}
-  const allMeta=await mapOf("meta");
+  const allMarks=await mapOf("marks"), allMeta=await mapOf("meta");
   for(let i=0;i<c.tracks.length;i++){
     const t=c.tracks[i], id=tid(c.id,t.file);
     const row=document.createElement("button");
@@ -1368,10 +1383,17 @@ async function renderColl(c,L){
     const meta=document.createElement("span"); meta.className="meta";
     const nm=document.createElement("span"); nm.className="name dv"; nm.textContent=t.title;
     meta.appendChild(nm);
-    const dur=allMeta.get("dur:"+id);
+    // `t.dur` is the manifest's own figure, so a recording that has never been
+    // played still says how long it is — which is how the two पद गायन versions
+    // are told apart before either has been opened
+    const mark=allMarks.get(id), dur=allMeta.get("dur:"+id)||t.dur;
     const sub=document.createElement("span"); sub.className="sub";
-    sub.textContent=dur?fmt(dur):"Tap to play";
+    if(mark&&mark.pos>15) sub.innerHTML='<span class="mark">Resume '+fmt(mark.pos)+'</span>'+(dur?' · '+fmt(dur):'');
+    else sub.textContent=dur?fmt(dur):"Tap to play";
     meta.appendChild(sub);
+    if(mark&&dur&&mark.pos>15){const b=document.createElement("span");b.className="track-bar";
+      const ii=document.createElement("i");ii.style.width=Math.min(100,mark.pos/dur*100)+"%";
+      b.appendChild(ii);meta.appendChild(b);}
     row.appendChild(meta);
     row.addEventListener("click",()=>playFixed(c,i));
     longPress(row,()=>openItemSheet({kind:"fixed",id,name:t.title}));
@@ -1841,6 +1863,7 @@ async function renderUser(L){
     :a.name.localeCompare(b.name,undefined,{numeric:true,sensitivity:"base"}));
   if(!list.length){const e=document.createElement("div");e.className="empty";
     e.innerHTML='<b class="dv">अभी कुछ नहीं</b>Tap + to make a folder or add songs.';L.appendChild(e);return;}
+  const allMarks=await mapOf("marks");
   const grid=document.createElement("div"); grid.className="ltiles";
   for(const n of list){
     const t=document.createElement("button");
@@ -1852,7 +1875,15 @@ async function renderUser(L){
     if(n.type==="folder"){
       const k=(await kids(n.id)).length;
       sub.textContent=k?k+" item"+(k>1?"s":""):"empty";
-    }else sub.textContent=n.duration?fmt(n.duration):bytes(n.size);
+    }else{
+      const mark=allMarks.get(n.id);
+      if(mark&&mark.pos>15){
+        sub.innerHTML='<span class="mark">Resume '+fmt(mark.pos)+'</span>';
+        if(n.duration){const b=document.createElement("span");b.className="lbar";
+          const ii=document.createElement("i");ii.style.width=Math.min(100,mark.pos/n.duration*100)+"%";
+          b.appendChild(ii);t.appendChild(b);}
+      } else sub.textContent=n.duration?fmt(n.duration):bytes(n.size);
+    }
     t.addEventListener("click",()=>{
       if(n.type==="folder"){S.stack.push({id:n.id,name:n.name});S.cwd=n.id;$("list").scrollTop=0;render();return;}
       const files=list.filter(x=>x.type==="file");
@@ -1889,27 +1920,38 @@ function goBack(){
 }
 
 /* ---------- playback ---------- */
-let objUrl=null,chainTimer=null,chainTick=null;
+let objUrl=null,saveAt=0,chainTimer=null,chainTick=null;
 let curSrc=null,retries=0,stallAt=-1,stallTicks=0;
 
 function clearChain(){if(chainTimer){clearTimeout(chainTimer);chainTimer=null;}
   if(chainTick){clearInterval(chainTick);chainTick=null;} $("chainLine").textContent="";}
 
-function playFixed(c,i){
+function playFixed(c,i,fromStart){
   clearChain(); S.session=null;
   const t=c.tracks[i];
-  playTrack({id:tid(c.id,t.file),name:t.title,url:t.file,coll:c,idx:i,kind:"fixed"});
+  playTrack({id:tid(c.id,t.file),name:t.title,url:t.file,coll:c,idx:i,kind:"fixed"},
+            false,fromStart);
 }
 
-/* EVERY ITEM STARTS AT ITS BEGINNING. A verse or a song left half-heard is
-   begun again, not resumed mid-word — the user's rule, and the reason the whole
-   resume-mark machinery is gone rather than merely unused.
+/* A VERSE BEGINS AGAIN; A SONG PICKS UP WHERE IT STOPPED.
+
+   A path item — a verse of the Sudha Nidhi, a pad of the Chaurasi — is under a
+   minute long and is read in order, so coming back to one mid-word is only
+   jarring: `t.path` items NEVER resume, and nothing writes a mark for them.
+   A song is a different creature: the two पद गायन recordings are near two hours
+   each, and starting one again from its top is the whole complaint the other
+   way round. So a track with no `path` honours its mark.
+
+   `fromStart` overrides that for the one case where even a song must begin
+   again: an item arrived at by ITSELF — the आरती chain, the next song in a
+   folder when one ends. A mark is for the item YOU choose, not the one that
+   comes to you.
 
    `startPaused` is how reading in silence works: the item is loaded and its
    words are painted, but nothing sounds until a play gesture. Callers that mean
    "play this" pass false; callers that are only moving the reader pass S.silent,
    so the habit carries. */
-async function playTrack(t,startPaused){
+async function playTrack(t,startPaused,fromStart){
   if(objUrl){URL.revokeObjectURL(objUrl);objUrl=null;}
   let src;
   if(t.blobId){const b=await get("blobs",t.blobId);
@@ -1923,6 +1965,7 @@ async function playTrack(t,startPaused){
     $("discLabel").setAttribute("fill",grp.tint||"#6E1F1F");}
   else $("discLabel").setAttribute("fill","#6E1F1F");
 
+  const mark=(t.path||fromStart)?null:await get("marks",t.id);
   curSrc=src; retries=0; stallAt=-1; stallTicks=0;
   audio.src=src;
   audio.onerror=recover;
@@ -1931,6 +1974,8 @@ async function playTrack(t,startPaused){
       if(t.node){if(Math.abs((t.node.duration||0)-audio.duration)>1){t.node.duration=audio.duration;await put("nodes",t.node);}}
       else await put("meta",audio.duration,"dur:"+t.id);
     }
+    if(mark&&mark.pos>0&&mark.pos<audio.duration-3){
+      audio.currentTime=mark.pos; toast("Resuming from "+fmt(mark.pos));}
     audio.playbackRate=S.speed;
     paint(); if(!startPaused) audio.play().catch(paint);
   };
@@ -1999,6 +2044,20 @@ function paint(){
 }
 
 
+/* Writes where the song has got to, for the ONE kind of item that resumes.
+   A path item is excluded at the door: no mark is ever written for a verse, so
+   nothing can be read back for one either, whatever a later reader does.
+
+   Clears the mark near the end so a finished song does not offer to resume at
+   its last second. That is a RESUME convenience only — completion is `ended`,
+   never this test. See advance(). */
+async function saveMark(){
+  if(!S.cur||S.cur.path)return; const c=audio.currentTime;
+  if(!isFinite(c))return;
+  if(audio.duration&&c>audio.duration-5) await del("marks",S.cur.id);
+  else await put("marks",{pos:c,updated:Date.now()},S.cur.id);
+}
+
 /* A hiccup must not end the sitting. The network changes, the stream is cut,
    the phone comes back from sleep: the element fires `error`, or simply stops
    advancing, and playback used to die there behind a toast nobody sees. This
@@ -2033,10 +2092,14 @@ setInterval(()=>{
   else { if(stallAt>=0) retries=0; stallAt=t; stallTicks=0; }
 },5000);
 
-audio.addEventListener("timeupdate",paint);
+audio.addEventListener("timeupdate",()=>{
+  paint();
+  const n=Date.now(); if(n-saveAt>5000){saveAt=n;saveMark();}
+});
 audio.addEventListener("play",paint);
-audio.addEventListener("pause",paint);
+audio.addEventListener("pause",()=>{paint();saveMark();});
 audio.addEventListener("ended",async()=>{
+  if(S.cur) await del("marks",S.cur.id);
   const t=S.cur;
 
   // a path item has played through to its end — the one thing that counts as done
@@ -2067,7 +2130,7 @@ audio.addEventListener("ended",async()=>{
     if(pair){startChain(t.coll,pair[1]);return;}
   }
   if(t&&t.kind==="user"&&S.autoplay&&S.qi>-1&&S.qi+1<S.queue.length){
-    S.qi++; playTrack(S.queue[S.qi]); return;
+    S.qi++; playTrack(S.queue[S.qi],false,true); return;   // arrived at, so from its top
   }
   paint(); render();
 });
@@ -2080,7 +2143,7 @@ function startChain(c,nextIdx){
   $("chainLine").textContent=c.tracks[nextIdx].title+" in "+left+"s";
   chainTick=setInterval(()=>{left--;
     if(left>0)$("chainLine").textContent=c.tracks[nextIdx].title+" in "+left+"s";},1000);
-  chainTimer=setTimeout(()=>{clearChain();playFixed(c,nextIdx);},gap*1000);
+  chainTimer=setTimeout(()=>{clearChain();playFixed(c,nextIdx,true);},gap*1000);
 }
 
 function mediaMeta(t){
@@ -2106,10 +2169,14 @@ $("settingsBtn").addEventListener("click",async()=>{renderDivRows();showSheet($(
     $("storageLine").textContent=bytes(e.usage||0)+" used";}
   else $("storageLine").textContent="Not reported by this browser";});
 
+document.addEventListener("visibilitychange",()=>{if(document.hidden)saveMark();});
+window.addEventListener("pagehide",saveMark);
+
 function openItemSheet(t){S.target=t;$("itemSheetTitle").textContent=t.name;
   const fx=t.kind==="fixed";
   $("actRename").style.display=fx?"none":"";
   $("actDelete").style.display=fx?"none":"";
+  $("actClearMark").style.display=(fx||(t.node&&t.node.type==="file"))?"":"none";
   showSheet($("itemSheet"));}
 
 /* ---------- dialog ---------- */
@@ -2136,6 +2203,9 @@ $("actRename").addEventListener("click",()=>{const t=S.target;hideSheets();
   ask("Rename",t.name,async n=>{t.node.name=n;await put("nodes",t.node);
     if(S.cur&&S.cur.id===t.node.id){S.cur.name=n;$("miniName").textContent=n;$("nowName").textContent=n;}
     render();});});
+$("actClearMark").addEventListener("click",async()=>{const t=S.target;hideSheets();
+  await del("marks",t.id);if(S.cur&&S.cur.id===t.id)audio.currentTime=0;
+  toast("Will start from the beginning");render();});
 $("actDelete").addEventListener("click",async()=>{const t=S.target;hideSheets();
   if(!confirm("Delete “"+t.name+"”"+(t.node.type==="folder"?" and everything inside it":"")+"?"))return;
   await rm(t.node);
@@ -2143,7 +2213,7 @@ $("actDelete").addEventListener("click",async()=>{const t=S.target;hideSheets();
     $("mini").hidden=true;document.body.classList.remove("has-mini","player-open","path-play");}
   render();});
 async function rm(n){if(n.type==="folder"){for(const k of await kids(n.id))await rm(k);}
-  else await del("blobs",n.id); await del("nodes",n.id);}
+  else{await del("blobs",n.id);await del("marks",n.id);} await del("nodes",n.id);}
 
 $("autoplayRow").addEventListener("click",async()=>{S.autoplay=!S.autoplay;
   $("autoplaySw").classList.toggle("on",S.autoplay);await put("meta",S.autoplay,"autoplay");});
@@ -2212,7 +2282,7 @@ apSeek.addEventListener("input",()=>{apSeek.dragging=true;const d=audio.duration
   $("apCur").textContent=fmtHMS(d*apSeek.value/1000);
   apSeek.style.setProperty("--fill",(apSeek.value/10)+"%");});
 apSeek.addEventListener("change",()=>{const d=audio.duration||0;
-  audio.currentTime=d*apSeek.value/1000;apSeek.dragging=false;});
+  audio.currentTime=d*apSeek.value/1000;apSeek.dragging=false;saveMark();});
 $("apSlower").addEventListener("click",()=>setSpeed(S.speed-SPD_STEP));
 $("apFaster").addEventListener("click",()=>setSpeed(S.speed+SPD_STEP));
 $("apRepeatRow").addEventListener("click",()=>setRepeat(!S.repeat));
@@ -2233,7 +2303,7 @@ const seek=$("seek");
 seek.addEventListener("input",()=>{seek.dragging=true;const d=audio.duration||0;
   $("tCur").textContent=fmt(d*seek.value/1000);seek.style.setProperty("--fill",(seek.value/10)+"%");});
 seek.addEventListener("change",()=>{const d=audio.duration||0;
-  audio.currentTime=d*seek.value/1000;seek.dragging=false;});
+  audio.currentTime=d*seek.value/1000;seek.dragging=false;saveMark();});
 window.addEventListener("popstate",()=>{
   if(pickerOpen())hidePicker();
   else if(openSh)hideSheets();

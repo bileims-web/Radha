@@ -79,9 +79,21 @@
     {
       "id": "padgayan",
       "title": "श्री हित चौरासी पद गायन",
-      "mode": "soon",
+      "mode": "coll",
       "tint": "#26365A",
-      "soonNote": "दो गायन संस्करण हैं। एक में जहाँ छूटा, दूसरा वहीं से चले — इसके लिए हर पद का समय चाहिए, जो अभी नहीं है।"
+      "range": "दो संस्करण",
+      "tracks": [
+        {
+          "file": "audio/chaturashi/01.mp3",
+          "title": "गायन 1",
+          "dur": 6531
+        },
+        {
+          "file": "audio/chaturashi/02.mp3",
+          "title": "गायन 2",
+          "dur": 7008
+        }
+      ]
     },
     {
       "id": "rsn",
