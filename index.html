@@ -1296,6 +1296,7 @@ async function restartPath(c,d){
 
 /* ---------- render ---------- */
 async function render(){
+  syncHistory();                 // a view change is a layer opened or closed
   const L=$("list"); L.innerHTML="";
   $("backBtn").hidden = S.view==="home";
   $("fab").hidden = !(S.view==="library");
@@ -2458,12 +2459,75 @@ seek.addEventListener("input",()=>{seek.dragging=true;const d=audio.duration||0;
   $("tCur").textContent=fmt(d*seek.value/1000);seek.style.setProperty("--fill",(seek.value/10)+"%");});
 seek.addEventListener("change",()=>{const d=audio.duration||0;
   audio.currentTime=d*seek.value/1000;seek.dragging=false;saveMark();});
-window.addEventListener("popstate",()=>{
-  if(pickerOpen())hidePicker();
-  else if(openSh)hideSheets();
-  else if(document.body.classList.contains("player-open"))closeReader();
-  else if(S.view!=="home")goBack();
-  history.pushState(null,"");});
+/* ---------- back ----------
+   One press closes exactly one thing: the picker, then a sheet, then the
+   raised player, then one step up the views — and from the tiles, with
+   nothing open, it leaves the app.
+
+   The history stack MIRRORS how deep the screen is: one entry per open layer,
+   pushed as the layer opens. The old model kept a SINGLE spare entry and
+   re-pushed it from inside `popstate`, which is a race — the entry the second
+   of two quick presses needs does not exist yet when that press is handled, so
+   it fell through to the bottom and closed the app. That is the reported bug,
+   and it only ever showed with something playing because that is the one flow
+   needing two presses in a row (close the player, then leave the slide).
+
+   Each entry carries its own depth, so `popstate` never has to count: it reads
+   where it landed and closes layers until the screen agrees. A traversal of
+   several entries fires ONE popstate, and the same loop covers it. */
+let histDepth=0,histPending=null;
+function uiDepth(){
+  let d=0;
+  if(S.view==="pathsub")d=2;                      // sub-list, list
+  else if(S.view==="library")d=1+S.stack.length;  // one per folder entered
+  else if(S.view!=="home")d=1;
+  if(document.body.classList.contains("player-open"))d++;
+  if($("scrim").classList.contains("on"))d++;     // a sheet OR the rename dialog
+  if(pickerOpen())d++;
+  return d;
+}
+/* innermost first, in the same order uiDepth counts them */
+function closeLayer(){
+  if(pickerOpen()){hidePicker();return true;}
+  if($("scrim").classList.contains("on")){hideSheets();return true;}
+  if(document.body.classList.contains("player-open")){closeReader();return true;}
+  if(S.view!=="home"){goBack();return true;}
+  return false;
+}
+function syncHistory(){
+  if(histPending)return;                          // a traversal we asked for is in flight
+  const want=uiDepth();
+  if(want>histDepth){
+    while(histDepth<want){histDepth++;history.pushState({d:histDepth},"");}
+  }
+  else if(want<histDepth){
+    /* The screen closed a layer by itself — the app’s own back arrow, the
+       player’s ✕, a tap on the scrim. Hand the entries back, or the next
+       press would be spent on an entry with nothing left to close. */
+    const n=histDepth-want;
+    histPending=setTimeout(()=>{histPending=null;},1000);   // never stay stuck
+    history.go(-n);
+  }
+}
+/* Every layer announces itself in a class — `player-open` on the body, `on`
+   on the scrim and on the picker — so the classes are watched and no caller
+   has to remember. The views are the one exception, and they all go through
+   render(). */
+const histWatch=new MutationObserver(syncHistory);
+for(const el of [document.body,$("scrim"),$("pickOv")])
+  histWatch.observe(el,{attributes:true,attributeFilter:["class"]});
+
+window.addEventListener("popstate",e=>{
+  if(histPending){clearTimeout(histPending);histPending=null;}
+  histDepth=(e.state&&typeof e.state.d==="number")?e.state.d:0;
+  // the bound is a belt against a layer that will not close, nothing more
+  for(let i=0;i<8&&uiDepth()>histDepth;i++) if(!closeLayer())break;
+  /* And reconcile once more. A screen that shut two layers while a traversal
+     was in flight — the back ARROW held down, `home()` in the tests — could
+     only be half-answered then, because `histPending` was set; this is where
+     the rest of it lands. */
+  syncHistory();
+});
 
 /* ---------- boot ---------- */
 (async function(){
@@ -2504,7 +2568,10 @@ window.addEventListener("popstate",()=>{
   document.documentElement.style.setProperty("--verse-size",S.font+"px");
   paintPanel(); paintReader();
   $("bigPlay").innerHTML=PLAY;$("miniPlay").innerHTML=PLAY;
-  history.pushState(null,"");
+  /* A reload lands on whatever entry the app was sitting on, but the screen
+     always starts at the tiles. Adopt that depth so the render below takes the
+     stack back down to match, instead of leaving dead presses above us. */
+  histDepth=(history.state&&typeof history.state.d==="number")?history.state.d:0;
   await render();
 })();
 
