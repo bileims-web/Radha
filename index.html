@@ -422,8 +422,17 @@
   .pick-head{display:flex;align-items:center;gap:6px;padding:0 8px 8px;
     border-bottom:1px solid var(--line)}
   .pick-title{flex:1;font-size:16px;font-weight:600}
+  /* `align-content:start` is load-bearing, not tidying. The grid is a flex
+     item with a definite height, so auto rows STRETCH to fill it — and a short
+     list has few rows, so they stretch a lot. The cells are `aspect-ratio:1/1`,
+     which then derives their WIDTH from that stretched height, and `1fr` is
+     `minmax(auto,1fr)`, so the columns grow to that width and the grid runs off
+     the screen. Measured at 390px: 271 cells sat at 66px and fitted; 31 cells
+     blew up to 102px and overflowed by 179px. `minmax(0,1fr)` cuts the same
+     feedback at the column, and is kept as the belt to this brace. */
   .pick-grid{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
-    display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:12px 4px 4px}
+    display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;
+    align-content:start;padding:12px 4px 4px}
   .pcell{aspect-ratio:1/1;border-radius:11px;background:var(--surface);
     border:1px solid var(--line);color:var(--text);font-size:15px;
     font-variant-numeric:tabular-nums;display:grid;place-items:center}
