@@ -2637,9 +2637,23 @@ $("rbGloss").addEventListener("click",()=>setGloss(!S.gloss));
 $("rbPrev").addEventListener("click",()=>readerStep(-1));
 $("rbNext").addEventListener("click",()=>readerStep(1));
 
-/* Turning the page with the thumb. The words scroll up and down inside one
-   item, so only a decisively sideways drag counts — and it is the same path as
-   the prev/next buttons, nothing of its own. */
+/* Turning the page with the thumb — two gestures into the one path, which is
+   the same one the prev/next buttons take.
+
+   The DRAG: the words scroll up and down inside one item, so only a decisively
+   sideways one counts. Leftwards brings the next page in from the right.
+
+   The TAP, the way a Kindle does it: the right edge forward, the left edge
+   back, and the wide middle deliberately DEAD — that is where a thumb rests
+   and where the eye reads, and v39 removed the toggle that used to live there
+   for exactly that reason. A tap NEVER starts or stops the recitation; play
+   and pause are buttons and stay buttons.
+
+   `turnedAt` is why the two do not fight: a drag can still be followed by a
+   click on some browsers, and that click would land in one of the edges and
+   turn a second page. After a drag the tap stands down for half a second. */
+const TAP_EDGE=0.30;      // of the width, each side; the middle 40% does nothing
+let turnedAt=0;
 (function(){
   const vs=$("verseScroll"); let x0=null,y0=null;
   vs.addEventListener("touchstart",e=>{
@@ -2650,16 +2664,21 @@ $("rbNext").addEventListener("click",()=>readerStep(1));
     const t=e.changedTouches[0],dx=t.clientX-x0,dy=t.clientY-y0;
     x0=null;
     if(Math.abs(dx)<56||Math.abs(dx)<Math.abs(dy)*1.6)return;
+    turnedAt=Date.now();
     readerStep(dx<0?1:-1);},{passive:true});
+  vs.addEventListener("click",e=>{
+    if(Date.now()-turnedAt<500)return;
+    // a व्याख्या fold, or anything else inside the words that is its own control
+    if(e.target.closest("summary,button,a,input,select,textarea"))return;
+    // a tap that puts down a selection is dismissing it, not turning a page
+    const sel=window.getSelection&&window.getSelection();
+    if(sel&&!sel.isCollapsed)return;
+    const r=vs.getBoundingClientRect(); if(!r.width)return;
+    const f=(e.clientX-r.left)/r.width;
+    if(f<TAP_EDGE) readerStep(-1);
+    else if(f>1-TAP_EDGE) readerStep(1);
+  });
 })();
-
-/* A tap on the words does NOTHING, asked for on 2026-09-19. v30 made it play
-   and pause — and so a thumb set down on the words, a phone picked up, a
-   finger following a line, all stopped the recitation, with nothing on the
-   screen to say what had. Starting and stopping is a BUTTON now, and only a
-   button: ▶ on the reader bar, the panel's, the mini bar's, and the phone's
-   own media keys. Nothing here listens for a tap any more, so a page-turn
-   swipe needs no `turnedAt` guard against the click that follows it. */
 
 /* ---------- the audio panel ---------- */
 $("apPlay").addEventListener("click",toggleAudio);
