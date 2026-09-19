@@ -33,6 +33,16 @@
       "Noto Serif Devanagari","Noto Serif Bengali";
     font-size:16px;line-height:1.4;overscroll-behavior:none;
     display:flex;flex-direction:column;height:100dvh}
+
+  /* Nothing on these screens is here to be selected — and a tap that selects
+     a word is exactly what summons Chrome's Touch to Search: the Google
+     Translate bar that slid up over the শব্দার্থ fold every time an edge tap
+     turned the page (screenshot, 2026-09-19). No word selected, nothing for it
+     to offer. The long-press callout goes with it, and the app reads as an app
+     instead of a web page. Fields are the exception: the rename dialog calls
+     .select() on its own text. */
+  body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  input,textarea{-webkit-user-select:text;user-select:text}
   button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
   input{font:inherit}
   .dv{font-family:"Noto Serif Devanagari","Noto Sans Devanagari",serif}
@@ -2681,7 +2691,9 @@ let turnedAt=0;
     if(Date.now()-turnedAt<500)return;
     // a व्याख्या fold, or anything else inside the words that is its own control
     if(e.target.closest("summary,button,a,input,select,textarea"))return;
-    // a tap that puts down a selection is dismissing it, not turning a page
+    // a tap that puts down a selection is dismissing it, not turning a page.
+    // A belt since v42, which took selection off the words altogether — see
+    // the body rule and why Google was appearing over them.
     const sel=window.getSelection&&window.getSelection();
     if(sel&&!sel.isCollapsed)return;
     const r=vs.getBoundingClientRect(); if(!r.width)return;
