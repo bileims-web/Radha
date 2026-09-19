@@ -57,6 +57,17 @@
 
   .scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:180px}
 
+  /* No scrollbar on anything that scrolls — asked for on 2026-09-19. Chrome
+     draws a thin grey rule down the right edge while a finger moves, and beside
+     a page of centred verse it reads as part of the page, a margin line someone
+     ruled there. Nothing here needs it: the reader counts its own place in the
+     header (5/7), the picker is a grid of numbers, and a sheet is a handful of
+     rows. Both spellings, because the standard property is Chrome 121+ and the
+     WebKit pseudo-element is what older phones still listen to. */
+  .scroll,.versescroll,.pick-grid,.sheet{scrollbar-width:none}
+  .scroll::-webkit-scrollbar,.versescroll::-webkit-scrollbar,
+  .pick-grid::-webkit-scrollbar,.sheet::-webkit-scrollbar{display:none;width:0;height:0}
+
   /* Alpona drawn on the ground itself, framing the content. z-index -1 so
      it lies under the flow but over the page colour; the top pair start
      below the topbar, which is opaque and would otherwise cover them. */
