@@ -2122,6 +2122,63 @@ function showVerse(c,n){
   document.body.classList.toggle("glossable",folds>0);
 }
 
+/* ---------- the screen must not go out under the reader ----------
+   A sitting is eyes on the page and ears on the recitation, not thumbs on the
+   glass, and the phone’s own screen timeout does not know that: it blacked a
+   verse out mid-line. The lock is held while there are words on screen or
+   something is playing, and only then.
+
+   Two facts about the API this leans on. The browser releases the lock BY
+   ITSELF the moment the page is hidden — the power button, a switch to
+   another app — so switching the screen off by hand still works and nothing
+   here has to undo it. And that release is final: the sentinel is dead, so
+   coming back to a visible page must ask again or the rest of the sitting
+   goes unheld. `release` fires for both kinds, which is why its handler only
+   drops the handle and never decides anything. */
+let wakeLock=null,wakeBusy=false;
+function wakeWanted(){
+  if(document.hidden)return false;          // a request would only throw
+  if(!audio.paused)return true;
+  // the words are on screen when the player is raised over a slide — either
+  // kind, the text section and the verse that plays keep the screen alike
+  const b=document.body.classList;
+  return b.contains("player-open")&&
+    (b.contains("text-play")||b.contains("path-play"));
+}
+async function syncWake(){
+  if(!("wakeLock" in navigator)||wakeBusy)return;
+  const want=wakeWanted();
+  if(want===!!wakeLock)return;
+  wakeBusy=true;
+  try{
+    if(want){
+      wakeLock=await navigator.wakeLock.request("screen");
+      wakeLock.addEventListener("release",()=>{wakeLock=null;});
+    }
+    else{ const l=wakeLock; wakeLock=null; await l.release(); }
+  }
+  // Refused: battery saver, a browser policy, a page hidden mid-request. This
+  // is a comfort, not a feature — it fails without a word, and the next thing
+  // that moves on screen asks again.
+  catch(e){wakeLock=null;}
+  finally{
+    wakeBusy=false;
+    // the sitting may have moved on while we awaited. A request that FAILED
+    // does not come back through here — `want` has not changed — or a phone
+    // that always refuses would spin.
+    if(wakeWanted()!==want) syncWake();
+  }
+}
+/* Every state the lock cares about is already written on the body: the player
+   is raised or it is not, the slide is a text or a verse, `playing` is toggled
+   from `audio.paused` on every play and pause. So the classes are watched
+   rather than each caller being made to remember — and a caller WOULD forget.
+   This began as two failing checks: closing the reader over a playing verse
+   goes through `closeReader`, which only calls `render()` when a TEXT slide is
+   open, so a hook there held the screen on for the rest of the session. */
+new MutationObserver(syncWake).observe(document.body,
+  {attributes:true,attributeFilter:["class"]});
+
 function paint(){
   const d=audio.duration||0,c=audio.currentTime||0,p=d?c/d*100:0;
   $("tCur").textContent=fmt(c);$("tDur").textContent=fmt(d);
@@ -2264,7 +2321,9 @@ $("settingsBtn").addEventListener("click",async()=>{renderDivRows();paintOffline
     $("storageLine").textContent=bytes(e.usage||0)+" used";}
   else $("storageLine").textContent="Not reported by this browser";});
 
-document.addEventListener("visibilitychange",()=>{if(document.hidden)saveMark();});
+// Coming back is the half that matters for the lock: the browser dropped it
+// on the way out and only a fresh request holds the screen again.
+document.addEventListener("visibilitychange",()=>{if(document.hidden)saveMark();syncWake();});
 window.addEventListener("pagehide",saveMark);
 
 function openItemSheet(t){S.target=t;$("itemSheetTitle").textContent=t.name;
