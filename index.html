@@ -1789,8 +1789,23 @@ async function openSection(c,n,raise){
   if(raise) document.body.classList.add("player-open");
   paintReader(); render();
 }
+/* Coming out of a slide leaves silence behind it.
+
+   Both ways out land here — the phone's back press, through closeLayer(), and
+   the player's own ✕ — because in this model they close the same layer, and a
+   recitation that follows you out to the tiles is the complaint either way. A
+   chain waiting to start the next आरती is dropped too: a countdown that fires
+   after you have gone is the same thing arriving ten seconds late.
+
+   What this does NOT do is set the silence habit. Leaving a screen is not the
+   same gesture as choosing to read without the music, so the next sitting still
+   opens as you left this one — and the mini bar keeps the item, so its play
+   button carries on from here. The mark is written by the `pause` listener,
+   which is why the place is kept without a word being said about it. */
 function closeReader(){
   document.body.classList.remove("player-open");
+  clearChain();
+  if(!audio.paused) audio.pause();
   if(S.read){S.read=null;document.body.classList.remove("text-play");render();}
 }
 async function setGloss(v){
