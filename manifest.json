@@ -103,7 +103,7 @@
       "title": "श्री मद् राधा सुधा निधि",
       "mode": "path",
       "tint": "#4A2F5C",
-      "bytes": 79086418,
+      "bytes": 297659636,
       "audio": "audio/rsn/SMRSNJ_{n}.mp3",
       "count": 270,
       "open": {
@@ -141,6 +141,7 @@
             "subpart": "উপভাগ",
             "subsOf": "ভাগ {n}-এর উপভাগ",
             "together": "একসাথে",
+            "reading": "পাঠ",
             "here": "এখানেই",
             "start": "আরম্ভ",
             "fromStart": "আরম্ভ থেকে",
@@ -150,6 +151,62 @@
             "closesWith": "শেষ ভাগ {cl} দিয়ে সম্পূর্ণ হয়।",
             "opensCloses": "প্রথম ভাগ সর্বদা {op} দিয়ে শুরু হয় এবং শেষ ভাগ {cl} দিয়ে সম্পূর্ণ হয়।"
           }
+        }
+      ],
+      "readings": [
+        {
+          "file": "audio/rsn-1/01.mp3",
+          "from": 1,
+          "to": 30,
+          "dur": 1012
+        },
+        {
+          "file": "audio/rsn-1/02.mp3",
+          "from": 31,
+          "to": 60,
+          "dur": 1042
+        },
+        {
+          "file": "audio/rsn-1/03.mp3",
+          "from": 61,
+          "to": 90,
+          "dur": 1132
+        },
+        {
+          "file": "audio/rsn-2/01.mp3",
+          "from": 91,
+          "to": 120,
+          "dur": 1094
+        },
+        {
+          "file": "audio/rsn-2/02.mp3",
+          "from": 121,
+          "to": 150,
+          "dur": 1095
+        },
+        {
+          "file": "audio/rsn-2/03.mp3",
+          "from": 151,
+          "to": 180,
+          "dur": 966
+        },
+        {
+          "file": "audio/rsn-3/01.mp3",
+          "from": 181,
+          "to": 210,
+          "dur": 908
+        },
+        {
+          "file": "audio/rsn-3/02.mp3",
+          "from": 211,
+          "to": 240,
+          "dur": 989
+        },
+        {
+          "file": "audio/rsn-3/03.mp3",
+          "from": 241,
+          "to": 270,
+          "dur": 1197
         }
       ]
     },

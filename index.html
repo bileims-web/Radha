@@ -401,6 +401,13 @@
   body.path-play .disc,body.path-play .now-folder,body.path-play #seek,
   body.path-play .player>.times,body.path-play .transport,
   body.path-play .chainline{display:none}
+  /* A READING is one file over thirty shlokas, so the seek bar and the clock
+     come back. On a verse slide they are noise — the file IS the item and its
+     length is that verse's. Here the sound runs for seventeen minutes while the
+     words are turned by hand, and finding a place inside it is the one thing
+     this reader needs that the other never does. */
+  body.path-play.reading #seek{display:block}
+  body.path-play.reading .player>.times{display:flex}
   /* the item's own name reads better above the words than under them */
   body.path-play .now-name{order:-1;font-size:15px;color:var(--muted);font-weight:600;
     letter-spacing:.3px;margin:0 0 10px}
@@ -1039,6 +1046,7 @@ const S={man:FALLBACK,view:"home",cwd:"root",stack:[],coll:null,grp:0,
   divEdit:null,// which text the division sheet is editing
   read:null,   // {id,n} while a text-only slide is open (सेवक वाणी)
   vpos:{},     // id -> {section: verse} — how far into each प्रकरण  ("vpos:<id>")
+  rpos:{},     // path id -> {reading: shloka} — where the EYE is   ("rpos:<id>")
   gloss:false, // are the व्याख्या blocks open  (persisted "gloss")
   // Reading with the music off is a HABIT, not a property of a text: one flag
   // for the app, remembered across items, across sittings and across launches.
@@ -1156,7 +1164,7 @@ function itemTitle(c,n){
    script it was written in, which the manifest already says. */
 const WORDS={
   part:"भाग", subpart:"उपभाग", subsOf:"भाग {n} के उपभाग",
-  together:"एक साथ", here:"यहीं", start:"आरम्भ",
+  together:"एक साथ", here:"यहीं", start:"आरम्भ", reading:"पाठ",
   fromStart:"आरम्भ से", sessionDone:"सत्र पूर्ण", alsoSubs:"उपभाग भी",
   opensWith:"पहला भाग सदा {op} से खुलता है।",
   closesWith:"अन्तिम भाग {cl} पर पूरा होता है।",
@@ -1233,6 +1241,32 @@ function subIndex(c,i,n){const ss=subsOf(c,i);
   for(let k=0;k<ss.length;k++) if(n>=ss[k].from&&n<=ss[k].to) return k;
   return 0;}
 
+/* ---------- the readings: one long recording over thirty shlokas ----------
+
+   A path item is one file and one verse, and the words can follow the sound
+   because each file ends exactly where its verse does. A reading is the other
+   shape: one recording carries thirty shlokas, nobody has timed the verses
+   inside it, and no honest code can say which one is sounding. So here the
+   sound and the words move SEPARATELY — the recording plays, the eye is turned
+   by hand, and each keeps its own place: the track's in `marks`, exactly as a
+   song's, and the eye's in `rpos:<id>`, one number per recording.
+
+   `rpos` is deliberately NOT the path's `pos`. That pointer means "where I am
+   in the text" and a sitting walks it forward as items finish; moving it from
+   here would drag the भाग tiles' gold edge about while a recording ran, and
+   nothing here has finished anything. */
+const readingsOf=c=>Array.isArray(c.readings)?c.readings:[];
+const readingId=(c,k)=>"rd:"+c.id+":"+k;
+function rposOf(c,k){
+  const r=readingsOf(c)[k]; if(!r)return 0;
+  const v=(S.rpos[c.id]||{})[k];
+  return (typeof v==="number"&&v>=r.from&&v<=r.to)?v:r.from;
+}
+async function saveRpos(c,k,n){
+  const m=Object.assign({},S.rpos[c.id]||{});
+  m[k]=n; S.rpos[c.id]=m; await put("meta",m,"rpos:"+c.id);
+}
+
 /* what a division covers, in words: "प्रशस्ति · पद 1–30" */
 function rangeText(c,d){
   const sc=scriptOf(c),bits=[];let from=d.from,to=d.to;
@@ -1303,6 +1337,40 @@ async function restartPath(c,d){
   await playPath(c,d.from,true);        // inherits the habit, like every tile
 }
 
+/* Opening a reading: the recording from where it was left — its mark, exactly
+   as a song's — and the words at the shloka the eye was left on. The two numbers
+   are independent, which is the point of this reader. */
+async function openReading(c,k){
+  const r=readingsOf(c)[k]; if(!r)return;
+  await loadText(c);
+  S.session=null;                       // a reading is not a sitting of the path
+  await playTrack({id:readingId(c,k),name:rangeText(c,{from:r.from,to:r.to}),
+    url:r.file,coll:c,kind:"read",read:{c:c,k:k,from:r.from,to:r.to},
+    n:rposOf(c,k)},S.silent);
+  document.body.classList.add("player-open");
+}
+/* Long press, as everywhere else on a tile: both places back to the top — the
+   recording at 0:00 and the eye on the first of its thirty. */
+async function restartReading(c,k){
+  const r=readingsOf(c)[k]; if(!r)return;
+  await del("marks",readingId(c,k));
+  await saveRpos(c,k,r.from);
+  toast(W(c,"fromStart"));
+  await openReading(c,k);
+}
+/* Moving the EYE, and nothing else. The audio element is not touched here — no
+   src, no seek, no pause — which is the whole difference between this reader and
+   the path's, where turning a verse IS loading the next file. */
+async function seatReading(n){
+  const t=S.cur; if(!t||!t.read)return;
+  if(n<t.read.from||n>t.read.to)return;
+  t.n=n;
+  showVerse(t.read.c,n);
+  $("nowName").textContent=itemTitle(t.read.c,n);
+  await saveRpos(t.read.c,t.read.k,n);
+  paintReader();
+}
+
 /* ---------- render ---------- */
 async function render(){
   syncHistory();                 // a view change is a layer opened or closed
@@ -1323,6 +1391,10 @@ async function render(){
     const d=divsOf(S.coll)[S.grp];
     setTitle(titleOf(S.coll),rangeText(S.coll,d),clsOf(S.coll));
     await renderPathSub(S.coll,L); return;
+  }
+  if(S.view==="pathread"){
+    setTitle(titleOf(S.coll),W(S.coll,"together"),clsOf(S.coll));
+    await renderPathRead(S.coll,L); return;
   }
   if(S.stack.length) setTitle(S.stack[S.stack.length-1].name,
     "रसिक पदावली / "+S.stack.map(x=>x.name).join(" / "),false);
@@ -1491,8 +1563,16 @@ async function renderPath(c,L){
   // count leaves an odd tile does एक साथ span the row, so there is never a
   // half-empty line at the bottom.
   if((ds.length+1)%2) one.classList.add("wide");
-  one.addEventListener("click",()=>startSession(c,all));
-  longPress(one,()=>restartPath(c,all));
+  // एक साथ means the whole text, and for a text that HAS long recordings that is
+  // a choice of two shapes rather than one action. The tile opens the screen
+  // that holds both; the verse-by-verse walk it used to start is the first
+  // thing on it, so nothing that was one tap away is now more than two.
+  if(readingsOf(c).length)
+    one.addEventListener("click",()=>{S.view="pathread";$("list").scrollTop=0;render();});
+  else{
+    one.addEventListener("click",()=>startSession(c,all));
+    longPress(one,()=>restartPath(c,all));
+  }
   grid.appendChild(one);
   L.appendChild(grid);
 }
@@ -1512,6 +1592,48 @@ async function renderPathSub(c,L){
     grid.appendChild(t);
   });
   L.appendChild(grid);
+}
+
+/* एक साथ, for a text that has long recordings: the walk through the whole text
+   this tile used to start, and under it the sittings the reciter cut it into.
+   Each of those is one recording and the thirty shlokas it covers — the picker
+   inside offers exactly those thirty, because that is what is sounding. */
+async function renderPathRead(c,L){
+  await loadText(c);
+  const rs=readingsOf(c);
+  const h1=document.createElement("div"); h1.className="sect "+clsOf(c);
+  h1.textContent=W(c,"reading");
+  L.appendChild(h1);
+  const marks=await mapOf("marks"), meta=await mapOf("meta");
+  const g1=document.createElement("div"); g1.className="stiles";
+  rs.forEach((r,k)=>{
+    const id=readingId(c,k),mark=marks.get(id),dur=meta.get("dur:"+id)||r.dur;
+    // "here" is the recording that is OPEN, not one the position happens to fall
+    // in: a reading is a thing you are inside, and `pos` knows nothing about it.
+    const open=!!(S.cur&&S.cur.read&&S.cur.read.c.id===c.id&&S.cur.read.k===k);
+    const t=stile(c,rangeText(c,{from:r.from,to:r.to}),
+      (mark&&mark.pos>15)?"Resume "+fmt(mark.pos)+(dur?"  \u00b7  "+fmt(dur):"")
+                         :(dur?fmt(dur):""),
+      r.to-r.from+1,open);
+    t.addEventListener("click",()=>openReading(c,k));
+    longPress(t,()=>restartReading(c,k));
+    g1.appendChild(t);
+  });
+  if(rs.length%2&&g1.lastChild) g1.lastChild.classList.add("wide");
+  L.appendChild(g1);
+
+  // and under them the walk this tile used to start on its own, unchanged: one
+  // file per verse, the words following the sound, the whole text in one go.
+  const all={from:0,to:lastIndex(c)};
+  const h2=document.createElement("div"); h2.className="sect "+clsOf(c);
+  h2.textContent=W(c,"together");
+  L.appendChild(h2);
+  const g2=document.createElement("div"); g2.className="stiles";
+  const one=stile(c,W(c,"together"),rangeText(c,all),all.to+1,false);
+  one.classList.add("wide");
+  one.addEventListener("click",()=>startSession(c,all));
+  longPress(one,()=>restartPath(c,all));
+  g2.appendChild(one); L.appendChild(g2);
 }
 
 /* ================================================================
@@ -1559,6 +1681,7 @@ async function jumpTo(c,n){
 function readerStep(delta){
   const x=readerCtx(); if(!x)return;
   const n=x.n+delta;
+  if(x.read){seatReading(n);return;}   // the eye moves; the recording does not
   if(n<0||n>lastIndex(x.c))return;
   x.text?openSection(x.c,n):jumpTo(x.c,n);
 }
@@ -1574,8 +1697,9 @@ async function setFont(px){
 /* The bar's own state: what is reachable from where the reader stands. */
 function paintReader(){
   const x=readerCtx();
-  $("rbPrev").disabled=!x||x.n<=0;
-  $("rbNext").disabled=!x||x.n>=lastIndex(x.c);
+  // a reading's ends are its own thirty, not the text's two hundred and seventy
+  $("rbPrev").disabled=!x||x.n<=(x.read?x.read.from:0);
+  $("rbNext").disabled=!x||x.n>=(x.read?x.read.to:lastIndex(x.c));
   $("rbSmaller").disabled=S.font<=FONT_MIN;
   $("rbBigger").disabled=S.font>=FONT_MAX;
   $("rbAudio").classList.toggle("on",openSh===$("audioPanel"));
@@ -1684,6 +1808,8 @@ async function setGloss(v){
 function readerCtx(){
   if(S.read){const c=collById(S.read.id);return c?{c:c,n:S.read.n,text:true}:null;}
   const t=S.cur;
+  // a reading carries its own bounds, and the bar reads them off `x.read`
+  if(t&&t.read) return {c:t.read.c,n:t.n,text:false,read:t.read};
   return t&&t.path?{c:t.path,n:t.n,text:false}:null;
 }
 
@@ -1704,7 +1830,9 @@ function pickScope(c,n){
 function openPicker(){
   const x=readerCtx(); if(!x)return;
   if(x.text) return openTitlePicker(x.c,x.n);
-  const t=S.cur,c=t.path,sp=pickScope(c,t.n);
+  // inside a reading the scope is the recording itself — the thirty shlokas it
+  // covers — because those are the ones the sound in the room is going through
+  const t=S.cur,c=x.c,sp=x.read?{from:x.read.from,to:x.read.to}:pickScope(c,t.n);
   const ttl=$("pickTitle");
   ttl.textContent=rangeText(c,sp);
   ttl.className="pick-title "+(scriptOf(c).cls||"dv");
@@ -1717,7 +1845,7 @@ function openPicker(){
     // they wear a danda instead of a number that would lie.
     b.textContent=(isOpen||isClose)?"॥":String(n);
     b.setAttribute("aria-label",itemTitle(c,n));
-    b.addEventListener("click",()=>{hidePicker();jumpTo(c,n);});
+    b.addEventListener("click",()=>{hidePicker();x.read?seatReading(n):jumpTo(c,n);});
     if(n===t.n)here=b;
     g.appendChild(b);
   }
@@ -1891,6 +2019,9 @@ function audioUrls(c){
   if(c.tracks) return c.tracks.map(t=>t.file);
   if(!c.audio) return [];
   const out=[]; for(let n=0;n<=lastIndex(c);n++) out.push(c.audio.replace("{n}",n));
+  // The long readings belong to the text as much as its verses do: "keep this on
+  // my phone" means the journey, and a journey is exactly what they are for.
+  for(const r of readingsOf(c)) out.push(r.file);
   return out;
 }
 /* The worker owns the cache's name — it carries AUDIO_VERSION, which only sw.js
@@ -2015,7 +2146,7 @@ async function openTile(c){
   $("list").scrollTop=0; render();
 }
 function goBack(){
-  if(S.view==="pathsub"){S.view="path";render();return;}
+  if(S.view==="pathsub"||S.view==="pathread"){S.view="path";render();return;}
   if(S.view==="collection"||S.view==="path"){S.view="home";S.coll=null;render();return;}
   if(S.view==="library"){
     if(S.stack.length){S.stack.pop();S.cwd=S.stack.length?S.stack[S.stack.length-1].id:"root";render();}
@@ -2064,6 +2195,10 @@ async function playTrack(t,startPaused,fromStart){
   else src=t.url;
 
   S.cur=t;
+  // Whose words are on screen: a path item's own text, or the text a reading
+  // runs over. Everything below that used to ask `t.path` asks this instead —
+  // but NOT the mark: a reading keeps one, a verse never does.
+  const rp=t.path||(t.read&&t.read.c);
   const grp=t.coll||t.path;                       // whichever kind of collection this came from
   if(grp){await put("meta",{id:t.id,name:t.name},"last:"+grp.id);
     $("discLabel").setAttribute("fill",grp.tint||"#6E1F1F");}
@@ -2084,9 +2219,12 @@ async function playTrack(t,startPaused,fromStart){
     paint(); if(!startPaused) audio.play().catch(paint);
   };
   $("mini").hidden=false; document.body.classList.add("has-mini");
-  const cls=t.path?(scriptOf(t.path).cls||"dv"):(t.coll?"dv":"");
+  const cls=rp?(scriptOf(rp).cls||"dv"):(t.coll?"dv":"");
   for(const el of [$("miniName"),$("nowName")]){
-    el.textContent=t.name;
+    // The mini bar names what is SOUNDING; the reader names what is being READ.
+    // On a path they are one item. Over a reading they part company — শ্লোক 1–30
+    // is playing while the eye sits on one of the thirty.
+    el.textContent=(t.read&&el===$("nowName"))?itemTitle(rp,t.n):t.name;
     el.classList.toggle("dv",cls==="dv"); el.classList.toggle("bn",cls==="bn");
   }
   $("nowFolder").textContent=grp?(titleOf(grp)+(grp.range?" "+grp.range:"")):"रसिक पदावली";
@@ -2096,9 +2234,10 @@ async function playTrack(t,startPaused,fromStart){
 
   // the words, in place of the disc. A path item takes the reader back from a
   // text slide, so the two can never disagree about whose words are on screen.
-  if(t.path){S.read=null;document.body.classList.remove("text-play");}
-  document.body.classList.toggle("path-play",!!t.path);
-  if(t.path) showVerse(t.path,t.n);
+  if(rp){S.read=null;document.body.classList.remove("text-play");}
+  document.body.classList.toggle("path-play",!!rp);
+  document.body.classList.toggle("reading",!!t.read);
+  if(rp) showVerse(rp,t.n);
   render(); paintReader(); mediaMeta(t);
 }
 
@@ -2487,7 +2626,7 @@ seek.addEventListener("change",()=>{const d=audio.duration||0;
 let histDepth=0,histPending=null;
 function uiDepth(){
   let d=0;
-  if(S.view==="pathsub")d=2;                      // sub-list, list
+  if(S.view==="pathsub"||S.view==="pathread")d=2; // sub-list, list
   else if(S.view==="library")d=1+S.stack.length;  // one per folder entered
   else if(S.view!=="home")d=1;
   if(document.body.classList.contains("player-open"))d++;
@@ -2561,6 +2700,8 @@ window.addEventListener("popstate",e=>{
     if(au!==undefined) S.auto[c.id]=!!au;
     const vp=await get("meta","vpos:"+c.id);
     if(vp&&typeof vp==="object") S.vpos[c.id]=vp;
+    const rd=await get("meta","rpos:"+c.id);
+    if(rd&&typeof rd==="object") S.rpos[c.id]=rd;
   }
   const ap=await get("meta","autoplay"); S.autoplay=ap===undefined?true:ap;
   $("autoplaySw").classList.toggle("on",S.autoplay);
