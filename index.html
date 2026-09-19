@@ -183,6 +183,11 @@
   .grab{width:38px;height:4px;border-radius:4px;background:var(--line);margin:6px auto 10px}
   .sheet h3{margin:4px 22px 12px;font-size:13px;letter-spacing:.6px;text-transform:uppercase;
     color:var(--muted);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* Every other sheet's heading is a Latin label, so it is set as one — small,
+     upper-cased, tracked out. This one carries the slide's own name in its own
+     script, where all three of those are wrong. */
+  #restartSheetTitle{text-transform:none;letter-spacing:0;font-size:15.5px;
+    color:var(--text);white-space:normal}
   .item{display:flex;align-items:center;gap:16px;padding:15px 22px;width:100%;text-align:left}
   .item:active{background:var(--surface2)}
   .item.danger{color:var(--red)}
@@ -897,6 +902,22 @@
   </button>
 </div>
 
+<!-- Long press on a sitting or a reading. It used to put the slide back to its
+     start on the spot, so a press held by accident cost a place with nothing but
+     a toast to say so. Now it asks. The slide names itself and the action wears
+     the text's OWN word for beginning again — आरम्भ से, আরম্ভ থেকে — because
+     everything else on these screens does. -->
+<div class="sheet" id="restartSheet">
+  <div class="grab"></div>
+  <h3 id="restartSheetTitle">&#8212;</h3>
+  <button class="item" id="actRestart">
+    <span class="glyph"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 109-9"/><path d="M3 4v5h5"/></svg></span><span id="actRestartLabel">Start from the beginning</span>
+  </button>
+  <button class="item" id="actRestartCancel">
+    <span class="glyph"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></span>Cancel
+  </button>
+</div>
+
 <div class="sheet" id="itemSheet">
   <div class="grab"></div>
   <h3 id="itemSheetTitle">Item</h3>
@@ -1549,12 +1570,13 @@ async function renderPath(c,L){
   L.appendChild(h);
   const grid=document.createElement("div"); grid.className="stiles";
   ds.forEach((d,i)=>{
-    const t=stile(c,W(c,"part")+" "+(i+1),rangeText(c,d),d.to-d.from+1,i===cur);
+    const name=W(c,"part")+" "+(i+1),range=rangeText(c,d);
+    const t=stile(c,name,range,d.to-d.from+1,i===cur);
     t.addEventListener("click",()=>{
       if(hasSubs(c)){S.grp=i;S.view="pathsub";$("list").scrollTop=0;render();}
       else startSession(c,d);
     });
-    longPress(t,()=>restartPath(c,d));
+    longPress(t,()=>openRestartSheet(c,name,range,()=>restartPath(c,d)));
     grid.appendChild(t);
   });
   const all={from:0,to:lastIndex(c)};
@@ -1571,7 +1593,8 @@ async function renderPath(c,L){
     one.addEventListener("click",()=>{S.view="pathread";$("list").scrollTop=0;render();});
   else{
     one.addEventListener("click",()=>startSession(c,all));
-    longPress(one,()=>restartPath(c,all));
+    longPress(one,()=>openRestartSheet(c,W(c,"together"),rangeText(c,all),
+      ()=>restartPath(c,all)));
   }
   grid.appendChild(one);
   L.appendChild(grid);
@@ -1586,9 +1609,10 @@ async function renderPathSub(c,L){
   L.appendChild(h);
   const grid=document.createElement("div"); grid.className="stiles";
   ss.forEach((d,k)=>{
-    const t=stile(c,W(c,"subpart")+" "+(k+1),rangeText(c,d),d.to-d.from+1,inHere&&k===cur);
+    const name=W(c,"subpart")+" "+(k+1),range=rangeText(c,d);
+    const t=stile(c,name,range,d.to-d.from+1,inHere&&k===cur);
     t.addEventListener("click",()=>startSession(c,d));
-    longPress(t,()=>restartPath(c,d));
+    longPress(t,()=>openRestartSheet(c,name,range,()=>restartPath(c,d)));
     grid.appendChild(t);
   });
   L.appendChild(grid);
@@ -1611,12 +1635,14 @@ async function renderPathRead(c,L){
     // "here" is the recording that is OPEN, not one the position happens to fall
     // in: a reading is a thing you are inside, and `pos` knows nothing about it.
     const open=!!(S.cur&&S.cur.read&&S.cur.read.c.id===c.id&&S.cur.read.k===k);
-    const t=stile(c,rangeText(c,{from:r.from,to:r.to}),
+    const name=rangeText(c,{from:r.from,to:r.to});
+    const t=stile(c,name,
       (mark&&mark.pos>15)?"Resume "+fmt(mark.pos)+(dur?"  \u00b7  "+fmt(dur):"")
                          :(dur?fmt(dur):""),
       r.to-r.from+1,open);
     t.addEventListener("click",()=>openReading(c,k));
-    longPress(t,()=>restartReading(c,k));
+    // a recording's own beginning is BOTH of its places — see restartReading
+    longPress(t,()=>openRestartSheet(c,name,dur?fmt(dur):"",()=>restartReading(c,k)));
     g1.appendChild(t);
   });
   if(rs.length%2&&g1.lastChild) g1.lastChild.classList.add("wide");
@@ -1632,7 +1658,8 @@ async function renderPathRead(c,L){
   const one=stile(c,W(c,"together"),rangeText(c,all),all.to+1,false);
   one.classList.add("wide");
   one.addEventListener("click",()=>startSession(c,all));
-  longPress(one,()=>restartPath(c,all));
+  longPress(one,()=>openRestartSheet(c,W(c,"together"),rangeText(c,all),
+    ()=>restartPath(c,all)));
   g2.appendChild(one); L.appendChild(g2);
 }
 
@@ -1806,7 +1833,13 @@ function closeReader(){
   document.body.classList.remove("player-open");
   clearChain();
   if(!audio.paused) audio.pause();
-  if(S.read){S.read=null;document.body.classList.remove("text-play");render();}
+  if(S.read){S.read=null;document.body.classList.remove("text-play");}
+  // and render whatever is behind, always. The pause above has just written a
+  // mark, and the screen you are landing back on is the one that SHOWS it: a
+  // recording's tile offers "Resume 8:42" the moment you leave it, instead of
+  // still saying 16:52 until something else happens to redraw. It also clears
+  // the gold edge from a reading that is no longer open.
+  render();
 }
 async function setGloss(v){
   S.gloss=!!v; await put("meta",S.gloss,"gloss");
@@ -2489,6 +2522,48 @@ $("settingsBtn").addEventListener("click",async()=>{renderDivRows();paintOffline
 // on the way out and only a fresh request holds the screen again.
 document.addEventListener("visibilitychange",()=>{if(document.hidden)saveMark();syncWake();});
 window.addEventListener("pagehide",saveMark);
+
+/* What a long press on a slide asks. `run` is the restart it will do if the
+   answer is yes — restartPath for a sitting, restartReading for a recording —
+   so this knows nothing about either. */
+let restartCb=null;
+function openRestartSheet(c,name,range,run){
+  restartCb=run;
+  const h=$("restartSheetTitle");
+  h.textContent=range?name+"  \u00b7  "+range:name;
+  h.className=clsOf(c);
+  const l=$("actRestartLabel");
+  l.textContent=W(c,"fromStart");
+  l.className=clsOf(c);
+  showSheet($("restartSheet"));
+}
+/* Why the action waits.
+
+   Closing a sheet hands its history entry back with a traversal, and
+   `syncHistory` refuses to push anything while that traversal is in flight. So
+   a layer opened in the same breath — and this action opens the READER — is
+   never recorded, and the popstate that lands a moment later sees a screen one
+   layer deeper than the entry it arrived on and closes it. Since v37 that close
+   also pauses, so the recitation the press asked to restart would stop the
+   instant it started.
+
+   Every other sheet action either opens nothing (Start from beginning, Delete)
+   or keeps the scrim up throughout (Rename, which hands straight to the
+   dialog), which is why this is the first one to need the wait. The traversal
+   normally lands within a frame; the timer is only a belt for the case where no
+   traversal was asked for at all. */
+function afterSheet(fn){
+  if(!fn){hideSheets();return;}
+  let done=false;
+  const run=()=>{if(done)return;done=true;
+    window.removeEventListener("popstate",run); clearTimeout(tm); fn();};
+  const tm=setTimeout(run,320);
+  window.addEventListener("popstate",run);   // after the app's own handler
+  hideSheets();
+}
+$("actRestart").addEventListener("click",()=>{
+  const f=restartCb; restartCb=null; afterSheet(f);});
+$("actRestartCancel").addEventListener("click",hideSheets);
 
 function openItemSheet(t){S.target=t;$("itemSheetTitle").textContent=t.name;
   const fx=t.kind==="fixed";
