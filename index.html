@@ -2640,9 +2640,6 @@ $("rbNext").addEventListener("click",()=>readerStep(1));
 /* Turning the page with the thumb. The words scroll up and down inside one
    item, so only a decisively sideways drag counts — and it is the same path as
    the prev/next buttons, nothing of its own. */
-/* When a swipe has just turned the page. A page turn can still be followed by a
-   click on some browsers, and that click must not also start the recitation. */
-let turnedAt=0;
 (function(){
   const vs=$("verseScroll"); let x0=null,y0=null;
   vs.addEventListener("touchstart",e=>{
@@ -2653,20 +2650,16 @@ let turnedAt=0;
     const t=e.changedTouches[0],dx=t.clientX-x0,dy=t.clientY-y0;
     x0=null;
     if(Math.abs(dx)<56||Math.abs(dx)<Math.abs(dy)*1.6)return;
-    turnedAt=Date.now();
     readerStep(dx<0?1:-1);},{passive:true});
 })();
 
-/* A tap on the words plays or pauses — the reader's own hand, without reaching
-   for the bar. `click` and not touchend on purpose: a scroll or a page-turn
-   swipe does not produce one, a mouse does, and the fold's summary keeps its
-   own tap. A text slide has nothing to sound, so it is left alone. */
-$("verseScroll").addEventListener("click",e=>{
-  if(!document.body.classList.contains("path-play"))return;
-  if(Date.now()-turnedAt<500)return;
-  if(e.target.closest("summary,button,a,input,select,textarea"))return;
-  toggleAudio();
-});
+/* A tap on the words does NOTHING, asked for on 2026-09-19. v30 made it play
+   and pause — and so a thumb set down on the words, a phone picked up, a
+   finger following a line, all stopped the recitation, with nothing on the
+   screen to say what had. Starting and stopping is a BUTTON now, and only a
+   button: ▶ on the reader bar, the panel's, the mini bar's, and the phone's
+   own media keys. Nothing here listens for a tap any more, so a page-turn
+   swipe needs no `turnedAt` guard against the click that follows it. */
 
 /* ---------- the audio panel ---------- */
 $("apPlay").addEventListener("click",toggleAudio);
