@@ -153,6 +153,34 @@
   body.player-open .fab{display:none}
   body.has-mini .fab{bottom:calc(env(safe-area-inset-bottom) + 92px)}
 
+  /* ---------- the way home ----------
+     One tap back to the tiles from wherever the screen has got to, instead of
+     a press of back for every layer. It sits at the bottom LEFT, the FAB's
+     mirror, and is quieter than the FAB on purpose: adding a pad is the loud
+     thing on a screen that offers it; going home is furniture.
+
+     It is fixed, and above the raised player (z-30) so it is reachable over a
+     sounding आरती, but below the scrim (z-40) — a sheet is answered by the
+     sheet, not by leaving. On a SLIDE it hides, because the reader's own bar
+     carries the same key in the same corner and two would collide. */
+  .homebtn{position:fixed;left:18px;bottom:calc(env(safe-area-inset-bottom) + 18px);
+    width:52px;height:52px;border-radius:50%;background:var(--surface2);
+    color:var(--gold);border:1px solid var(--line);
+    display:grid;place-items:center;box-shadow:0 6px 20px rgba(0,0,0,.45);z-index:31;
+    transition:transform .12s}
+  .homebtn:active{transform:scale(.93)}
+  .homebtn[hidden]{display:none}
+  /* the mini bar takes the foot of the screen, so the button steps over it —
+     the same lift, and the same distance, as the FAB on the other side */
+  body.has-mini .homebtn{bottom:calc(env(safe-area-inset-bottom) + 92px)}
+  /* a raised player covers the mini bar, so the lift comes off again; and it
+     covers the tiles, so the button shows even when the view beneath IS home */
+  body.player-open .homebtn{bottom:calc(env(safe-area-inset-bottom) + 18px)}
+  body.player-open .homebtn[hidden]{display:grid}
+  /* a slide has the bar, whose first key is this one */
+  body.path-play .homebtn,body.text-play .homebtn,
+  body.path-play .homebtn[hidden],body.text-play .homebtn[hidden]{display:none}
+
   .mini{position:fixed;left:0;right:0;bottom:0;
     padding:0 6px calc(env(safe-area-inset-bottom) + 6px);z-index:18}
   .mini[hidden]{display:none}
@@ -810,6 +838,13 @@
   <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
 </button>
 
+<!-- The way home: one tap to the tiles from wherever the screen has got to.
+     Its twin is the first key of the reader's bar, for the slides, where this
+     one stands down — see `goHome`, which both of them call. -->
+<button class="homebtn" id="homeBtn" hidden aria-label="Home">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.8L12 3.5l9 7.3"/><path d="M5.8 9.8V20a1 1 0 001 1h10.4a1 1 0 001-1V9.8"/><path d="M9.8 21v-6.2h4.4V21"/></svg>
+</button>
+
 <div class="mini" id="mini" hidden>
   <div class="mini-inner">
     <div class="meta" id="miniOpen">
@@ -872,6 +907,11 @@
        screen there, so the transport moves into the panel behind the ♪ and this
        bar carries what a reader actually reaches for. -->
   <div class="rbar" id="rbar">
+    <!-- Home first, at the bottom extreme left of a slide, which is the screen
+         that used to be furthest from the tiles. -->
+    <button class="rb" id="rbHome" aria-label="Home">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.8L12 3.5l9 7.3"/><path d="M5.8 9.8V20a1 1 0 001 1h10.4a1 1 0 001-1V9.8"/><path d="M9.8 21v-6.2h4.4V21"/></svg>
+    </button>
     <button class="rb" id="rbPick" aria-label="Choose an item">
       <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
     </button>
@@ -1420,6 +1460,10 @@ async function render(){
   syncHistory();                 // a view change is a layer opened or closed
   const L=$("list"); L.innerHTML="";
   $("backBtn").hidden = S.view==="home";
+  // and the way home, which is wanted on every screen the tiles are not on.
+  // A raised player over the home view shows it again, in CSS — the tiles are
+  // covered there too, and the body class is what knows it.
+  $("homeBtn").hidden = S.view==="home";
   $("fab").hidden = !(S.view==="library");
 
   if(S.view==="home"){
@@ -2225,6 +2269,32 @@ function goBack(){
   }
 }
 
+/* HOME, in one tap, from wherever the screen has got to.
+
+   Back closes exactly one layer, which is the right thing for a press of back.
+   But a verse is three layers from the tiles — the player, the sub-list, the
+   list — and pressing back three times to get out is the complaint this
+   answers. So this closes them ALL, in the same order and through the same
+   calls `closeLayer` makes one at a time, and then takes the views home in one
+   step instead of one per level.
+
+   It leaves silence behind it, because closeReader does: coming out of a slide
+   has stopped the recitation since sw v37, and arriving at the tiles this way
+   is the same leaving. One rule, however the screen was left.
+
+   Nothing is done about the history here. render() calls syncHistory, which
+   sees the screen standing at depth 0, hands back every entry in ONE traversal
+   and leaves no dead presses above us — the same path a layer that closes
+   itself already takes. */
+function goHome(){
+  hidePicker();
+  hideSheets();
+  closeReader();
+  S.view="home"; S.coll=null; S.grp=0; S.cwd="root"; S.stack=[];
+  $("list").scrollTop=0;
+  render();
+}
+
 /* ---------- playback ---------- */
 let objUrl=null,saveAt=0,chainTimer=null,chainTick=null;
 let curSrc=null,retries=0,stallAt=-1,stallTicks=0;
@@ -2652,6 +2722,8 @@ $("autoplayRow").addEventListener("click",async()=>{S.autoplay=!S.autoplay;
 
 /* ---------- controls ---------- */
 $("backBtn").addEventListener("click",goBack);
+$("homeBtn").addEventListener("click",goHome);
+$("rbHome").addEventListener("click",goHome);   // the slide's own, same call
 $("miniOpen").addEventListener("click",()=>{
   // the mini bar belongs to whatever is playing, so it takes the reader back
   const t=S.cur;
