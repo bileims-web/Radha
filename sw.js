@@ -10,7 +10,7 @@
  *   AUDIO_VERSION — bump ONLY when an mp3 under audio/ is replaced. Expensive:
  *                   every track has to be downloaded again.
  */
-var SHELL_VERSION = 'v45';  // v45: the home key survives a slide having been opened
+var SHELL_VERSION = 'v46';  // v46: an आरती waits five seconds before it sounds
 var AUDIO_VERSION = 'v1';   // untouched: this release only ADDS mp3s, it replaces none
 var SHELL_CACHE = 'radha-shell-' + SHELL_VERSION;
 var AUDIO_CACHE = 'radha-audio-' + AUDIO_VERSION;
@@ -182,8 +182,26 @@ function sliceRange(full, rangeHeader) {
  * So the choice is made ONCE, on the request that starts the load, and every
  * later range request for that track follows it. Proven both ways in Chrome:
  * network-then-cache breaks the seek; one source throughout plays to `ended`.
+ *
+ * AND IT OUTLASTS THE LOAD. The same hand-over kills the NEXT load too, not
+ * just a seek inside this one: a track played from the network while the fill
+ * ran, then tapped again a moment later, asks for `bytes=0-` afresh — and the
+ * answer now comes from the cache. Chrome rejects it outright, MEDIA_ERR_
+ * SRC_NOT_SUPPORTED, "Format error", before a byte of it is decoded, and the
+ * app's three recovery attempts each meet the same wall: "Could not play this
+ * file", on a file that is sitting complete in the cache.
+ *
+ * So the choice is remembered per URL for as long as this worker lives. The
+ * first load of a track in a fresh worker still picks freely — a track already
+ * cached plays from the cache, offline included — and if the network fails
+ * under a url pinned to 'net', the catch below still falls back to the cache,
+ * because at that point there is nothing else to fall back to.
+ *
+ * Found by the आरती lead-in: five silent seconds with the file loaded is long
+ * enough for Chrome to drop what it had buffered, so the next tap really does
+ * ask again from zero, every time. It made a rare race into a repeatable one.
  */
-var provider = Object.create(null);      // url -> 'cache' | 'net', for the load in flight
+var provider = Object.create(null);      // url -> 'cache' | 'net', for THIS worker's life
 
 function startsLoad(range) {
   return !range || /^bytes=0-$/.test(String(range).trim());
@@ -197,7 +215,7 @@ function handleAudio(request) {
   var url = request.url, range = request.headers.get('range');
   return caches.open(AUDIO_CACHE).then(function (cache) {
     return cache.match(url).then(function (hit) {
-      if (startsLoad(range)) provider[url] = hit ? 'cache' : 'net';
+      if (startsLoad(range) && !provider[url]) provider[url] = hit ? 'cache' : 'net';
       if (hit && provider[url] === 'cache') return fromCache(hit, range);
       if (!hit) queueFill(url);        // fill for next time, in the background
       // Stay on the network for the rest of this load even once the fill lands.

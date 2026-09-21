@@ -9,7 +9,8 @@
       "tracks": [
         {
           "file": "audio/arati/01.mp3",
-          "title": "हरिवंश महाप्रभु आरती"
+          "title": "हरिवंश महाप्रभु आरती",
+          "leadIn": 5
         },
         {
           "file": "audio/arati/02.mp3",
@@ -17,7 +18,8 @@
         },
         {
           "file": "audio/arati/03.mp3",
-          "title": "चंद्र मिटे दिनकर मिटे"
+          "title": "चंद्र मिटे दिनकर मिटे",
+          "leadIn": 5
         },
         {
           "file": "audio/arati/04.mp3",

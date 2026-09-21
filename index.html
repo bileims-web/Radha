@@ -2304,17 +2304,62 @@ function goHome(){
 }
 
 /* ---------- playback ---------- */
-let objUrl=null,saveAt=0,chainTimer=null,chainTick=null;
+let objUrl=null,saveAt=0,chainTimer=null,chainTick=null,waitLeft=0;
 let curSrc=null,retries=0,stallAt=-1,stallTicks=0;
 
 function clearChain(){if(chainTimer){clearTimeout(chainTimer);chainTimer=null;}
-  if(chainTick){clearInterval(chainTick);chainTick=null;} $("chainLine").textContent="";}
+  if(chainTick){clearInterval(chainTick);chainTick=null;}
+  const was=waitLeft; waitLeft=0; $("chainLine").textContent="";
+  if(was)paint();}                       // the bar goes back to saying the time
 
-function playFixed(c,i,fromStart){
+/* A COUNTDOWN, AND THEN A SOUND.
+
+   Two things wait: the gap between the two आरती of a pair, and the breath
+   before one that a hand has just started. Both park the ONE timer, so
+   everything that already drops a chain — the play button, leaving the slide,
+   tapping another track — drops a lead-in as well, and the two can never be
+   left running behind one another.
+
+   `bar` is whether the item that is WAITING is also the item the mini bar is
+   showing. A lead-in is loaded and silent, so "in 5s" under its own name is
+   exactly what is happening. A chain gap is not: the bar still carries the
+   आरती that has just finished, and a countdown under that name would be
+   naming the wrong song. The line under the transport names it instead —
+   which is also why the bar has to carry the lead-in at all, since that line
+   is only on screen when the player is raised, and a tap from the list
+   leaves it down. */
+function countdown(name,secs,bar,go){
+  let left=secs;
+  const show=()=>{$("chainLine").textContent=name+" in "+left+"s";
+                  if(bar){waitLeft=left; paint();}};
+  show();
+  chainTick=setInterval(()=>{left--; if(left>0)show();},1000);
+  chainTimer=setTimeout(()=>{clearChain();go();},secs*1000);
+}
+
+/* A BREATH BEFORE THE FIRST NOTE.
+
+   An आरती is sung standing in front of the image with the lamp in the hand,
+   and the tap that starts it is the one moment the phone is still being held.
+   So a track carrying `leadIn` in the manifest loads silent and sounds that
+   many seconds later — time to put the phone down and take up the diya. It is
+   on the two आरती a hand actually starts, हरिवंश महाप्रभु and चंद्र मिटे दिनकर
+   मिटे; the other of each pair arrives by the chain, which has just served a
+   gap of its own.
+
+   `arrived` is the flag that says an item came by ITSELF rather than by a tap,
+   and it answers both questions at once: such an item begins from its top (see
+   playTrack) and it needs no lead-in.
+
+   A resume waits too. It is the same gesture and the same lamp, whether the
+   आरती takes up at 0:00 or at 4:12. */
+function playFixed(c,i,arrived){
   clearChain(); S.session=null;
   const t=c.tracks[i];
+  const lead=arrived?0:(t.leadIn||0);
   playTrack({id:tid(c.id,t.file),name:t.title,url:t.file,coll:c,idx:i,kind:"fixed"},
-            false,fromStart);
+            lead>0,arrived);
+  if(lead) countdown(t.title,lead,true,()=>audio.play().catch(paint));
 }
 
 /* A VERSE BEGINS AGAIN; A SONG PICKS UP WHERE IT STOPPED.
@@ -2484,7 +2529,8 @@ function paint(){
   s.style.setProperty("--fill",p+"%");
   $("ring").style.strokeDashoffset=603-603*p/100;
   $("miniProg").style.width=p+"%";
-  $("miniSub").textContent=fmt(c)+(d?" / "+fmt(d):"");
+  // while an आरती is waiting to begin, the bar says so instead of the time
+  $("miniSub").textContent=waitLeft?("in "+waitLeft+"s"):(fmt(c)+(d?" / "+fmt(d):""));
   const ic=audio.paused?PLAY:PAUSE;
   $("bigPlay").innerHTML=ic;$("miniPlay").innerHTML=ic;
   document.body.classList.toggle("playing",!audio.paused);
@@ -2604,11 +2650,7 @@ audio.addEventListener("ended",async()=>{
    across unchanged — the behaviour lives in manifest.json's `chains`. */
 function startChain(c,nextIdx){
   const gap=(S.man.rules&&S.man.rules.aratiChainGapSeconds)||10;
-  let left=gap;
-  $("chainLine").textContent=c.tracks[nextIdx].title+" in "+left+"s";
-  chainTick=setInterval(()=>{left--;
-    if(left>0)$("chainLine").textContent=c.tracks[nextIdx].title+" in "+left+"s";},1000);
-  chainTimer=setTimeout(()=>{clearChain();playFixed(c,nextIdx,true);},gap*1000);
+  countdown(c.tracks[nextIdx].title,gap,false,()=>playFixed(c,nextIdx,true));
 }
 
 function mediaMeta(t){
@@ -2616,7 +2658,9 @@ function mediaMeta(t){
   const grp=t.coll||t.path;
   navigator.mediaSession.metadata=new MediaMetadata({
     title:t.name,artist:grp?grp.title:"रसिक पदावली",album:"राधा"});
-  navigator.mediaSession.setActionHandler("play",()=>{setSilent(false);audio.play();});
+  // clearChain: the lock screen's play means "now", exactly as the bar's does,
+  // so a lead-in still counting down must not fire a second play behind it
+  navigator.mediaSession.setActionHandler("play",()=>{clearChain();setSilent(false);audio.play();});
   navigator.mediaSession.setActionHandler("pause",()=>{setSilent(true);audio.pause();});
   navigator.mediaSession.setActionHandler("seekbackward",()=>audio.currentTime-=30);
   navigator.mediaSession.setActionHandler("seekforward",()=>audio.currentTime+=30);
