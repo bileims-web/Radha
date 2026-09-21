@@ -1356,8 +1356,10 @@ async function playPath(c,n,raise,startPaused){
    the position MOVES to this division's first item, so "where I am" stays honest
    and finishing a sitting walks the highlight on to the next tile. The tile
    inherits the silence habit — words only, unless you were listening when you
-   left — and a sounding session runs to its own end; the auto-play toggle
-   governs what happens OUTSIDE one. */
+   left — and a sounding session runs on verse by verse for as long as the
+   path's auto-play switch is on. With it off the sitting still exists, and
+   still ends where it ends, but each verse waits for the page to be turned:
+   the switch governs every automatic turn now, inside a sitting and out. */
 async function startSession(c,d){
   let p=posOf(c);
   if(p<d.from||p>d.to){p=d.from;S.pos[c.id]=p;await put("meta",p,"pos:"+c.id);}
@@ -2483,6 +2485,22 @@ audio.addEventListener("ended",async()=>{
        yesterday came in mid-word behind the one that had just finished. */
     const s=S.session;
     if(s&&s.pathId===c.id&&s.items[s.i]===t.n&&s.i+1<s.items.length){
+      /* AUTO-PLAY OFF HOLDS THE PAGE — inside a sitting as well as outside one.
+         The switch says "Play next verse when this ends", and until now a
+         sitting was exempt from it: opened from a tile it ran to its own end
+         whatever the switch said, and only a pad tapped on its own obeyed. That
+         is the line overturned here. Off means the recitation stops on the
+         verse it has just finished, however that verse was reached, and the
+         page is turned by hand.
+
+         The sitting is NOT ended by this, only held: `s.i` still points at this
+         verse, so turning the page re-seats the sitting from there (jumpTo) and
+         the sitting's LAST verse still falls through below to end it and say so.
+         And the hand-turned page sounds by itself, which is the other half of
+         the same wish: playPath carries the silence habit, and a verse that ran
+         to its end never set it — so play on + auto-play off is a swipe, and
+         the next verse speaks as it arrives. */
+      if(!autoOf(c)){ paint(); render(); return; }
       s.i++; await playPath(c,s.items[s.i],false,false); return;
     }
     if(s&&s.pathId===c.id){S.session=null;toast(W(c,"sessionDone"));}
