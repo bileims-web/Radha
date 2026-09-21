@@ -177,9 +177,17 @@
      covers the tiles, so the button shows even when the view beneath IS home */
   body.player-open .homebtn{bottom:calc(env(safe-area-inset-bottom) + 18px)}
   body.player-open .homebtn[hidden]{display:grid}
-  /* a slide has the bar, whose first key is this one */
-  body.path-play .homebtn,body.text-play .homebtn,
-  body.path-play .homebtn[hidden],body.text-play .homebtn[hidden]{display:none}
+  /* A SLIDE has the bar, whose first key is this one, so this one stands down
+     — but only while the slide is actually UP. `path-play` says which face the
+     player wears, not whether it is raised, and it is never taken off the body:
+     once a verse has been opened it stays for the rest of the session. Matched
+     on its own it took the floating key off every list behind the slide, for
+     the rest of the session — reported as "I can't see the home button", and
+     answered by pairing the class with `player-open`, which really does mean
+     the slide is up. */
+  body.player-open.path-play .homebtn,body.player-open.text-play .homebtn,
+  body.player-open.path-play .homebtn[hidden],
+  body.player-open.text-play .homebtn[hidden]{display:none}
 
   .mini{position:fixed;left:0;right:0;bottom:0;
     padding:0 6px calc(env(safe-area-inset-bottom) + 6px);z-index:18}
