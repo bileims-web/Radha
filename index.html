@@ -401,6 +401,10 @@
      सेवक वाणी, and the verses of the Sudha Nidhi that have their meaning */
   #rbGloss{display:none}
   body.text-play #rbGloss,body.glossable #rbGloss{display:grid}
+  /* On a verse the play button is the middle of the bar, three a side. A verse
+     with no meaning offers no book, but its place is kept, or play would slide
+     half a button left every time the page turned past shloka 90. */
+  body.path-play:not(.glossable) #rbGloss{display:grid;visibility:hidden}
   /* the picker lists sections by their titles, one to a row */
   .pick-grid.titles{grid-template-columns:1fr;gap:7px}
   .titles .pcell{aspect-ratio:auto;display:flex;align-items:center;gap:12px;
@@ -928,17 +932,18 @@
     <button class="rb" id="rbPick" aria-label="Choose an item">
       <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
     </button>
-    <button class="rb" id="rbSmaller" aria-label="Smaller text"><span class="az sm">A</span><span class="pm">&#8722;</span></button>
-    <button class="rb" id="rbBigger" aria-label="Larger text"><span class="az">A</span><span class="pm">+</span></button>
-    <button class="rb" id="rbReset" aria-label="Reset text size">
-      <span class="az sm">A</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:2px"><path d="M3 12a9 9 0 109-9"/><path d="M3 4v5h5"/></svg>
-    </button>
-    <!-- Play/pause, the same gesture as a tap on the words. Its icon is filled
-         in by paintReader(), so it is right from the slide's first frame. -->
-    <button class="rb" id="rbPlay" aria-label="Play or pause"></button>
     <button class="rb" id="rbAudio" aria-label="Audio controls">
       <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg>
     </button>
+    <!-- Play/pause, the same gesture as a tap on the words. Its icon is filled
+         in by paintReader(), so it is right from the slide's first frame.
+         It is the MIDDLE of the bar (user, 2026-09-25): three either side, the
+         sound on its left beside the ♪, the words' own controls on its right.
+         The book keeps its place even where it is hidden, so the middle stays
+         the middle from one verse to the next. -->
+    <button class="rb" id="rbPlay" aria-label="Play or pause"></button>
+    <button class="rb" id="rbSmaller" aria-label="Smaller text"><span class="az sm">A</span><span class="pm">&#8722;</span></button>
+    <button class="rb" id="rbBigger" aria-label="Larger text"><span class="az">A</span><span class="pm">+</span></button>
     <!-- Only on a text slide: opens or closes every व्याख्या in the section. -->
     <button class="rb" id="rbGloss" aria-label="Show or hide the commentary">
       <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 015.5 4H10a2 2 0 012 2v13a2 2 0 00-2-1.6H4z"/><path d="M20 5.5A1.5 1.5 0 0018.5 4H14a2 2 0 00-2 2v13a2 2 0 012-1.6h6z"/></svg>
@@ -2854,7 +2859,6 @@ $("rbPick").addEventListener("click",openPicker);
 $("pickClose").addEventListener("click",hidePicker);
 $("rbSmaller").addEventListener("click",()=>setFont(S.font-FONT_STEP));
 $("rbBigger").addEventListener("click",()=>setFont(S.font+FONT_STEP));
-$("rbReset").addEventListener("click",()=>setFont(FONT_DEF));
 $("rbAudio").addEventListener("click",()=>{
   if(openSh===$("audioPanel"))hideSheets();
   else{paintPanel();showSheet($("audioPanel"));paintReader();}});
