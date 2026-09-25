@@ -2317,13 +2317,30 @@ function goHome(){
 }
 
 /* ---------- playback ---------- */
-let objUrl=null,saveAt=0,chainTimer=null,chainTick=null,waitLeft=0;
+let objUrl=null,saveAt=0,chainTimer=null,chainTick=null,waitLeft=0,hold=null;
 let curSrc=null,retries=0,stallAt=-1,stallTicks=0;
 
 function clearChain(){if(chainTimer){clearTimeout(chainTimer);chainTimer=null;}
   if(chainTick){clearInterval(chainTick);chainTick=null;}
+  if(hold){hold.pause();hold=null;}      // a wait dropped is a silence stopped
   const was=waitLeft; waitLeft=0; $("chainLine").textContent="";
   if(was)paint();}                       // the bar goes back to saying the time
+
+/* `secs` seconds of nothing, as a WAV the page makes for itself: 8 kHz, 8-bit,
+   every sample the mid-point 128. A blob, so the worker never sees it and the
+   audio cache never holds it. */
+const quiet={};
+function silence(secs){
+  if(quiet[secs]) return quiet[secs];
+  const rate=8000,n=rate*secs,b=new Uint8Array(44+n),v=new DataView(b.buffer);
+  const s=(o,w)=>{for(let i=0;i<w.length;i++)b[o+i]=w.charCodeAt(i);};
+  s(0,"RIFF");v.setUint32(4,36+n,true);s(8,"WAVE");s(12,"fmt ");
+  v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
+  v.setUint32(24,rate,true);v.setUint32(28,rate,true);
+  v.setUint16(32,1,true);v.setUint16(34,8,true);
+  s(36,"data");v.setUint32(40,n,true);b.fill(128,44);
+  return quiet[secs]=URL.createObjectURL(new Blob([b],{type:"audio/wav"}));
+}
 
 /* A COUNTDOWN, AND THEN A SOUND.
 
@@ -2340,14 +2357,45 @@ function clearChain(){if(chainTimer){clearTimeout(chainTimer);chainTimer=null;}
    naming the wrong song. The line under the transport names it instead —
    which is also why the bar has to carry the lead-in at all, since that line
    is only on screen when the player is raised, and a tap from the list
-   leaves it down. */
+   leaves it down.
+
+   THE WAIT PLAYS SILENCE. Tap an आरती, switch the screen off, put the phone
+   down: with nothing sounding, the phone goes to sleep a few seconds later, and
+   a sleeping phone runs no timer — the countdown simply stopped, and took up
+   again from 5s when the screen came back on. A phone does not sleep while it
+   is playing, so the wait is spent playing `hold`, a silent clip longer than
+   the wait itself. It is not muted on purpose: a muted player is not one the
+   phone keeps awake for.
+
+   And the countdown reads the wall clock, not its own ticks. Any of three
+   things may notice the time is up — the timeout, the one-second tick, the
+   silent clip's own progress — and whichever is first starts the आरती, so if
+   the phone did sleep after all, waking it sounds the आरती at once instead of
+   counting down what is left.
+
+   The silence goes on until the आरती is actually PLAYING, not merely asked
+   for: a chain's next track still has to load, and the gap between the two is
+   exactly when a phone would doze off. So the one that fires takes `hold` out
+   of clearChain's reach before starting the next thing. */
 function countdown(name,secs,bar,go){
-  let left=secs;
-  const show=()=>{$("chainLine").textContent=name+" in "+left+"s";
-                  if(bar){waitLeft=left; paint();}};
+  const end=Date.now()+secs*1000;
+  let shown=0;
+  const show=()=>{const left=Math.max(1,Math.ceil((end-Date.now())/1000));
+    if(left===shown)return; shown=left;
+    $("chainLine").textContent=name+" in "+left+"s";
+    if(bar){waitLeft=left; paint();}};
+  const fire=()=>{
+    if(chainTimer!==mine)return;         // dropped, or a later wait has the timer
+    const h=hold; hold=null; clearChain(); go();
+    if(h) audio.addEventListener("playing",()=>h.pause(),{once:true});
+  };
+  const tick=()=>{if(Date.now()>=end)fire(); else show();};
   show();
-  chainTick=setInterval(()=>{left--; if(left>0)show();},1000);
-  chainTimer=setTimeout(()=>{clearChain();go();},secs*1000);
+  const mine=chainTimer=setTimeout(fire,secs*1000);
+  chainTick=setInterval(tick,1000);
+  hold=new Audio(silence(secs+10));
+  hold.ontimeupdate=tick;
+  hold.play().catch(()=>{});             // refused: the timers still run it, as before
 }
 
 /* A BREATH BEFORE THE FIRST NOTE.
@@ -2674,7 +2722,9 @@ function mediaMeta(t){
   // clearChain: the lock screen's play means "now", exactly as the bar's does,
   // so a lead-in still counting down must not fire a second play behind it
   navigator.mediaSession.setActionHandler("play",()=>{clearChain();setSilent(false);audio.play();});
-  navigator.mediaSession.setActionHandler("pause",()=>{setSilent(true);audio.pause();});
+  // and the lock screen's pause means stop, a wait included: during a lead-in
+  // the silence is what is "playing", so this is the button it shows
+  navigator.mediaSession.setActionHandler("pause",()=>{clearChain();setSilent(true);audio.pause();});
   navigator.mediaSession.setActionHandler("seekbackward",()=>audio.currentTime-=30);
   navigator.mediaSession.setActionHandler("seekforward",()=>audio.currentTime+=30);
 }

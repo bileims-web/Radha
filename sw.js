@@ -10,7 +10,7 @@
  *   AUDIO_VERSION — bump ONLY when an mp3 under audio/ is replaced. Expensive:
  *                   every track has to be downloaded again.
  */
-var SHELL_VERSION = 'v50';  // v50: no arrows on the reader bar; the rest have room, home is larger
+var SHELL_VERSION = 'v51';  // v51: an आरती's wait plays silence, so a phone with its screen off does not sleep through it
 var AUDIO_VERSION = 'v1';   // untouched: this release only ADDS mp3s, it replaces none
 var SHELL_CACHE = 'radha-shell-' + SHELL_VERSION;
 var AUDIO_CACHE = 'radha-audio-' + AUDIO_VERSION;
