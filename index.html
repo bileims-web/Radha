@@ -920,9 +920,10 @@
        bar carries what a reader actually reaches for. -->
   <div class="rbar" id="rbar">
     <!-- Home first, at the bottom extreme left of a slide, which is the screen
-         that used to be furthest from the tiles. -->
+         that used to be furthest from the tiles. Drawn larger than the rest:
+         its thin outline read smaller than the solid shapes beside it. -->
     <button class="rb" id="rbHome" aria-label="Home">
-      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.8L12 3.5l9 7.3"/><path d="M5.8 9.8V20a1 1 0 001 1h10.4a1 1 0 001-1V9.8"/><path d="M9.8 21v-6.2h4.4V21"/></svg>
+      <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.8L12 3.5l9 7.3"/><path d="M5.8 9.8V20a1 1 0 001 1h10.4a1 1 0 001-1V9.8"/><path d="M9.8 21v-6.2h4.4V21"/></svg>
     </button>
     <button class="rb" id="rbPick" aria-label="Choose an item">
       <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
@@ -942,12 +943,9 @@
     <button class="rb" id="rbGloss" aria-label="Show or hide the commentary">
       <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 015.5 4H10a2 2 0 012 2v13a2 2 0 00-2-1.6H4z"/><path d="M20 5.5A1.5 1.5 0 0018.5 4H14a2 2 0 00-2 2v13a2 2 0 012-1.6h6z"/></svg>
     </button>
-    <button class="rb" id="rbPrev" aria-label="Previous item">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
-    </button>
-    <button class="rb" id="rbNext" aria-label="Next item">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
-    </button>
+    <!-- No arrows. The edges of the words turn the page (v40), and a swipe
+         does too, on every slide this bar is on; the two buttons that did the
+         same were taken off on the user's word, so the rest have room. -->
   </div>
 </section>
 
@@ -1213,7 +1211,7 @@ function longPress(el,fn){let t=null,f=false;
 const isPath=c=>!!c&&c.mode==="path";
 /* श्री हित सेवक वाणी: the same reader, with nothing to play. Its recordings are
    YouTube embeds in the original app and cannot be lifted, so the slide is the
-   words alone — picker, size, prev, next, and the gloss. */
+   words alone — picker, size, the gloss, and the page turned at its edges. */
 const isText=c=>!!c&&c.mode==="text";
 const collById=id=>S.man.collections.find(c=>c.id===id)||null;
 function scriptOf(c){const id=S.script[c.id];
@@ -1760,7 +1758,7 @@ async function renderPathRead(c,L){
 /* ================================================================
    THE READER — the bar under the words, and the two panels behind it
 
-   On a path slide the words are the screen. Seven controls sit under them and
+   On a path slide the words are the screen. A row of controls sits under them and
    everything else lives in a panel: the transport, the pace, and the two
    toggles a reciter changes mid-sitting.
    ================================================================ */
@@ -1817,10 +1815,6 @@ async function setFont(px){
 
 /* The bar's own state: what is reachable from where the reader stands. */
 function paintReader(){
-  const x=readerCtx();
-  // a reading's ends are its own thirty, not the text's two hundred and seventy
-  $("rbPrev").disabled=!x||x.n<=(x.read?x.read.from:0);
-  $("rbNext").disabled=!x||x.n>=(x.read?x.read.to:lastIndex(x.c));
   $("rbSmaller").disabled=S.font<=FONT_MIN;
   $("rbBigger").disabled=S.font>=FONT_MAX;
   $("rbAudio").classList.toggle("on",openSh===$("audioPanel"));
@@ -2816,11 +2810,10 @@ $("rbAudio").addEventListener("click",()=>{
   else{paintPanel();showSheet($("audioPanel"));paintReader();}});
 $("rbPlay").addEventListener("click",toggleAudio);
 $("rbGloss").addEventListener("click",()=>setGloss(!S.gloss));
-$("rbPrev").addEventListener("click",()=>readerStep(-1));
-$("rbNext").addEventListener("click",()=>readerStep(1));
 
-/* Turning the page with the thumb — two gestures into the one path, which is
-   the same one the prev/next buttons take.
+/* Turning the page with the thumb — two gestures into the one path,
+   readerStep(). They are the ONLY way to turn it: the bar's prev/next buttons
+   were taken off in v50, so every slide this bar is on must keep them.
 
    The DRAG: the words scroll up and down inside one item, so only a decisively
    sideways one counts. Leftwards brings the next page in from the right.
