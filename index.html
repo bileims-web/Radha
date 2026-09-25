@@ -1468,9 +1468,24 @@ async function seatReading(n){
 }
 
 /* ---------- render ---------- */
+/* ONE DRAWING AT A TIME, AND ONLY THE LAST ONE SHOWS.
+
+   A drawing waits part-way — on a text's json, on the database — and render()
+   is often called twice in a row: the home key closes the reader (which draws
+   the slide it is leaving) and then draws the tiles. Both used to write into
+   the live list, so the slow first one landed its sittings AFTER the second
+   had cleared it, and the home page came up with the Sudha Nidhi's tiles
+   stacked above it. So each drawing is built off-screen and put up whole, and
+   only if no later render() has begun since; an older one finishing late is
+   dropped. The builders below still just append to `L` — they need not know. */
+let drawGen=0;
 async function render(){
   syncHistory();                 // a view change is a layer opened or closed
-  const L=$("list"); L.innerHTML="";
+  const gen=++drawGen, L=document.createElement("div");
+  await draw(L);
+  if(gen===drawGen) $("list").replaceChildren(...L.childNodes);
+}
+async function draw(L){
   $("backBtn").hidden = S.view==="home";
   // and the way home, which is wanted on every screen the tiles are not on.
   // A raised player over the home view shows it again, in CSS — the tiles are
