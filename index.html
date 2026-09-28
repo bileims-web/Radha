@@ -2331,19 +2331,24 @@ function clearChain(){if(chainTimer){clearTimeout(chainTimer);chainTimer=null;}
   const was=waitLeft; waitLeft=0; $("chainLine").textContent="";
   if(was)paint();}                       // the bar goes back to saying the time
 
-/* `secs` seconds of nothing, as a WAV the page makes for itself: 8 kHz, 8-bit,
-   every sample the mid-point 128. A blob, so the worker never sees it and the
-   audio cache never holds it. */
+/* `secs` seconds of nothing, as a WAV the page makes for itself, in the आरती's
+   OWN format — 44.1 kHz, 16-bit, stereo, every sample zero. It was 8 kHz 8-bit
+   mono once, and the song came in distorted for its first moments (the user,
+   2026-09-28, loudest on चंद्र मिटे, which is near full volume within a second).
+   The mp3 decodes clean, so the likeliest cause is the phone running a
+   telephone-grade stream beside the music one just as the song begins. In the
+   song's own format there is nothing to convert and nothing to reconcile. A
+   blob, so the worker never sees it and the audio cache never holds it. */
 const quiet={};
 function silence(secs){
   if(quiet[secs]) return quiet[secs];
-  const rate=8000,n=rate*secs,b=new Uint8Array(44+n),v=new DataView(b.buffer);
+  const rate=44100,ch=2,n=rate*secs*ch*2,b=new Uint8Array(44+n),v=new DataView(b.buffer);
   const s=(o,w)=>{for(let i=0;i<w.length;i++)b[o+i]=w.charCodeAt(i);};
   s(0,"RIFF");v.setUint32(4,36+n,true);s(8,"WAVE");s(12,"fmt ");
-  v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
-  v.setUint32(24,rate,true);v.setUint32(28,rate,true);
-  v.setUint16(32,1,true);v.setUint16(34,8,true);
-  s(36,"data");v.setUint32(40,n,true);b.fill(128,44);
+  v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,ch,true);
+  v.setUint32(24,rate,true);v.setUint32(28,rate*ch*2,true);
+  v.setUint16(32,ch*2,true);v.setUint16(34,16,true);
+  s(36,"data");v.setUint32(40,n,true);   // a new array is zeros: silence as it stands
   return quiet[secs]=URL.createObjectURL(new Blob([b],{type:"audio/wav"}));
 }
 
@@ -2378,10 +2383,12 @@ function silence(secs){
    the phone did sleep after all, waking it sounds the आरती at once instead of
    counting down what is left.
 
-   The silence goes on until the आरती is actually PLAYING, not merely asked
-   for: a chain's next track still has to load, and the gap between the two is
-   exactly when a phone would doze off. So the one that fires takes `hold` out
-   of clearChain's reach before starting the next thing. */
+   The silence goes on through a chain's load — the next track still has to
+   load, and the gap between the two is exactly when a phone would doze off —
+   and stops at the आरती's `play`, the instant it is asked to sound, never
+   after. It used to wait for `playing`, and the two ran over each other for the
+   first moment of every song. So the one that fires takes `hold` out of
+   clearChain's reach before starting the next thing. */
 function countdown(name,secs,bar,go){
   const end=Date.now()+secs*1000;
   let shown=0;
@@ -2392,7 +2399,7 @@ function countdown(name,secs,bar,go){
   const fire=()=>{
     if(chainTimer!==mine)return;         // dropped, or a later wait has the timer
     const h=hold; hold=null; clearChain(); go();
-    if(h) audio.addEventListener("playing",()=>h.pause(),{once:true});
+    if(h) audio.addEventListener("play",()=>h.pause(),{once:true});
   };
   const tick=()=>{if(Date.now()>=end)fire(); else show();};
   show();
