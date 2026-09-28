@@ -1597,7 +1597,7 @@ async function renderColl(c,L){
     // `t.dur` is the manifest's own figure, so a recording that has never been
     // played still says how long it is — which is how the two पद गायन versions
     // are told apart before either has been opened
-    const mark=allMarks.get(id), dur=allMeta.get("dur:"+id)||t.dur;
+    const mark=tapMark(c,allMarks.get(id)), dur=allMeta.get("dur:"+id)||t.dur;
     const sub=document.createElement("span"); sub.className="sub";
     if(mark&&mark.pos>15) sub.innerHTML='<span class="mark">Resume '+fmt(mark.pos)+'</span>'+(dur?' · '+fmt(dur):'');
     else sub.textContent=dur?fmt(dur):"Tap to play";
@@ -2449,6 +2449,14 @@ function playFixed(c,i,arrived){
    folder when one ends. A mark is for the item YOU choose, not the one that
    comes to you.
 
+   The आरती go further, by `resume:"slider"` on their collection: a tap starts
+   at the top even after a pause part-way. The user's rule, 2026-09-28: "unless
+   I slide the song track to a specific time stamp, tapping a song always
+   starts the song from the beginning." So the one mark such a song keeps is the
+   place the seek bar was dragged to; pausing, stopping and leaving the app
+   write nothing (see saveMark), and a mark from before the rule is not taken
+   for one (see tapMark).
+
    `startPaused` is how reading in silence works: the item is loaded and its
    words are painted, but nothing sounds until a play gesture. Callers that mean
    "play this" pass false; callers that are only moving the reader pass S.silent,
@@ -2471,7 +2479,7 @@ async function playTrack(t,startPaused,fromStart){
     $("discLabel").setAttribute("fill",grp.tint||"#6E1F1F");}
   else $("discLabel").setAttribute("fill","#6E1F1F");
 
-  const mark=(t.path||fromStart)?null:await get("marks",t.id);
+  const mark=(t.path||fromStart)?null:tapMark(t.coll,await get("marks",t.id));
   curSrc=src; retries=0; stallAt=-1; stallTicks=0;
   audio.src=src;
   audio.onerror=recover;
@@ -2618,12 +2626,26 @@ function paint(){
 
    Clears the mark near the end so a finished song does not offer to resume at
    its last second. That is a RESUME convenience only — completion is `ended`,
-   never this test. See advance(). */
-async function saveMark(){
+   never this test. See advance().
+
+   `slid` is true only from the two seek bars. For a `resume:"slider"`
+   collection nothing else writes: the time ticking, a pause and the page
+   going away all leave the dragged-to place as it was. It is compared with
+   `true` and not taken as truthy, because pagehide hands this its Event. */
+async function saveMark(slid){
   if(!S.cur||S.cur.path)return; const c=audio.currentTime;
   if(!isFinite(c))return;
+  const bySlider=!!(S.cur.coll&&S.cur.coll.resume==="slider");
+  if(bySlider&&slid!==true)return;
   if(audio.duration&&c>audio.duration-5) await del("marks",S.cur.id);
-  else await put("marks",{pos:c,updated:Date.now()},S.cur.id);
+  else await put("marks",{pos:c,updated:Date.now(),slid:bySlider},S.cur.id);
+}
+
+/* The mark a tap may honour. In a `resume:"slider"` collection only one the
+   seek bar wrote counts; the builds before 2026-09-28 wrote one on every
+   pause, with no `slid`, and a phone still holds those. */
+function tapMark(coll,m){
+  return m&&(!coll||coll.resume!=="slider"||m.slid)?m:null;
 }
 
 /* A hiccup must not end the sitting. The network changes, the stream is cut,
@@ -2925,7 +2947,7 @@ apSeek.addEventListener("input",()=>{apSeek.dragging=true;const d=audio.duration
   $("apCur").textContent=fmtHMS(d*apSeek.value/1000);
   apSeek.style.setProperty("--fill",(apSeek.value/10)+"%");});
 apSeek.addEventListener("change",()=>{const d=audio.duration||0;
-  audio.currentTime=d*apSeek.value/1000;apSeek.dragging=false;saveMark();});
+  audio.currentTime=d*apSeek.value/1000;apSeek.dragging=false;saveMark(true);});
 $("apSlower").addEventListener("click",()=>setSpeed(S.speed-SPD_STEP));
 $("apFaster").addEventListener("click",()=>setSpeed(S.speed+SPD_STEP));
 $("apRepeatRow").addEventListener("click",()=>setRepeat(!S.repeat));
@@ -2946,7 +2968,7 @@ const seek=$("seek");
 seek.addEventListener("input",()=>{seek.dragging=true;const d=audio.duration||0;
   $("tCur").textContent=fmt(d*seek.value/1000);seek.style.setProperty("--fill",(seek.value/10)+"%");});
 seek.addEventListener("change",()=>{const d=audio.duration||0;
-  audio.currentTime=d*seek.value/1000;seek.dragging=false;saveMark();});
+  audio.currentTime=d*seek.value/1000;seek.dragging=false;saveMark(true);});
 /* ---------- back ----------
    One press closes exactly one thing: the picker, then a sheet, then the
    raised player, then one step up the views — and from the tiles, with
