@@ -5,7 +5,7 @@
       "title": "आरती",
       "mode": "arati",
       "tint": "#6E1F1F",
-      "bytes": 28283919,
+      "bytes": 33937697,
       "tracks": [
         {
           "file": "audio/arati/01.mp3",
@@ -22,7 +22,7 @@
           "leadIn": 15
         },
         {
-          "file": "audio/arati/04.mp3",
+          "file": "audio/arati/04b.mp3",
           "title": "श्री यमुनाष्टक"
         }
       ],

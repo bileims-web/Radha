@@ -10,8 +10,8 @@
  *   AUDIO_VERSION — bump ONLY when an mp3 under audio/ is replaced. Expensive:
  *                   every track has to be downloaded again.
  */
-var SHELL_VERSION = 'v54';  // v54: a tapped आरती starts at its top, unless the seek bar was dragged to a place
-var AUDIO_VERSION = 'v1';   // untouched: this release only ADDS mp3s, it replaces none
+var SHELL_VERSION = 'v55';  // v55: the new श्री यमुनाष्टक (2022 recording) on the आरती slide
+var AUDIO_VERSION = 'v1';   // untouched: the new यमुनाष्टक has a NEW name (04b), so no cached track goes stale
 var SHELL_CACHE = 'radha-shell-' + SHELL_VERSION;
 var AUDIO_CACHE = 'radha-audio-' + AUDIO_VERSION;
 
