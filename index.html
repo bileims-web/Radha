@@ -543,21 +543,6 @@
   .srate{min-width:52px;text-align:center;font-size:15.5px;font-variant-numeric:tabular-nums;
     color:var(--gold);font-weight:600}
 
-  /* ---------- where the sittings are decided ---------- */
-  .dlevel{padding:2px 0 10px;border-bottom:1px solid var(--line);margin-bottom:8px}
-  .dlevel:last-of-type{border-bottom:0}
-  .dhead{display:flex;align-items:center;gap:10px;padding:8px 22px 6px}
-  .dh-t{flex:1;font-size:14.5px;font-weight:600}
-  .dh-n{display:flex;align-items:center;gap:8px}
-  .dh-n b{min-width:18px;text-align:center;font-variant-numeric:tabular-nums;color:var(--gold)}
-  .drow{display:flex;align-items:center;gap:10px;padding:7px 22px}
-  .dn{flex:0 0 18px;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
-  .dr{flex:1;min-width:0;font-size:13.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .dc{flex:0 0 auto;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
-  .dstep{flex:0 0 84px;display:flex;gap:6px;justify-content:flex-end}
-  .dstep .sbtn{width:34px;height:34px;flex:0 0 34px;font-size:17px}
-  .dnote{padding:2px 22px 12px;font-size:12px;color:var(--muted);line-height:1.55}
-
   @media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
 </style>
 </head>
@@ -1048,18 +1033,6 @@
   </button>
 </div>
 
-<!-- Where the sittings are decided. One row per division; the stepper moves the
-     boundary between it and the next, so a gap or an overlap cannot be typed. -->
-<div class="sheet" id="divSheet">
-  <div class="grab"></div>
-  <h3 id="divTitle" class="dv">&#2349;&#2366;&#2327;</h3>
-  <div id="divBody"></div>
-  <div class="dlg-btns" style="padding:2px 22px 8px">
-    <button class="cancel" id="divDefaults">Defaults</button>
-    <button class="go" id="divDone">Done</button>
-  </div>
-</div>
-
 <div class="sheet" id="setSheet">
   <div class="grab"></div>
   <h3>Settings</h3>
@@ -1070,7 +1043,6 @@
     </span>
     <span class="sw" id="autoplaySw"></span>
   </button>
-  <div id="divRows"></div>
   <!-- Audio is cached only as it is played, so a text nobody has listened
        through is not on the phone. These rows fetch one whole text at a time,
        for a journey, or for a phone that is about to lose the site. -->
@@ -1132,15 +1104,12 @@ async function mapOf(s){
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 
 /* ---------- state ---------- */
-const S={man:FALLBACK,view:"home",cwd:"root",stack:[],coll:null,grp:0,
+const S={man:FALLBACK,view:"home",cwd:"root",stack:[],coll:null,
   autoplay:true,queue:[],qi:-1,cur:null,target:null,
   pos:{},      // path id -> the next item to play      (persisted "pos:<id>")
   script:{},   // path id -> chosen script id           (persisted "script:<id>")
   text:{},     // "<pathId>:<scriptId>" -> rows | null  (fetched once)
-  div:{},      // path id -> level-1 cut points         (persisted "div:<id>")
-  sub:{},      // path id -> {divIndex: cut points}     (persisted "sub:<id>")
   auto:{},     // path id -> carry on into the next one (persisted "auto:<id>")
-  divEdit:null,// which text the division sheet is editing
   read:null,   // {id,n} while a text-only slide is open (सेवक वाणी)
   vpos:{},     // id -> {section: verse} — how far into each प्रकरण  ("vpos:<id>")
   rpos:{},     // path id -> {reading: shloka} — where the EYE is   ("rpos:<id>")
@@ -1204,13 +1173,14 @@ function longPress(el,fn){let t=null,f=false;
 
      · The bracket needs no state. pos===0 means the opening pad has not been
        heard this cycle, so any session starting there opens with it. That is
-       why the evening session does not replay it, and why resuming into
-       one-go from pad 41 does not either: the bracket belongs to the cycle,
-       and the cycle's progress IS pos.
+       why resuming from pad 41 does not replay it: the bracket belongs to the
+       cycle, and the cycle's progress IS pos.
      · A cycle ends by returning pos to 0 — never to 1. The user's rule:
        "every cycle opens with the praise pad, no matter how it was reached."
-     · The two modes share the one pos, so tapping either resumes where the
-       other left off.
+     · There is one sitting, एक साथ, the whole text. The भाग and उपभाग that
+       once split it went on 2026-10-10 (the user): the tile on the home
+       screen is एक साथ itself — for चौरासी जी a tap opens the text where pos
+       stands, for the Sudha Nidhi it opens the একসাথে screen.
    ================================================================ */
 
 const isPath=c=>!!c&&c.mode==="path";
@@ -1250,7 +1220,7 @@ function itemTitle(c,n){
   return scriptOf(c).itemLabel+" "+n;}
 
 /* ---------- the frame, in the script the text is read in ----------
-   A path's furniture — भाग, एक साथ, यहीं, the name at the top — was written in
+   A path's furniture — एक साथ, यहीं, the name at the top — was written in
    Devanagari because both paths were Hindi. The Sudha Nidhi is read in Bengali,
    so the frame follows the verse: a manifest script entry may carry its own
    `title` and a `words` map, and whatever it does not carry falls back to the
@@ -1260,12 +1230,8 @@ function itemTitle(c,n){
    locale here and nothing to negotiate with the browser. A text is read in the
    script it was written in, which the manifest already says. */
 const WORDS={
-  part:"भाग", subpart:"उपभाग", subsOf:"भाग {n} के उपभाग",
   together:"एक साथ", here:"यहीं", start:"आरम्भ", reading:"पाठ",
-  fromStart:"आरम्भ से", sessionDone:"सत्र पूर्ण", alsoSubs:"उपभाग भी",
-  opensWith:"पहला भाग सदा {op} से खुलता है।",
-  closesWith:"अन्तिम भाग {cl} पर पूरा होता है।",
-  opensCloses:"पहला भाग सदा {op} से खुलता है और अन्तिम {cl} पर पूरा होता है।"};
+  fromStart:"आरम्भ से", sessionDone:"सत्र पूर्ण"};
 function W(c,k,vals){
   const sc=(c&&c.scripts)?scriptOf(c):null;
   let t=(sc&&sc.words&&sc.words[k])||WORDS[k];
@@ -1276,67 +1242,6 @@ const clsOf=c=>((c&&c.scripts)?(scriptOf(c).cls||"dv"):"dv");
 /* the name it wears, in that same script */
 const titleOf=c=>{const sc=(c&&c.scripts)?scriptOf(c):null;
   return (sc&&sc.title)||c.title;};
-
-/* ---------- how a path is divided into sittings ----------
-
-   A division is stored as its CUT POINTS — the item each division ends on, bar
-   the last — and never as ranges. Gaps and overlaps then cannot be expressed at
-   all: the first division always begins at 0 and the last always ends at
-   lastIndex, so the praise pad is always inside the first session and the
-   phalashruti always inside the last, with nothing to check afterwards. They
-   are parts of those sessions, not a bracket around the day.
-
-   Position needs no migration when a boundary moves either. `pos` is an item
-   number; which division holds it is worked out afresh on every render, so
-   changing a split resolves to whichever session now contains the item. */
-
-const DIV_MIN=2,DIV_MAX=6;
-
-function evenCuts(from,to,n){                  // n divisions over from..to
-  const total=to-from+1,cuts=[];
-  for(let i=1;i<n;i++) cuts.push(from+Math.round(total*i/n)-1);
-  return cuts;
-}
-function rangesFrom(from,to,cuts){
-  const out=[];let a=from;
-  for(const c of cuts){out.push({from:a,to:c});a=c+1;}
-  out.push({from:a,to:to});
-  return out;
-}
-function cutsValid(from,to,cuts){
-  if(!Array.isArray(cuts)||cuts.length<DIV_MIN-1||cuts.length>DIV_MAX-1)return false;
-  let prev=from-1;
-  for(const c of cuts){if(!Number.isInteger(c)||c<=prev||c>=to)return false;prev=c;}
-  return true;
-}
-/* The manifest's own blocks are the default while the count matches them —
-   that is where 31/30/25 and 91/90/90 come from. Any other count splits the
-   BODY evenly and lets the brackets ride the outer divisions. */
-function defaultCuts(c,n){
-  if(n===undefined) n=(c.blocks&&c.blocks.length)||3;
-  if(c.blocks&&c.blocks.length===n) return c.blocks.slice(0,-1).map(b=>b.to);
-  return evenCuts(c.open?c.open.n+1:0,c.count,n);
-}
-/* Sub-divisions skip the opening bracket when splitting, so it joins the first
-   sub-tile rather than forming one of its own: block 1 is 31/30/30, not 30/30/31. */
-function defaultSubCuts(c,d,n){
-  return evenCuts((c.open&&d.from===c.open.n)?d.from+1:d.from,d.to,n===undefined?3:n);
-}
-const hasSubs=c=>!!c.groups;                   // RSN alone goes a layer deeper
-function divsOf(c){
-  const to=lastIndex(c),cuts=S.div[c.id];
-  return rangesFrom(0,to,cutsValid(0,to,cuts)?cuts:defaultCuts(c));
-}
-function subsOf(c,i){
-  const d=divsOf(c)[i],cuts=(S.sub[c.id]||{})[i];
-  return rangesFrom(d.from,d.to,cutsValid(d.from,d.to,cuts)?cuts:defaultSubCuts(c,d));
-}
-function divIndex(c,n){const ds=divsOf(c);
-  for(let i=0;i<ds.length;i++) if(n>=ds[i].from&&n<=ds[i].to) return i;
-  return 0;}
-function subIndex(c,i,n){const ss=subsOf(c,i);
-  for(let k=0;k<ss.length;k++) if(n>=ss[k].from&&n<=ss[k].to) return k;
-  return 0;}
 
 /* ---------- the readings: one long recording over thirty shlokas ----------
 
@@ -1406,10 +1311,9 @@ async function playPath(c,n,raise,startPaused){
   // closed stays closed.
   if(raise) document.body.classList.add("player-open");
 }
-/* A session is one division read, and played to its end if it is played at all.
+/* A session is the sitting read, and played to its end if it is played at all.
    If the path already stands inside it we resume there; if it stands elsewhere
-   the position MOVES to this division's first item, so "where I am" stays honest
-   and finishing a sitting walks the highlight on to the next tile. The tile
+   the position MOVES to its first item, so "where I am" stays honest. The tile
    inherits the silence habit — words only, unless you were listening when you
    left — and a sounding session runs on verse by verse for as long as the
    path's auto-play switch is on. With it off the sitting still exists, and
@@ -1502,14 +1406,6 @@ async function draw(L){
   if(S.view==="collection"){
     setTitle(titleOf(S.coll),S.coll.range||"",clsOf(S.coll)); await renderColl(S.coll,L); return;
   }
-  if(S.view==="path"){
-    setTitle(titleOf(S.coll),"",clsOf(S.coll)); await renderPath(S.coll,L); return;
-  }
-  if(S.view==="pathsub"){
-    const d=divsOf(S.coll)[S.grp];
-    setTitle(titleOf(S.coll),rangeText(S.coll,d),clsOf(S.coll));
-    await renderPathSub(S.coll,L); return;
-  }
   if(S.view==="pathread"){
     setTitle(titleOf(S.coll),W(S.coll,"together"),clsOf(S.coll));
     await renderPathRead(S.coll,L); return;
@@ -1578,6 +1474,10 @@ async function renderTiles(L){
     const rr=t.querySelector(".tile-range");
     if(rr) rr.textContent=t.dataset.sub;
     t.addEventListener("click",()=>openTile(c));
+    // the long press its एक साथ tile had: the text back to its start
+    if(isPath(c)&&!readingsOf(c).length){const all={from:0,to:lastIndex(c)};
+      longPress(t,()=>openRestartSheet(c,W(c,"together"),rangeText(c,all),
+        ()=>{S.coll=c;restartPath(c,all);}));}
     grid.appendChild(t);
   }
   L.appendChild(grid);
@@ -1629,7 +1529,8 @@ function stile(c,name,range,count,now){
 }
 
 /* The head of a path slide: which script, and the note about text that is not
-   written yet. Both are unchanged; only what follows them is new. */
+   written yet. Only the Sudha Nidhi has a screen of its own now, so only it
+   wears this — and with one script and its text in place, it draws nothing. */
 function pathHead(c,L){
   const sc=scriptOf(c);
   if(c.scripts.length>1){
@@ -1654,73 +1555,14 @@ function pathHead(c,L){
   }
 }
 
-/* Level one: the sittings this text is divided into, and the one-go tile that
-   plays the lot. The tile holding the current position wears the gold edge —
-   for RSN that is the block the position falls in, and the layer below says
-   which third of it. */
-async function renderPath(c,L){
-  await loadText(c);
-  pathHead(c,L);
-  const p=posOf(c),ds=divsOf(c),cur=divIndex(c,p);
-  const h=document.createElement("div"); h.className="sect "+clsOf(c);
-  h.textContent=W(c,"part");
-  L.appendChild(h);
-  const grid=document.createElement("div"); grid.className="stiles";
-  ds.forEach((d,i)=>{
-    const name=W(c,"part")+" "+(i+1),range=rangeText(c,d);
-    const t=stile(c,name,range,d.to-d.from+1,i===cur);
-    t.addEventListener("click",()=>{
-      if(hasSubs(c)){S.grp=i;S.view="pathsub";$("list").scrollTop=0;render();}
-      else startSession(c,d);
-    });
-    longPress(t,()=>openRestartSheet(c,name,range,()=>restartPath(c,d)));
-    grid.appendChild(t);
-  });
-  const all={from:0,to:lastIndex(c)};
-  const one=stile(c,W(c,"together"),rangeText(c,all),all.to+1,false);
-  // Three sittings and एक साथ make a clean 2×2 of equal leaves. Only when the
-  // count leaves an odd tile does एक साथ span the row, so there is never a
-  // half-empty line at the bottom.
-  if((ds.length+1)%2) one.classList.add("wide");
-  // एक साथ means the whole text, and for a text that HAS long recordings that is
-  // a choice of two shapes rather than one action. The tile opens the screen
-  // that holds both; the verse-by-verse walk it used to start is the first
-  // thing on it, so nothing that was one tap away is now more than two.
-  if(readingsOf(c).length)
-    one.addEventListener("click",()=>{S.view="pathread";$("list").scrollTop=0;render();});
-  else{
-    one.addEventListener("click",()=>startSession(c,all));
-    longPress(one,()=>openRestartSheet(c,W(c,"together"),rangeText(c,all),
-      ()=>restartPath(c,all)));
-  }
-  grid.appendChild(one);
-  L.appendChild(grid);
-}
-
-/* Level two, RSN only: the block split into thirds. */
-async function renderPathSub(c,L){
-  await loadText(c);
-  const p=posOf(c),i=S.grp,ss=subsOf(c,i),inHere=divIndex(c,p)===i,cur=subIndex(c,i,p);
-  const h=document.createElement("div"); h.className="sect "+clsOf(c);
-  h.textContent=W(c,"subsOf",{n:i+1});
-  L.appendChild(h);
-  const grid=document.createElement("div"); grid.className="stiles";
-  ss.forEach((d,k)=>{
-    const name=W(c,"subpart")+" "+(k+1),range=rangeText(c,d);
-    const t=stile(c,name,range,d.to-d.from+1,inHere&&k===cur);
-    t.addEventListener("click",()=>startSession(c,d));
-    longPress(t,()=>openRestartSheet(c,name,range,()=>restartPath(c,d)));
-    grid.appendChild(t);
-  });
-  L.appendChild(grid);
-}
-
-/* एक साथ, for a text that has long recordings: the walk through the whole text
-   this tile used to start, and under it the sittings the reciter cut it into.
-   Each of those is one recording and the thirty shlokas it covers — the picker
-   inside offers exactly those thirty, because that is what is sounding. */
+/* एक साथ, for a text that has long recordings — the Sudha Nidhi's tile opens
+   straight onto it: the sittings the reciter cut the text into, and under them
+   the walk through the whole of it. Each sitting is one recording and the
+   thirty shlokas it covers — the picker inside offers exactly those thirty,
+   because that is what is sounding. */
 async function renderPathRead(c,L){
   await loadText(c);
+  pathHead(c,L);
   const rs=readingsOf(c);
   const h1=document.createElement("div"); h1.className="sect "+clsOf(c);
   h1.textContent=W(c,"reading");
@@ -1956,17 +1798,14 @@ function readerCtx(){
 
 /* ---------- the item picker ----------
 
-   What it may show is the SITTING you are in, and nothing beyond it: inside
-   भाग 2 it offers पद 31–60, inside a उपभाग only that third. एक साथ is a sitting
-   like any other — it simply covers the whole text, which is why it alone
-   offers every pad. With no sitting running (one finished, or the app was
-   reopened) the bound is the division the current item falls in, at the finest
-   level that text has. */
+   What it may show is the SITTING you are in, and nothing beyond it. The one
+   sitting is एक साथ, the whole text, so it offers every pad — and with no
+   sitting running (one finished, or the app was reopened) it is the whole
+   text all the same. */
 function pickScope(c,n){
   const s=S.session;
   if(s&&s.pathId===c.id&&typeof s.from==="number") return {from:s.from,to:s.to};
-  const i=divIndex(c,n);
-  return hasSubs(c)?subsOf(c,i)[subIndex(c,i,n)]:divsOf(c)[i];
+  return {from:0,to:lastIndex(c)};
 }
 function openPicker(){
   const x=readerCtx(); if(!x)return;
@@ -2053,97 +1892,6 @@ async function setRepeat(v){
 }
 async function setAuto(c,v){
   S.auto[c.id]=!!v; await put("meta",!!v,"auto:"+c.id); paintPanel();
-}
-
-/* ---------- where the sittings are decided ----------
-   The stepper moves a BOUNDARY, never a range, so a gap or an overlap cannot
-   be typed. Changing the number of divisions goes back to an even split, and
-   moving a level-1 boundary re-splits that text's sub-divisions, because the
-   old sub-boundaries would sit outside their block. */
-function stepBtn(txt,dis,fn){
-  const b=document.createElement("button");
-  b.className="sbtn"; b.textContent=txt; b.disabled=!!dis;
-  if(!dis)b.addEventListener("click",fn);
-  return b;
-}
-function divLevel(c,title,from,to,cuts,note,onCuts){
-  const wrap=document.createElement("div"); wrap.className="dlevel";
-  const head=document.createElement("div"); head.className="dhead";
-  const h=document.createElement("span"); h.className="dh-t "+clsOf(c); h.textContent=title;
-  const nn=document.createElement("span"); nn.className="dh-n";
-  const n=cuts.length+1;
-  nn.appendChild(stepBtn("−",n<=DIV_MIN,()=>onCuts(null,n-1)));
-  const b=document.createElement("b"); b.textContent=String(n); nn.appendChild(b);
-  nn.appendChild(stepBtn("+",n>=DIV_MAX||(to-from+1)<n+1,()=>onCuts(null,n+1)));
-  head.appendChild(h); head.appendChild(nn); wrap.appendChild(head);
-
-  rangesFrom(from,to,cuts).forEach((d,i)=>{
-    const row=document.createElement("div"); row.className="drow";
-    const dn=document.createElement("span"); dn.className="dn"; dn.textContent=(i+1)+".";
-    const dr=document.createElement("span");
-    dr.className="dr "+(scriptOf(c).cls||"dv"); dr.textContent=rangeText(c,d);
-    const dc=document.createElement("span"); dc.className="dc"; dc.textContent=String(d.to-d.from+1);
-    const st=document.createElement("span"); st.className="dstep";
-    if(i<cuts.length){
-      const lo=(i===0?from:cuts[i-1]+1),hi=(i===cuts.length-1?to-1:cuts[i+1]-1);
-      st.appendChild(stepBtn("−",cuts[i]<=lo,()=>{const x=cuts.slice();x[i]--;onCuts(x);}));
-      st.appendChild(stepBtn("+",cuts[i]>=hi,()=>{const x=cuts.slice();x[i]++;onCuts(x);}));
-    }
-    row.appendChild(dn);row.appendChild(dr);row.appendChild(dc);row.appendChild(st);
-    wrap.appendChild(row);
-  });
-  if(note){const p=document.createElement("div");p.className="dnote "+clsOf(c);
-    p.textContent=note;wrap.appendChild(p);}
-  return wrap;
-}
-async function setDivCuts(c,cuts,n){
-  if(cuts===null||cuts===undefined) cuts=defaultCuts(c,n);
-  S.div[c.id]=cuts; await put("meta",cuts,"div:"+c.id);
-  S.sub[c.id]={}; await put("meta",{},"sub:"+c.id);
-  renderDivBody(); render();
-}
-async function setSubCuts(c,i,cuts,n){
-  if(cuts===null||cuts===undefined) cuts=defaultSubCuts(c,divsOf(c)[i],n);
-  const all=Object.assign({},S.sub[c.id]||{}); all[i]=cuts;
-  S.sub[c.id]=all; await put("meta",all,"sub:"+c.id);
-  renderDivBody(); render();
-}
-function renderDivBody(){
-  const c=S.divEdit; if(!c)return;
-  $("divTitle").textContent=titleOf(c); $("divTitle").className=clsOf(c);
-  const box=$("divBody"); box.innerHTML="";
-  const to=lastIndex(c),cuts=divsOf(c).slice(0,-1).map(d=>d.to);
-  // Said in the text's own words: RSN opens on मङ्गलाचरण and has no closing pad,
-  // so the note must not promise it a फलस्तुति.
-  const op=c.open?bracketLabel(c,"open"):"",cl=c.close?bracketLabel(c,"close"):"";
-  const note=op&&cl?W(c,"opensCloses",{op:op,cl:cl})
-            :op?W(c,"opensWith",{op:op})
-            :cl?W(c,"closesWith",{cl:cl}):"";
-  box.appendChild(divLevel(c,W(c,"part"),0,to,cuts,note,(x,n)=>setDivCuts(c,x,n)));
-  if(hasSubs(c)) divsOf(c).forEach((d,i)=>{
-    const sc=subsOf(c,i).slice(0,-1).map(r=>r.to);
-    box.appendChild(divLevel(c,W(c,"subsOf",{n:i+1}),d.from,d.to,sc,null,
-      (x,n)=>setSubCuts(c,i,x,n)));
-  });
-}
-function openDivSheet(c){
-  S.divEdit=c; hideSheets(); renderDivBody(); showSheet($("divSheet"));
-}
-/* One row per path in Settings, so the divisions are reachable without being
-   in a text. Each says how that text stands at the moment. */
-function renderDivRows(){
-  const box=$("divRows"); box.innerHTML="";
-  for(const c of S.man.collections){
-    if(!isPath(c))continue;
-    const b=document.createElement("button"); b.className="toggle";
-    b.innerHTML='<span class="meta"><span class="name '+clsOf(c)+'"></span>'+
-                '<span class="sub '+clsOf(c)+'"></span></span>'+CHEV;
-    b.querySelector(".name").textContent=titleOf(c);
-    b.querySelector(".sub").textContent=W(c,"part")+" "+divsOf(c).map(d=>d.to-d.from+1).join(" · ")+
-      (hasSubs(c)?"  ·  "+W(c,"alsoSubs"):"");
-    b.addEventListener("click",()=>openDivSheet(c));
-    box.appendChild(b);
-  }
 }
 
 /* ---------- keeping a text on the phone ----------
@@ -2282,13 +2030,20 @@ async function openTile(c){
   }
   if(c.mode==="library"){S.view="library";S.cwd="root";S.stack=[];$("list").scrollTop=0;render();return;}
   if(isText(c)){S.coll=c; await openSection(c,posOf(c),true); return;}
-  S.coll=c; S.grp=0;
-  S.view=isPath(c)?"path":"collection";
+  S.coll=c;
+  // A path's tile IS its एक साथ. With long recordings that is the screen that
+  // holds them and the whole-text walk; without, it is the walk itself, opened
+  // where the text stands, over the tiles — closing it comes straight home.
+  if(isPath(c)){
+    if(readingsOf(c).length){S.view="pathread";$("list").scrollTop=0;render();}
+    else await startSession(c,{from:0,to:lastIndex(c)});
+    return;
+  }
+  S.view="collection";
   $("list").scrollTop=0; render();
 }
 function goBack(){
-  if(S.view==="pathsub"||S.view==="pathread"){S.view="path";render();return;}
-  if(S.view==="collection"||S.view==="path"){S.view="home";S.coll=null;render();return;}
+  if(S.view==="collection"||S.view==="pathread"){S.view="home";S.coll=null;render();return;}
   if(S.view==="library"){
     if(S.stack.length){S.stack.pop();S.cwd=S.stack.length?S.stack[S.stack.length-1].id:"root";render();}
     else{S.view="home";render();}
@@ -2316,7 +2071,7 @@ function goHome(){
   hidePicker();
   hideSheets();
   closeReader();
-  S.view="home"; S.coll=null; S.grp=0; S.cwd="root"; S.stack=[];
+  S.view="home"; S.coll=null; S.cwd="root"; S.stack=[];
   $("list").scrollTop=0;
   render();
 }
@@ -2771,7 +2526,7 @@ function hideSheets(){if(openSh)openSh.classList.remove("on");openSh=null;
   $("scrim").classList.remove("on");$("dlg").classList.remove("on");paintReader();}
 $("scrim").addEventListener("click",hideSheets);
 $("fab").addEventListener("click",()=>showSheet($("addSheet")));
-$("settingsBtn").addEventListener("click",async()=>{renderDivRows();paintOffline();showSheet($("setSheet"));
+$("settingsBtn").addEventListener("click",async()=>{paintOffline();showSheet($("setSheet"));
   if(navigator.storage&&navigator.storage.estimate){const e=await navigator.storage.estimate();
     $("storageLine").textContent=bytes(e.usage||0)+" used";}
   else $("storageLine").textContent="Not reported by this browser";});
@@ -2955,13 +2710,6 @@ $("apAutoRow").addEventListener("click",()=>{
   const c=S.cur&&S.cur.path; if(!c){toast("Open a path first");return;}
   setAuto(c,!autoOf(c));});
 
-/* ---------- the divisions ---------- */
-$("divDone").addEventListener("click",()=>{hideSheets();render();});
-$("divDefaults").addEventListener("click",async()=>{
-  const c=S.divEdit; if(!c)return;
-  delete S.div[c.id]; delete S.sub[c.id];
-  await del("meta","div:"+c.id); await del("meta","sub:"+c.id);
-  renderDivBody(); render();});
 $("back30").addEventListener("click",()=>audio.currentTime=Math.max(0,audio.currentTime-30));
 $("fwd30").addEventListener("click",()=>audio.currentTime=Math.min(audio.duration||0,audio.currentTime+30));
 const seek=$("seek");
@@ -2988,8 +2736,7 @@ seek.addEventListener("change",()=>{const d=audio.duration||0;
 let histDepth=0,histPending=null;
 function uiDepth(){
   let d=0;
-  if(S.view==="pathsub"||S.view==="pathread")d=2; // sub-list, list
-  else if(S.view==="library")d=1+S.stack.length;  // one per folder entered
+  if(S.view==="library")d=1+S.stack.length;       // one per folder entered
   else if(S.view!=="home")d=1;
   if(document.body.classList.contains("player-open"))d++;
   if($("scrim").classList.contains("on"))d++;     // a sheet OR the rename dialog
@@ -3052,12 +2799,6 @@ window.addEventListener("popstate",e=>{
     S.pos[c.id]=(typeof p==="number"&&p>=0&&p<=lastIndex(c))?p:0;
     const s=await get("meta","script:"+c.id);
     if(s&&c.scripts.some(x=>x.id===s)) S.script[c.id]=s;
-    // A stored split is honoured only while it still covers this text — a cut
-    // that no longer fits falls back to the default rather than to a gap.
-    const dv=await get("meta","div:"+c.id);
-    if(cutsValid(0,lastIndex(c),dv)) S.div[c.id]=dv;
-    const sb=await get("meta","sub:"+c.id);
-    if(sb&&typeof sb==="object") S.sub[c.id]=sb;
     const au=await get("meta","auto:"+c.id);
     if(au!==undefined) S.auto[c.id]=!!au;
     const vp=await get("meta","vpos:"+c.id);
