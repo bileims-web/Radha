@@ -478,6 +478,10 @@
      this reader needs that the other never does. */
   body.path-play.reading #seek{display:block}
   body.path-play.reading .player>.times{display:flex}
+  /* the close row: the arrow on the left, the script on the right */
+  .ptop{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .scriptsel{font:inherit;font-size:15px;color:var(--text);background:var(--surface);
+    border:1px solid var(--line);border-radius:9px;padding:6px 8px;max-width:50%}
   /* the item's own name reads better above the words than under them */
   body.path-play .now-name{order:-1;font-size:15px;color:var(--muted);font-weight:600;
     letter-spacing:.3px;margin:0 0 10px}
@@ -858,10 +862,12 @@
 </div>
 
 <section class="player" id="player">
-  <div>
+  <div class="ptop">
     <button class="icon-btn" id="playerClose" aria-label="Close player">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
     </button>
+    <!-- which script the words are in, for a text that has more than one -->
+    <select class="scriptsel" id="scriptSel" aria-label="Script" hidden></select>
   </div>
   <div class="disc">
     <svg viewBox="0 0 200 200" aria-hidden="true">
@@ -1225,7 +1231,8 @@ function itemTitle(c,n){
    Devanagari because both paths were Hindi. The Sudha Nidhi is read in Bengali,
    so the frame follows the verse: a manifest script entry may carry its own
    `title` and a `words` map, and whatever it does not carry falls back to the
-   Devanagari below. चौरासी जी and सेवक वाणी carry neither and are untouched.
+   Devanagari below. सेवक वाणी carries neither, nor does चौरासी जी's Hindi; its
+   Bengali (the default since 2026-10-10) carries both, as the Sudha Nidhi does.
 
    These are one screen's worth of words, not a translation layer — there is no
    locale here and nothing to negotiate with the browser. A text is read in the
@@ -1592,6 +1599,31 @@ function paintReader(){
   // the bar's play icon lives here rather than in paint(), so it is right from
   // the first frame of a slide — paint() does not run until metadata arrives
   $("rbPlay").innerHTML=audio.paused?RB_PLAY:RB_PAUSE;
+  paintScriptSel();
+}
+
+/* The script the words are read in, for a path that has more than one — चौरासी
+   जी in Bengali first and Hindi after (2026-10-10, the user). The frame follows
+   the choice, as it does for the Sudha Nidhi: the name at the top, the पद
+   label, the brackets. The choice is the path's own and is remembered. */
+function paintScriptSel(){
+  const x=readerCtx(),sel=$("scriptSel");
+  const c=(x&&!x.text&&!x.read&&x.c.scripts&&x.c.scripts.length>1)?x.c:null;
+  sel.hidden=!c; if(!c)return;
+  if(sel.dataset.coll!==c.id){
+    sel.innerHTML="";
+    for(const sc of c.scripts){const o=document.createElement("option");
+      o.value=sc.id;o.textContent=sc.label;sel.appendChild(o);}
+    sel.dataset.coll=c.id;
+  }
+  sel.value=scriptOf(c).id;
+}
+async function setScript(c,id){
+  S.script[c.id]=id; await put("meta",id,"script:"+c.id);
+  await loadText(c);
+  const t=S.cur;
+  if(t&&t.path===c){t.name=itemTitle(c,t.n); paintNames(t); showVerse(c,t.n); mediaMeta(t);}
+  render(); paintReader();
 }
 
 /* ---------- a text-only section ----------
@@ -2167,6 +2199,21 @@ async function playTrack(t,startPaused,fromStart){
     paint(); if(!startPaused) audio.play().catch(paint);
   };
   $("mini").hidden=false; document.body.classList.add("has-mini");
+  paintNames(t);
+
+  // the words, in place of the disc. A path item takes the reader back from a
+  // text slide, so the two can never disagree about whose words are on screen.
+  if(rp){S.read=null;document.body.classList.remove("text-play");}
+  document.body.classList.toggle("path-play",!!rp);
+  document.body.classList.toggle("reading",!!t.read);
+  if(rp) showVerse(rp,t.n);
+  render(); paintReader(); mediaMeta(t);
+}
+/* What is sounding and whose it is, on the mini bar and over the words — in the
+   script the text is being read in, so it is painted again when that changes. */
+function paintNames(t){
+  const rp=t.path||(t.read&&t.read.c);
+  const grp=t.coll||t.path;
   const cls=rp?(scriptOf(rp).cls||"dv"):(t.coll?"dv":"");
   for(const el of [$("miniName"),$("nowName")]){
     // The mini bar names what is SOUNDING; the reader names what is being READ.
@@ -2179,14 +2226,6 @@ async function playTrack(t,startPaused,fromStart){
   const fcls=grp?clsOf(grp):"dv";
   $("nowFolder").classList.toggle("dv",fcls==="dv");
   $("nowFolder").classList.toggle("bn",fcls==="bn");
-
-  // the words, in place of the disc. A path item takes the reader back from a
-  // text slide, so the two can never disagree about whose words are on screen.
-  if(rp){S.read=null;document.body.classList.remove("text-play");}
-  document.body.classList.toggle("path-play",!!rp);
-  document.body.classList.toggle("reading",!!t.read);
-  if(rp) showVerse(rp,t.n);
-  render(); paintReader(); mediaMeta(t);
 }
 
 /* text and audio in sync: one file per item, so the text for the item that is
@@ -2553,6 +2592,8 @@ $("miniOpen").addEventListener("click",()=>{
     document.body.classList.add("path-play");showVerse(t.path,t.n);render();}
   document.body.classList.add("player-open");});
 $("playerClose").addEventListener("click",closeReader);
+$("scriptSel").addEventListener("change",e=>{const x=readerCtx();
+  if(x&&!x.text&&!x.read) setScript(x.c,e.target.value);});
 $("miniPlay").addEventListener("click",toggleAudio);
 $("bigPlay").addEventListener("click",toggleAudio);
 

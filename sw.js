@@ -10,7 +10,7 @@
  *   AUDIO_VERSION — bump ONLY when an mp3 under audio/ is replaced. Expensive:
  *                   every track has to be downloaded again.
  */
-var SHELL_VERSION = 'v58';  // v58: the Sudha Nidhi's tile opens its text too, with no screen of recordings
+var SHELL_VERSION = 'v59';  // v59: श्री हित चौरासी जी in Bengali by default, Hindi from a dropdown in the reader
 var AUDIO_VERSION = 'v1';   // untouched: the new यमुनाष्टक has a NEW name (04c), so no cached track goes stale
 var SHELL_CACHE = 'radha-shell-' + SHELL_VERSION;
 var AUDIO_CACHE = 'radha-audio-' + AUDIO_VERSION;
@@ -34,6 +34,7 @@ var SHELL = [
   'fonts/noto-serif-bengali-latin-ext-500.woff2',
   // the recitation text: small, and the path slides are useless without it
   'text/shcj.json',
+  'text/shcj-bn.json',
   'text/rsn-bn.json',
   'text/sevakvani.json',
   'icons/icon-192.png',

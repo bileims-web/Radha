@@ -56,6 +56,24 @@
       },
       "scripts": [
         {
+          "id": "bn",
+          "label": "বাংলা",
+          "text": "text/shcj-bn.json",
+          "cls": "bn",
+          "itemLabel": "পদ",
+          "openLabel": "প্রশস্তি",
+          "closeLabel": "ফলস্তুতি",
+          "title": "শ্রীহিত চৌরাসী জী",
+          "words": {
+            "together": "একসাথে",
+            "reading": "পাঠ",
+            "here": "এখানেই",
+            "start": "আরম্ভ",
+            "fromStart": "আরম্ভ থেকে",
+            "sessionDone": "পাঠ সম্পূর্ণ"
+          }
+        },
+        {
           "id": "hi",
           "label": "हिन्दी",
           "text": "text/shcj.json",
