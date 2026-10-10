@@ -1179,8 +1179,9 @@ function longPress(el,fn){let t=null,f=false;
        "every cycle opens with the praise pad, no matter how it was reached."
      · There is one sitting, एक साथ, the whole text. The भाग and उपभाग that
        once split it went on 2026-10-10 (the user): the tile on the home
-       screen is एक साथ itself — for चौरासी जी a tap opens the text where pos
-       stands, for the Sudha Nidhi it opens the একসাথে screen.
+       screen is एक साथ itself, and a tap opens the text where pos stands.
+       The Sudha Nidhi's nine long recordings went with them, the same day —
+       its reading engine is still here, with nothing that opens it.
    ================================================================ */
 
 const isPath=c=>!!c&&c.mode==="path";
@@ -1406,10 +1407,6 @@ async function draw(L){
   if(S.view==="collection"){
     setTitle(titleOf(S.coll),S.coll.range||"",clsOf(S.coll)); await renderColl(S.coll,L); return;
   }
-  if(S.view==="pathread"){
-    setTitle(titleOf(S.coll),W(S.coll,"together"),clsOf(S.coll));
-    await renderPathRead(S.coll,L); return;
-  }
   if(S.stack.length) setTitle(S.stack[S.stack.length-1].name,
     "रसिक पदावली / "+S.stack.map(x=>x.name).join(" / "),false);
   else setTitle("रसिक पदावली","",true);
@@ -1475,7 +1472,7 @@ async function renderTiles(L){
     if(rr) rr.textContent=t.dataset.sub;
     t.addEventListener("click",()=>openTile(c));
     // the long press its एक साथ tile had: the text back to its start
-    if(isPath(c)&&!readingsOf(c).length){const all={from:0,to:lastIndex(c)};
+    if(isPath(c)){const all={from:0,to:lastIndex(c)};
       longPress(t,()=>openRestartSheet(c,W(c,"together"),rangeText(c,all),
         ()=>{S.coll=c;restartPath(c,all);}));}
     grid.appendChild(t);
@@ -1526,80 +1523,6 @@ function stile(c,name,range,count,now){
   r.textContent=range; r.className="srange "+cls;
   t.querySelector(".scount").textContent=count;
   return t;
-}
-
-/* The head of a path slide: which script, and the note about text that is not
-   written yet. Only the Sudha Nidhi has a screen of its own now, so only it
-   wears this — and with one script and its text in place, it draws nothing. */
-function pathHead(c,L){
-  const sc=scriptOf(c);
-  if(c.scripts.length>1){
-    const bar=document.createElement("div"); bar.className="scripts";
-    for(const x of c.scripts){
-      const b=document.createElement("button");
-      b.className=(x.id===sc.id?"on":"")+" "+(x.cls||"");
-      b.innerHTML='<span></span>'+(x.text?"":'<span class="tag dv">शीघ्र</span>');
-      b.querySelector("span").textContent=x.label;
-      b.addEventListener("click",async()=>{S.script[c.id]=x.id;
-        await put("meta",x.id,"script:"+c.id); render();});
-      bar.appendChild(b);
-    }
-    L.appendChild(bar);
-  }
-  if(!sc.text){
-    const ph=document.createElement("div"); ph.className="ph dv";
-    ph.innerHTML="<b></b><span></span>";
-    ph.querySelector("b").textContent=sc.placeholderTitle||"अभी तैयार नहीं";
-    ph.querySelector("span").textContent=sc.placeholderBody||"";
-    L.appendChild(ph);
-  }
-}
-
-/* एक साथ, for a text that has long recordings — the Sudha Nidhi's tile opens
-   straight onto it: the sittings the reciter cut the text into, and under them
-   the walk through the whole of it. Each sitting is one recording and the
-   thirty shlokas it covers — the picker inside offers exactly those thirty,
-   because that is what is sounding. */
-async function renderPathRead(c,L){
-  await loadText(c);
-  pathHead(c,L);
-  const rs=readingsOf(c);
-  const h1=document.createElement("div"); h1.className="sect "+clsOf(c);
-  h1.textContent=W(c,"reading");
-  L.appendChild(h1);
-  const marks=await mapOf("marks"), meta=await mapOf("meta");
-  const g1=document.createElement("div"); g1.className="stiles";
-  rs.forEach((r,k)=>{
-    const id=readingId(c,k),mark=marks.get(id),dur=meta.get("dur:"+id)||r.dur;
-    // "here" is the recording that is OPEN, not one the position happens to fall
-    // in: a reading is a thing you are inside, and `pos` knows nothing about it.
-    const open=!!(S.cur&&S.cur.read&&S.cur.read.c.id===c.id&&S.cur.read.k===k);
-    const name=rangeText(c,{from:r.from,to:r.to});
-    const t=stile(c,name,
-      (mark&&mark.pos>15)?"Resume "+fmt(mark.pos)+(dur?"  \u00b7  "+fmt(dur):"")
-                         :(dur?fmt(dur):""),
-      r.to-r.from+1,open);
-    t.addEventListener("click",()=>openReading(c,k));
-    // a recording's own beginning is BOTH of its places — see restartReading
-    longPress(t,()=>openRestartSheet(c,name,dur?fmt(dur):"",()=>restartReading(c,k)));
-    g1.appendChild(t);
-  });
-  if(rs.length%2&&g1.lastChild) g1.lastChild.classList.add("wide");
-  L.appendChild(g1);
-
-  // and under them the walk this tile used to start on its own, unchanged: one
-  // file per verse, the words following the sound, the whole text in one go.
-  const all={from:0,to:lastIndex(c)};
-  const h2=document.createElement("div"); h2.className="sect "+clsOf(c);
-  h2.textContent=W(c,"together");
-  L.appendChild(h2);
-  const g2=document.createElement("div"); g2.className="stiles";
-  const one=stile(c,W(c,"together"),rangeText(c,all),all.to+1,false);
-  one.classList.add("wide");
-  one.addEventListener("click",()=>startSession(c,all));
-  longPress(one,()=>openRestartSheet(c,W(c,"together"),rangeText(c,all),
-    ()=>restartPath(c,all)));
-  g2.appendChild(one); L.appendChild(g2);
 }
 
 /* ================================================================
@@ -2031,19 +1954,14 @@ async function openTile(c){
   if(c.mode==="library"){S.view="library";S.cwd="root";S.stack=[];$("list").scrollTop=0;render();return;}
   if(isText(c)){S.coll=c; await openSection(c,posOf(c),true); return;}
   S.coll=c;
-  // A path's tile IS its एक साथ. With long recordings that is the screen that
-  // holds them and the whole-text walk; without, it is the walk itself, opened
-  // where the text stands, over the tiles — closing it comes straight home.
-  if(isPath(c)){
-    if(readingsOf(c).length){S.view="pathread";$("list").scrollTop=0;render();}
-    else await startSession(c,{from:0,to:lastIndex(c)});
-    return;
-  }
+  // A path's tile IS its एक साथ: the walk through the whole text, opened where
+  // the text stands, over the tiles — closing it comes straight home.
+  if(isPath(c)){await startSession(c,{from:0,to:lastIndex(c)}); return;}
   S.view="collection";
   $("list").scrollTop=0; render();
 }
 function goBack(){
-  if(S.view==="collection"||S.view==="pathread"){S.view="home";S.coll=null;render();return;}
+  if(S.view==="collection"){S.view="home";S.coll=null;render();return;}
   if(S.view==="library"){
     if(S.stack.length){S.stack.pop();S.cwd=S.stack.length?S.stack[S.stack.length-1].id:"root";render();}
     else{S.view="home";render();}
