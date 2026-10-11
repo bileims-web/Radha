@@ -490,9 +490,9 @@
      this reader needs that the other never does. */
   body.path-play.reading #seek{display:block}
   body.path-play.reading .player>.times{display:flex}
-  /* the close row: the arrow; the script is chosen in Settings */
+  /* the close row: the arrow on the left, the script on the right */
   .ptop{display:flex;align-items:center;justify-content:space-between;gap:10px}
-  .scriptsel{font:inherit;font-size:15px;color:var(--text);background:var(--bg);
+  .scriptsel{font:inherit;font-size:15px;color:var(--text);background:var(--surface);
     border:1px solid var(--line);border-radius:9px;padding:6px 8px;max-width:50%}
   /* the item's own name reads better above the words than under them */
   body.path-play .now-name{order:-1;font-size:15px;color:var(--muted);font-weight:600;
@@ -780,6 +780,8 @@
     <button class="icon-btn" id="playerClose" aria-label="Close player">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
     </button>
+    <!-- which script the words are in, for a text that has more than one -->
+    <select class="scriptsel" id="scriptSel" aria-label="Script" hidden></select>
   </div>
   <div class="disc">
     <svg viewBox="0 0 200 200" aria-hidden="true">
@@ -963,8 +965,6 @@
     </span>
     <span class="sw" id="autoplaySw"></span>
   </button>
-  <h3 id="scriptHead">Script</h3>
-  <div id="scriptRows"></div>
   <!-- Audio is cached only as it is played, so a text nobody has listened
        through is not on the phone. These rows fetch one whole text at a time,
        for a journey, or for a phone that is about to lose the site. -->
@@ -1358,10 +1358,10 @@ const TILE_MOTIF={
 // The lotus was asked for in pink; that pairing stays with सेवक वाणी. The
 // flute, the feather and the feet are drawn in the आरती maroon (user,
 // 2026-10-11), so their outlines match the diya's.
-// Every tile name in Bengali letters (user, 2026-10-11). চৌরাসী জী is here too
-// so its tile stays Bengali when its words are read in Hindi.
+// Every tile name in Bengali letters (user, 2026-10-11). The two texts that
+// already carry a Bengali script keep theirs; these four are written here.
 // Only the tile: a page's own title is unchanged.
-const TILE_BN={"arati":"আরতি","shcj":"শ্রীহিত চৌরাসী জী","padgayan":"শ্রীহিত চৌরাসী পদ গায়ন",
+const TILE_BN={"arati":"আরতি","padgayan":"শ্রীহিত চৌরাসী পদ গায়ন",
   "sevak-vani":"শ্রীহিত সেবক বাণী","padavali":"রসিক পদাবলী"};
 const TILE_INK={"sevak-vani":"#C2557A",
   "shcj":"#6E1F1F","padgayan":"#6E1F1F","rsn":"#6E1F1F"};
@@ -1514,30 +1514,24 @@ function paintReader(){
   // the bar's play icon lives here rather than in paint(), so it is right from
   // the first frame of a slide — paint() does not run until metadata arrives
   $("rbPlay").innerHTML=audio.paused?RB_PLAY:RB_PAUSE;
+  paintScriptSel();
 }
 
 /* The script the words are read in, for a path that has more than one — चौरासी
    जी in Bengali first and Hindi after (2026-10-10, the user). The frame follows
    the choice, as it does for the Sudha Nidhi: the name at the top, the पद
-   label, the brackets. The choice is the path's own and is remembered. It is
-   made in Settings, one row per such text, so the reader carries nothing but
-   the words (user, 2026-10-11). */
-function paintScriptRows(){
-  const box=$("scriptRows"); box.innerHTML="";
-  const cs=S.man.collections.filter(c=>c.scripts&&c.scripts.length>1);
-  $("scriptHead").hidden=!cs.length;
-  for(const c of cs){
-    const row=document.createElement("div"); row.className="toggle";
-    const meta=document.createElement("span"); meta.className="meta";
-    const nm=document.createElement("span"); nm.className="name "+clsOf(c); nm.textContent=titleOf(c);
-    meta.appendChild(nm); row.appendChild(meta);
-    const sel=document.createElement("select"); sel.className="scriptsel"; sel.setAttribute("aria-label","Script");
+   label, the brackets. The choice is the path's own and is remembered. */
+function paintScriptSel(){
+  const x=readerCtx(),sel=$("scriptSel");
+  const c=(x&&!x.text&&!x.read&&x.c.scripts&&x.c.scripts.length>1)?x.c:null;
+  sel.hidden=!c; if(!c)return;
+  if(sel.dataset.coll!==c.id){
+    sel.innerHTML="";
     for(const sc of c.scripts){const o=document.createElement("option");
       o.value=sc.id;o.textContent=sc.label;sel.appendChild(o);}
-    sel.value=scriptOf(c).id;
-    sel.addEventListener("change",async e=>{await setScript(c,e.target.value);paintScriptRows();});
-    row.appendChild(sel); box.appendChild(row);
+    sel.dataset.coll=c.id;
   }
+  sel.value=scriptOf(c).id;
 }
 async function setScript(c,id){
   S.script[c.id]=id; await put("meta",id,"script:"+c.id);
@@ -2402,7 +2396,7 @@ function hideSheets(){if(openSh)openSh.classList.remove("on");openSh=null;
   $("scrim").classList.remove("on");$("dlg").classList.remove("on");paintReader();}
 $("scrim").addEventListener("click",hideSheets);
 $("fab").addEventListener("click",()=>showSheet($("addSheet")));
-$("settingsBtn").addEventListener("click",async()=>{paintOffline();paintScriptRows();showSheet($("setSheet"));
+$("settingsBtn").addEventListener("click",async()=>{paintOffline();showSheet($("setSheet"));
   if(navigator.storage&&navigator.storage.estimate){const e=await navigator.storage.estimate();
     $("storageLine").textContent=bytes(e.usage||0)+" used";}
   else $("storageLine").textContent="Not reported by this browser";});
@@ -2511,6 +2505,8 @@ $("miniOpen").addEventListener("click",()=>{
     document.body.classList.add("path-play");showVerse(t.path,t.n);render();}
   document.body.classList.add("player-open");});
 $("playerClose").addEventListener("click",closeReader);
+$("scriptSel").addEventListener("change",e=>{const x=readerCtx();
+  if(x&&!x.text&&!x.read) setScript(x.c,e.target.value);});
 $("miniPlay").addEventListener("click",toggleAudio);
 $("bigPlay").addEventListener("click",toggleAudio);
 
