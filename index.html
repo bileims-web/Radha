@@ -422,21 +422,8 @@
     padding:13px 14px;text-align:left;font-size:15px}
   .titles .pcell.on{font-weight:600}
 
-  /* ---------- रसिक पदावली — the library, laid out as tiles ---------- */
-  .ltiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px var(--pad) 0}
-  .ltile{position:relative;aspect-ratio:1/1;border-radius:16px;overflow:hidden;padding:13px;
-    display:flex;flex-direction:column;justify-content:flex-end;text-align:left;
-    background:var(--surface);border:1px solid var(--line);transition:transform .12s}
-  .ltile:active{transform:scale(.975)}
-  .ltile.cur{border-color:var(--gold)}
-  .ltile.cur .lname{color:var(--gold)}
-  .lglyph{position:absolute;top:12px;left:12px;color:var(--muted)}
-  .lname{font-size:15px;font-weight:600;line-height:1.32;
-    display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-  .lsub{font-size:11.5px;color:var(--muted);margin-top:4px;font-variant-numeric:tabular-nums}
-  .lsub .mark{color:var(--gold)}
-  .lbar{height:2px;background:var(--line);border-radius:2px;margin-top:7px;overflow:hidden}
-  .lbar i{display:block;height:100%;background:var(--gold);border-radius:2px}
+  /* रसिक पदावली is a list of rows like every other list (user, 2026-10-11):
+     its solid tiles covered the peacock on the ground. */
 
   /* The two slides that are not built yet. They hold their place in the grid
      so the layout is whole, but they are plainly not ready: no ink of their
@@ -1970,14 +1957,13 @@ async function renderUser(L){
   if(!list.length){const e=document.createElement("div");e.className="empty";
     e.innerHTML='<b class="dv">अभी कुछ नहीं</b>Tap + to make a folder or add songs.';L.appendChild(e);return;}
   const allMarks=await mapOf("marks");
-  const grid=document.createElement("div"); grid.className="ltiles";
   for(const n of list){
     const t=document.createElement("button");
-    t.className="ltile"+(S.cur&&S.cur.id===n.id?" cur":"");
-    t.innerHTML='<span class="lglyph">'+(n.type==="folder"?FOLDER:NOTE)+'</span>'+
-      '<span class="lname"></span><span class="lsub"></span>';
-    t.querySelector(".lname").textContent=n.name;
-    const sub=t.querySelector(".lsub");
+    t.className="row"+(S.cur&&S.cur.id===n.id?" current":"");
+    t.innerHTML='<span class="glyph">'+(n.type==="folder"?FOLDER:NOTE)+'</span>'+
+      '<span class="meta"><span class="name"></span><span class="sub"></span></span>';
+    t.querySelector(".name").textContent=n.name;
+    const sub=t.querySelector(".sub");
     if(n.type==="folder"){
       const k=(await kids(n.id)).length;
       sub.textContent=k?k+" item"+(k>1?"s":""):"empty";
@@ -1985,9 +1971,9 @@ async function renderUser(L){
       const mark=allMarks.get(n.id);
       if(mark&&mark.pos>15){
         sub.innerHTML='<span class="mark">Resume '+fmt(mark.pos)+'</span>';
-        if(n.duration){const b=document.createElement("span");b.className="lbar";
+        if(n.duration){const b=document.createElement("span");b.className="track-bar";
           const ii=document.createElement("i");ii.style.width=Math.min(100,mark.pos/n.duration*100)+"%";
-          b.appendChild(ii);t.appendChild(b);}
+          b.appendChild(ii);t.querySelector(".meta").appendChild(b);}
       } else sub.textContent=n.duration?fmt(n.duration):bytes(n.size);
     }
     t.addEventListener("click",()=>{
@@ -1997,9 +1983,8 @@ async function renderUser(L){
       S.qi=files.indexOf(n); playTrack(S.queue[S.qi]);
     });
     longPress(t,()=>openItemSheet({kind:"user",id:n.id,name:n.name,node:n}));
-    grid.appendChild(t);
+    L.appendChild(t);
   }
-  L.appendChild(grid);
 }
 
 /* ---------- opening ---------- */
