@@ -1467,7 +1467,7 @@ async function renderTiles(L){
     let sub="";
     if(soon) sub='<span class="tile-soon dv">शीघ्र</span>';
     else{
-      const r=c.mode==="library"?(libCount?libCount+" item"+(libCount>1?"s":""):"अपने गीत"):tileRange(c);
+      const r=c.mode==="library"?(libCount?"":"अपने गीत"):tileRange(c);
       if(r) sub='<span class="tile-range '+clsOf(c)+'"></span>';
       t.dataset.sub=r||"";
     }

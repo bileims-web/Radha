@@ -10,7 +10,7 @@
  *   AUDIO_VERSION — bump ONLY when an mp3 under audio/ is replaced. Expensive:
  *                   every track has to be downloaded again.
  */
-var SHELL_VERSION = 'v59';  // v59: श्री हित चौरासी जी in Bengali by default, Hindi from a dropdown in the reader
+var SHELL_VERSION = 'v60';  // v60: the रसिक पदावली tile no longer shows its item count
 var AUDIO_VERSION = 'v1';   // untouched: the new यमुनाष्टक has a NEW name (04c), so no cached track goes stale
 var SHELL_CACHE = 'radha-shell-' + SHELL_VERSION;
 var AUDIO_CACHE = 'radha-audio-' + AUDIO_VERSION;
