@@ -10,7 +10,7 @@
  *   AUDIO_VERSION — bump ONLY when an mp3 under audio/ is replaced. Expensive:
  *                   every track has to be downloaded again.
  */
-var SHELL_VERSION = 'v70';  // v70: new feet with the auspicious marks on the Sudha Nidhi tile
+var SHELL_VERSION = 'v71';  // v71: the user's Vecteezy flute on the चौरासी जी tile
 var AUDIO_VERSION = 'v1';   // untouched: the new यमुनाष्टक has a NEW name (04c), so no cached track goes stale
 var SHELL_CACHE = 'radha-shell-' + SHELL_VERSION;
 var AUDIO_CACHE = 'radha-audio-' + AUDIO_VERSION;
