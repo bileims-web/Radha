@@ -1458,18 +1458,6 @@ const TILE_MOTIF={
 // The lotus was asked for in pink; that pairing stays with सेवक वाणी.
 const TILE_INK={"sevak-vani":"#C2557A"};
 
-/* the line under a tile's name: for a path, where it currently stands */
-function tileRange(c){
-  if(isText(c)) return itemTitle(c,posOf(c))||W(c,"start");
-  if(isPath(c)){
-    const p=posOf(c);
-    if(p===0) return c.open?bracketLabel(c,"open"):W(c,"start");
-    if(c.close&&p===c.close.n) return bracketLabel(c,"close");
-    return scriptOf(c).itemLabel+" "+p+" / "+c.count;
-  }
-  return c.range||"";
-}
-
 async function renderTiles(L){
   const grid=document.createElement("div"); grid.className="tiles";
   const libCount=(await kids("root")).length;
@@ -1483,7 +1471,10 @@ async function renderTiles(L){
     let sub="";
     if(soon) sub='<span class="tile-soon dv">शीघ्र</span>';
     else{
-      const r=c.mode==="library"?(libCount?"":"अपने गीत"):tileRange(c);
+      // No line under a tile's name (user, 2026-10-11: where a text stands,
+      // पद 12 / 84 and the like, is the reader's to show) — but an empty
+      // library still says what it is for.
+      const r=c.mode==="library"&&!libCount?"अपने गीत":"";
       if(r) sub='<span class="tile-range '+clsOf(c)+'"></span>';
       t.dataset.sub=r||"";
     }
