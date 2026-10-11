@@ -1355,8 +1355,11 @@ const TILE_MOTIF={
   "sevak-vani":"lotus",
   "padavali":"pothi"
 };
-// The lotus was asked for in pink; that pairing stays with सेवक वाणी.
-const TILE_INK={"sevak-vani":"#C2557A"};
+// The lotus was asked for in pink; that pairing stays with सेवक वाणी. The
+// flute, the feather and the feet are drawn in the आरती maroon (user,
+// 2026-10-11), so their outlines match the diya's.
+const TILE_INK={"sevak-vani":"#C2557A",
+  "shcj":"#6E1F1F","padgayan":"#6E1F1F","rsn":"#6E1F1F"};
 
 async function renderTiles(L){
   const grid=document.createElement("div"); grid.className="tiles";
