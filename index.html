@@ -468,6 +468,18 @@
   .rbar{display:none;align-items:center;justify-content:space-between;gap:2px;
     margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
   body.path-play .rbar{display:flex}
+  /* The reader's alpona: the page's corner flourish in the four spaces the
+     words leave, the top pair over the name and the arrow, the bottom pair
+     standing on the bar's line (user, 2026-10-11). Fainter than on the lists,
+     and z-index -1 inside the player's own layer, so it lies under the words. */
+  .part{display:none;position:absolute;width:min(48vw,200px);aspect-ratio:1;
+    color:var(--gold);opacity:.07;pointer-events:none;z-index:-1}
+  body.path-play .part{display:block}
+  .part.tl{top:env(safe-area-inset-top);left:0}
+  .part.tr{top:env(safe-area-inset-top);right:0;transform:scaleX(-1)}
+  .rbar{position:relative}
+  .part.bl{bottom:100%;left:-24px;transform:scaleY(-1)}
+  .part.br{bottom:100%;right:-24px;transform:scale(-1,-1)}
   body.path-play .disc,body.path-play .now-folder,body.path-play #seek,
   body.path-play .player>.times,body.path-play .transport,
   body.path-play .chainline{display:none}
@@ -862,6 +874,8 @@
 </div>
 
 <section class="player" id="player">
+  <svg class="part tl" viewBox="0 0 100 100" aria-hidden="true"><use href="#m-alpona-bg"/></svg>
+  <svg class="part tr" viewBox="0 0 100 100" aria-hidden="true"><use href="#m-alpona-bg"/></svg>
   <div class="ptop">
     <button class="icon-btn" id="playerClose" aria-label="Close player">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
@@ -914,6 +928,8 @@
        screen there, so the transport moves into the panel behind the ♪ and this
        bar carries what a reader actually reaches for. -->
   <div class="rbar" id="rbar">
+    <svg class="part bl" viewBox="0 0 100 100" aria-hidden="true"><use href="#m-alpona-bg"/></svg>
+    <svg class="part br" viewBox="0 0 100 100" aria-hidden="true"><use href="#m-alpona-bg"/></svg>
     <!-- Home first, at the bottom extreme left of a slide, which is the screen
          that used to be furthest from the tiles. Drawn larger than the rest:
          its thin outline read smaller than the solid shapes beside it. -->
