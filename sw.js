@@ -10,7 +10,7 @@
  *   AUDIO_VERSION — bump ONLY when an mp3 under audio/ is replaced. Expensive:
  *                   every track has to be downloaded again.
  */
-var SHELL_VERSION = 'v65';  // v65: a very faint peacock on the page ground (art/peacock.svg)
+var SHELL_VERSION = 'v66';  // v66: the peacock fills the ground; no rule between list rows
 var AUDIO_VERSION = 'v1';   // untouched: the new यमुनाष्टक has a NEW name (04c), so no cached track goes stale
 var SHELL_CACHE = 'radha-shell-' + SHELL_VERSION;
 var AUDIO_CACHE = 'radha-audio-' + AUDIO_VERSION;

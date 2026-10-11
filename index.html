@@ -95,9 +95,13 @@
   /* A peacock on the ground, very faint, centred low where the lists leave
      room (user, 2026-10-11: aesthetic, never in the way of reading). From
      the user's Freepik file 4411667_2146 on Drive pnf/, cut out and optimised
-     (svgo -p 1, 336 -> 93 KB); its own file so the page stays light. */
-  #bgArt .peacock{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom) + 12vh);
-    width:min(64vw,280px);transform:translateX(-50%);opacity:.05}
+     (svgo -p 1, 336 -> 93 KB); its own file so the page stays light.
+     It fills the ground below the topbar like an alpona, as large as the
+     screen allows in proportion (object-fit), centred. */
+  #bgArt .peacock{position:absolute;left:0;width:100%;
+    top:calc(env(safe-area-inset-top) + 66px);
+    height:calc(100% - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 78px);
+    object-fit:contain;opacity:.05}
 
   /* Tiles are off-white leaves of paper. Each collection's colour from
      manifest.json is no longer the fill — it is the ink the motif and the
@@ -137,8 +141,9 @@
   .libtile .name{font-size:16.5px;font-weight:600}
   .libtile .sub{font-size:12.5px;color:var(--muted);margin-top:3px}
 
+  /* no rule between rows (user, 2026-10-11): it cut across the peacock */
   .row{display:flex;align-items:center;gap:14px;padding:13px var(--pad);
-    border-bottom:1px solid var(--line);user-select:none;-webkit-user-select:none;
+    user-select:none;-webkit-user-select:none;
     width:100%;text-align:left}
   .row:active{background:var(--surface)}
   .row.current .name,.row.current .glyph{color:var(--gold)}
