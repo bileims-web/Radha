@@ -1358,6 +1358,11 @@ const TILE_MOTIF={
 // The lotus was asked for in pink; that pairing stays with सेवक वाणी. The
 // flute, the feather and the feet are drawn in the आरती maroon (user,
 // 2026-10-11), so their outlines match the diya's.
+// Every tile name in Bengali letters (user, 2026-10-11). The two texts that
+// already carry a Bengali script keep theirs; these four are written here.
+// Only the tile: a page's own title is unchanged.
+const TILE_BN={"arati":"আরতি","padgayan":"শ্রীহিত চৌরাসী পদ গায়ন",
+  "sevak-vani":"শ্রীহিত সেবক বাণী","padavali":"রসিক পদাবলী"};
 const TILE_INK={"sevak-vani":"#C2557A",
   "shcj":"#6E1F1F","padgayan":"#6E1F1F","rsn":"#6E1F1F"};
 
@@ -1377,14 +1382,14 @@ async function renderTiles(L){
       // No line under a tile's name (user, 2026-10-11: where a text stands,
       // पद 12 / 84 and the like, is the reader's to show) — but an empty
       // library still says what it is for.
-      const r=c.mode==="library"&&!libCount?"अपने गीत":"";
-      if(r) sub='<span class="tile-range '+clsOf(c)+'"></span>';
+      const r=c.mode==="library"&&!libCount?"অপনে গীত":"";
+      if(r) sub='<span class="tile-range '+(TILE_BN[c.id]?"bn":clsOf(c))+'"></span>';
       t.dataset.sub=r||"";
     }
     t.innerHTML='<span class="tile-alpona"><svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><use href="#m-alpona"/></svg></span>'+
       (mk?'<span class="tile-art"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#m-'+mk+'"/></svg></span>':'')+
-      '<span class="tile-hi '+clsOf(c)+'"></span>'+sub;
-    t.querySelector(".tile-hi").textContent=titleOf(c);
+      '<span class="tile-hi '+(TILE_BN[c.id]?"bn":clsOf(c))+'"></span>'+sub;
+    t.querySelector(".tile-hi").textContent=TILE_BN[c.id]||titleOf(c);
     const rr=t.querySelector(".tile-range");
     if(rr) rr.textContent=t.dataset.sub;
     t.addEventListener("click",()=>openTile(c));
