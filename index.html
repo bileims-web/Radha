@@ -111,8 +111,9 @@
   .tile{position:relative;aspect-ratio:1/1;border-radius:16px;overflow:hidden;
     display:flex;flex-direction:column;justify-content:center;padding:13px;
     text-align:center;transition:transform .12s;
-    background:#F7F1E4;
-    background:color-mix(in srgb, var(--tint) 9%, #F7F1E4);
+    /* every tile on the आरती paper (user, 2026-10-11): ivory with 9% of its
+       maroon #6E1F1F, = #EBDED2. --tint stays each tile's own ink. */
+    background:#EBDED2;
     border:1px solid rgba(62,42,27,.16);
     box-shadow:0 1px 3px rgba(0,0,0,.35)}
   .tile:active{transform:scale(.975)}
