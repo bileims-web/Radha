@@ -10,7 +10,7 @@
  *   AUDIO_VERSION — bump ONLY when an mp3 under audio/ is replaced. Expensive:
  *                   every track has to be downloaded again.
  */
-var SHELL_VERSION = 'v68';  // v68: every home tile on the आरती paper
+var SHELL_VERSION = 'v69';  // v69: the Noun Project diya on the आरती tile
 var AUDIO_VERSION = 'v1';   // untouched: the new यमुनाष्टक has a NEW name (04c), so no cached track goes stale
 var SHELL_CACHE = 'radha-shell-' + SHELL_VERSION;
 var AUDIO_CACHE = 'radha-audio-' + AUDIO_VERSION;
