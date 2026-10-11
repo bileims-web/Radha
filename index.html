@@ -416,8 +416,10 @@
   body.text-play #rbGloss,body.glossable #rbGloss{display:grid}
   /* On a verse the play button is the middle of the bar, three a side. A verse
      with no meaning offers no book, but its place is kept, or play would slide
-     half a button left every time the page turned past shloka 90. */
-  body.path-play:not(.glossable) #rbGloss{display:grid;visibility:hidden}
+     half a button left every time the page turned past shloka 90. A text with
+     no meaning anywhere (चौरासी जी) keeps no such place: its six buttons
+     share the whole bar (user, 2026-10-11). */
+  body.path-play.glossbook:not(.glossable) #rbGloss{display:grid;visibility:hidden}
   /* the picker lists sections by their titles, one to a row */
   .pick-grid.titles{grid-template-columns:1fr;gap:7px}
   .titles .pcell{aspect-ratio:auto;display:flex;align-items:center;gap:12px;
@@ -497,15 +499,21 @@
   /* the item's own name reads better above the words than under them */
   body.path-play .now-name{order:-1;font-size:15px;color:var(--muted);font-weight:600;
     letter-spacing:.3px;margin:0 0 10px}
-  .rb{flex:1 1 0;min-width:0;height:46px;border-radius:11px;display:grid;
+  .rb{flex:1 1 0;min-width:0;height:54px;border-radius:11px;display:grid;
     grid-auto-flow:column;gap:1px;place-items:center;align-content:center;
     color:var(--text);position:relative}
   .rb:active{background:var(--surface2)}
   .rb:disabled{color:var(--line)}
   .rb.on{color:var(--gold)}
-  .rb .az{font-size:17px;font-weight:600;line-height:1}
-  .rb .az.sm{font-size:13px}
-  .rb .pm{font-size:11px;font-weight:600;margin-left:1px;vertical-align:top}
+  .rb .az{font-size:22px;font-weight:600;line-height:1}
+  .rb .az.sm{font-size:17px}
+  .rb .pm{font-size:14px;font-weight:600;margin-left:1px;vertical-align:top}
+  /* larger buttons, and the bar sits lower, into the room that was left under
+     it (user, 2026-10-11) */
+  .rb>svg{width:27px;height:27px}
+  #rbHome>svg{width:31px;height:31px}
+  body.path-play .player,body.text-play .player{
+    padding-bottom:calc(env(safe-area-inset-bottom) + 8px)}
 
   /* ---------- item picker overlay ---------- */
   .pickov{position:fixed;inset:0;z-index:44;background:var(--bg);display:none;
@@ -2149,6 +2157,12 @@ function paintNames(t){
    folded away underneath so the screen still reads as verse until it is asked
    for. The Sudha Nidhi has it on shlokas 1-90; every other item on every path
    has none, and for those the box below is emptied and hides itself. */
+/* does any verse of this text, in the script it is read in, fold a meaning */
+function textFolds(c){
+  const sc=scriptOf(c),rows=S.text[c.id+":"+sc.id];
+  return !!rows&&Object.values(rows).some(r=>r&&r.g&&
+    r.g.some(([label])=>!(sc.openGloss&&label===sc.openGloss)));
+}
 function showVerse(c,n){
   const el=$("verseText"),sc=scriptOf(c),row=rowFor(c,n),box=$("verseRich");
   $("verseScroll").scrollTop=0;
@@ -2169,6 +2183,8 @@ function showVerse(c,n){
   }
   // the bar's button belongs to whatever actually folds, not to having a meaning
   document.body.classList.toggle("glossable",folds>0);
+  // and its empty place is kept only where some verse of the text does fold
+  document.body.classList.toggle("glossbook",textFolds(c));
 }
 
 /* ---------- the screen must not go out under the reader ----------
